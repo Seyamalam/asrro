@@ -93,6 +93,11 @@ Membership decisions, event reminders, registration confirmation,
 certificates, bulk member mail, and committee announcements enqueue provider
 messages while retaining dashboard notifications. Administrators with
 `notifications_send` may inspect delivery state through `emails.list`.
+Every production template has an escaped, responsive ASRRO HTML layout and a
+plain-text alternative. Delivery supports Gmail SMTP over implicit TLS and the
+existing Resend-compatible HTTP provider. The internal design-review batch is
+confirmation-gated and covers the exact production template inventory without
+changing any account, application, event, or certificate state.
 
 ## Pagination, errors and exports
 
