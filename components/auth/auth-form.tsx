@@ -225,6 +225,17 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
           }}
         />
 
+        {mode === "sign-in" ? (
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-xs font-semibold text-cyan-700 hover:text-cyan-600 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none dark:text-cyan-300 dark:hover:text-cyan-200"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        ) : null}
+
         <AnimatePresence initial={false} mode="popLayout">
           {mode === "sign-up" ? (
             <motion.div
