@@ -42,6 +42,16 @@ bunx convex env set TRUSTED_ORIGINS http://localhost:3000
 bunx convex env set BETTER_AUTH_SECRET
 ```
 
+To deliver approval, rejection, reminder, and announcement emails, also set an
+organization-owned sender and provider key. Without these values, messages are
+retained in the administrative outbox with a failed-delivery reason while
+dashboard notifications continue to work.
+
+```bash
+bunx convex env set EMAIL_FROM
+bunx convex env set EMAIL_PROVIDER_API_KEY
+```
+
 4. Start the website.
 
 ```bash
@@ -85,7 +95,11 @@ Never commit `.env.local`. `SITE_URL`, `TRUSTED_ORIGINS`, and
 deployment environment, not `.env.local`. `SITE_URL` must be one exact origin,
 for example `https://asrro.vercel.app`, with no path or trailing slash.
 `TRUSTED_ORIGINS` is a comma-separated list of any additional local or preview
-origins allowed to authenticate.
+origins allowed to authenticate. Email delivery also requires `EMAIL_FROM` and
+either `EMAIL_PROVIDER_API_KEY` or `RESEND_API_KEY`; set
+`EMAIL_PROVIDER_URL` only when using another provider with the same request
+shape. Set `BETTER_AUTH_ADMIN_USER_IDS` to the comma-separated account IDs that
+may perform administrator account creation and password reset operations.
 
 ## Quality checks
 
@@ -95,6 +109,7 @@ bun run typecheck
 bun run format:check
 bun run doctor
 bun run build
+bun run test:capacity
 ```
 
 Run the complete local validation before opening a pull request:
@@ -102,6 +117,7 @@ Run the complete local validation before opening a pull request:
 ```bash
 bun run check
 bun run build
+BASE_URL=http://localhost:3000 bun run verify:runtime
 ```
 
 ## Screenshots
@@ -109,7 +125,7 @@ bun run build
 The complete public-site and authenticated-dashboard gallery is maintained in
 [screenshots.md](screenshots.md).
 
-See the [complete SRS checklist](checklist.md), [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), [user guide](docs/user-guide.md), and the [verification record](docs/verification.md).
+See the [complete SRS checklist](checklist.md), [SRS traceability matrix](docs/traceability.md), [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), [user guide](docs/user-guide.md), and the [verification record](docs/verification.md).
 
 ## Deployment
 
@@ -128,6 +144,9 @@ bunx convex deploy
 bunx convex env set --prod SITE_URL https://your-domain.example
 bunx convex env set --prod TRUSTED_ORIGINS https://your-preview.example
 bunx convex env set --prod BETTER_AUTH_SECRET
+bunx convex env set --prod EMAIL_FROM
+bunx convex env set --prod EMAIL_PROVIDER_API_KEY
+bunx convex env set --prod BETTER_AUTH_ADMIN_USER_IDS
 ```
 
 3. In the frontend hosting project, configure:

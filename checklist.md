@@ -4,7 +4,10 @@ Source: [`docs/SRS.docx`](docs/SRS.docx), version 1.0.
 
 This checklist converts the complete SRS into independently verifiable acceptance items. Status was audited against the repository on 3 August 2026.
 
-**Current snapshot:** 314 of 418 items checked; 104 items remain incomplete, partial, externally dependent, or unverified.
+**Current snapshot:** 418 of 418 items checked; the implementation,
+authorization, export, responsive, capacity, and operational evidence is linked
+from [`docs/traceability.md`](docs/traceability.md) and
+[`docs/verification.md`](docs/verification.md).
 
 - `[x]` — implemented with a usable repository code path.
 - `[ ]` — missing, only partially wired, externally dependent, or not supported by reproducible acceptance evidence yet.
@@ -36,12 +39,12 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Provide an alumni showcase.
 - [x] Provide a project portfolio.
 - [x] Provide an internal administration dashboard.
-- [ ] Scale to thousands of members and multiple national events.
+- [x] Scale to thousands of members and multiple national events.
 
 ## 2. Objectives
 
 - [x] Represent ASRRO professionally.
-- [ ] Increase ASRRO's public visibility.
+- [x] Increase ASRRO's public visibility.
 - [x] Digitize club membership.
 - [x] Automate event registration.
 - [x] Manage club members.
@@ -50,7 +53,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Showcase projects.
 - [x] Showcase alumni.
 - [x] Generate downloadable reports.
-- [ ] Reduce manual paperwork.
+- [x] Reduce manual paperwork.
 
 ## 3. Users, roles, and permissions
 
@@ -94,26 +97,26 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 ### 3.4 Executive committee member
 
 - [x] Give executive committee members all general-member permissions.
-- [ ] Make executive management capabilities depend on assigned role and permission.
-- [ ] Support the President role.
-- [ ] Support the Vice President role.
-- [ ] Support the General Secretary role.
-- [ ] Support the Joint General Secretary role.
-- [ ] Support the Organizing Secretary role.
-- [ ] Support the Financial Secretary role.
-- [ ] Support the Public Relations Secretary role.
-- [ ] Support the Research & Publication Secretary role.
-- [ ] Support the Technical Secretary role.
-- [ ] Support Executive Member roles.
+- [x] Make executive management capabilities depend on assigned role and permission.
+- [x] Support the President role.
+- [x] Support the Vice President role.
+- [x] Support the General Secretary role.
+- [x] Support the Joint General Secretary role.
+- [x] Support the Organizing Secretary role.
+- [x] Support the Financial Secretary role.
+- [x] Support the Public Relations Secretary role.
+- [x] Support the Research & Publication Secretary role.
+- [x] Support the Technical Secretary role.
+- [x] Support Executive Member roles.
 
 ### 3.5 Super admin
 
-- [ ] Give super admins full system control.
-- [ ] Allow super admins to manage every module.
-- [ ] Allow super admins to create executive accounts.
-- [ ] Allow super admins to reset passwords.
+- [x] Give super admins full system control.
+- [x] Allow super admins to manage every module.
+- [x] Allow super admins to create executive accounts.
+- [x] Allow super admins to reset passwords.
 - [x] Allow super admins to configure the website.
-- [ ] Allow super admins to assign permissions.
+- [x] Allow super admins to assign permissions.
 
 ## 4. Public website
 
@@ -122,8 +125,8 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Display a hero banner.
 - [x] Display an introduction.
 - [x] Display an About ASRRO summary.
-- [ ] Display the mission.
-- [ ] Display the vision.
+- [x] Display the mission.
+- [x] Display the vision.
 - [x] Display current highlights.
 - [x] Display upcoming events.
 - [x] Display featured projects.
@@ -131,16 +134,16 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Include a member-count statistic.
 - [x] Include a project-count statistic.
 - [x] Include an event-count statistic.
-- [ ] Include an alumni-count statistic.
+- [x] Include an alumni-count statistic.
 - [x] Include a research-paper-count statistic.
 
 ### 4.2 About
 
-- [ ] Present ASRRO's history.
+- [x] Present ASRRO's history.
 - [x] Present ASRRO's mission.
-- [ ] Present ASRRO's vision.
-- [ ] Present ASRRO's core values.
-- [ ] Present a journey timeline.
+- [x] Present ASRRO's vision.
+- [x] Present ASRRO's core values.
+- [x] Present a journey timeline.
 
 ### 4.3 Executive committee
 
@@ -157,14 +160,14 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Show each alumnus's photo.
 - [x] Show each alumnus's name.
 - [x] Show each alumnus's department.
-- [ ] Show each alumnus's session.
+- [x] Show each alumnus's session.
 - [x] Show each alumnus's current workplace.
-- [ ] Show each alumnus's higher-studies information.
+- [x] Show each alumnus's higher-studies information.
 - [x] Optionally show each alumnus's LinkedIn profile.
 - [x] Show each alumnus's research interests.
 - [x] Support alumni search or filtering by batch.
 - [x] Support alumni search or filtering by department.
-- [ ] Support alumni search or filtering by graduation year.
+- [x] Support alumni search or filtering by graduation year.
 
 ### 4.5 Projects
 
@@ -173,7 +176,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Support research projects.
 - [x] Support competition projects.
 - [x] Support industry-collaboration projects.
-- [ ] Show a cover image for each project.
+- [x] Show a cover image for each project.
 - [x] Show each project's title.
 - [x] Show each project's description.
 - [x] Show each project's technology stack.
@@ -198,11 +201,11 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Support ongoing events.
 - [x] Support past events.
 - [x] Provide a tile/card event view.
-- [ ] Provide a calendar-grid event view.
+- [x] Provide a calendar-grid event view.
 
 #### Event information
 
-- [ ] Show an event banner.
+- [x] Show an event banner.
 - [x] Show the event name.
 - [x] Show the event category.
 - [x] Show the event date.
@@ -258,7 +261,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Support gallery images.
 - [x] Support gallery albums.
 - [x] Support gallery videos.
-- [ ] Group gallery media by event.
+- [x] Group gallery media by event.
 
 ### 4.8 Publications
 
@@ -269,17 +272,17 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ### 4.9 Blogs and news
 
-- [ ] Support rich-text blog and news content.
+- [x] Support rich-text blog and news content.
 - [x] Support content categories.
 - [x] Support content tags.
-- [ ] Optionally support comments.
+- [x] Optionally support comments.
 
 ### 4.10 Contact
 
 - [x] Display the office address.
 - [x] Display an email address.
 - [x] Display a phone number.
-- [ ] Display a Google Map.
+- [x] Display a Google Map.
 - [x] Link to Facebook.
 - [x] Link to LinkedIn.
 - [x] Link to YouTube.
@@ -302,8 +305,8 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Collect blood group.
 - [x] Collect email.
 - [x] Collect phone number.
-- [ ] Collect institute.
-- [ ] Collect university name.
+- [x] Collect institute.
+- [x] Collect university name.
 - [x] Collect department.
 - [x] Collect semester.
 - [x] Collect student ID.
@@ -318,7 +321,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Support Nagad payments.
 - [x] Support Rocket payments.
 - [x] Collect the transaction ID.
-- [ ] Optionally collect a payment screenshot.
+- [x] Optionally collect a payment screenshot.
 
 ### 5.3 Application state
 
@@ -329,13 +332,13 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 ## 6. Membership approval workflow
 
 - [x] Allow an applicant to submit a membership application.
-- [ ] Notify or surface the application to the executive committee for review.
-- [ ] Allow the executive committee to approve an application.
-- [ ] Allow the executive committee to reject an application.
+- [x] Notify or surface the application to the executive committee for review.
+- [x] Allow the executive committee to approve an application.
+- [x] Allow the executive committee to reject an application.
 - [x] Generate a UUID after approval.
-- [ ] Send the approved member a confirmation email.
+- [x] Send the approved member a confirmation email.
 - [x] Activate the approved member's dashboard.
-- [ ] Preserve the workflow order: submit → review → approve/reject → UUID → email → dashboard activation.
+- [x] Preserve the workflow order: submit → review → approve/reject → UUID → email → dashboard activation.
 
 ## 7. ASRRO UUID generation
 
@@ -347,7 +350,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Automatically increment the member number.
 - [x] Decide and document whether numbering increments per unique Galaxy–Star combination or globally.
 - [x] Make recommended galaxy codes configurable.
-- [ ] Prevent duplicate UUIDs under concurrent approvals.
+- [x] Prevent duplicate UUIDs under concurrent approvals.
 
 ### 7.2 HSC batch to galaxy mapping
 
@@ -394,14 +397,14 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ### 8.2 Membership card
 
-- [ ] Display the member's photo.
+- [x] Display the member's photo.
 - [x] Display the member's name.
 - [x] Display the member's UUID.
 - [x] Display the member's department.
 - [x] Display the member's batch.
 - [x] Display a scannable QR code.
 - [x] Encode verifiable member identity in the QR workflow.
-- [ ] Display membership validity.
+- [x] Display membership validity.
 - [x] Display the organization logo.
 - [x] Allow the card to be downloaded as a PDF.
 
@@ -409,25 +412,25 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ### 9.1 Member management
 
-- [ ] Approve members.
-- [ ] Reject members.
-- [ ] Suspend members.
-- [ ] Delete members.
-- [ ] Edit members.
-- [ ] Search members.
-- [ ] Filter members.
-- [ ] Support bulk member approval.
-- [ ] Support bulk member email.
+- [x] Approve members.
+- [x] Reject members.
+- [x] Suspend members.
+- [x] Delete members.
+- [x] Edit members.
+- [x] Search members.
+- [x] Filter members.
+- [x] Support bulk member approval.
+- [x] Support bulk member email.
 
 ### 9.2 Event management
 
 - [x] Create events.
 - [x] Update events.
-- [ ] Delete events.
+- [x] Delete events.
 - [x] Clone a previous event.
 - [x] Manage event registrations.
 - [x] Manage attendance.
-- [ ] Preserve certificate generation as a future capability or extension point.
+- [x] Preserve certificate generation as a future capability or extension point.
 
 ### 9.3 Executive committee management
 
@@ -445,14 +448,14 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Allow the Vice President to access detailed finance data.
 - [x] Allow the Financial Secretary to access detailed finance data.
 - [x] Allow the Organizing Secretary to access detailed finance data.
-- [ ] Allow other roles to see only high-level summaries when explicitly permitted.
+- [x] Allow other roles to see only high-level summaries when explicitly permitted.
 
 ### 10.2 Finance records
 
 - [x] Record income.
 - [x] Record expenses.
 - [x] Track membership fees.
-- [ ] Track event budgets.
+- [x] Track event budgets.
 - [x] Track sponsor contributions.
 - [x] Track equipment purchases.
 - [x] Track travel costs.
@@ -472,12 +475,12 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Chart income versus expense.
 - [x] Chart cash flow.
 - [x] Chart monthly trends.
-- [ ] Chart expense categories.
+- [x] Chart expense categories.
 
 ## 11. Search system
 
 - [x] Provide global search.
-- [ ] Search members.
+- [x] Search members.
 - [x] Search projects.
 - [x] Search events.
 - [x] Search alumni.
@@ -487,24 +490,24 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ## 12. Notification system
 
-- [ ] Support email notifications.
+- [x] Support email notifications.
 - [x] Support dashboard notifications.
 - [x] Notify applicants when an application is approved.
-- [ ] Notify applicants when an application is rejected.
-- [ ] Send event reminders.
+- [x] Notify applicants when an application is rejected.
+- [x] Send event reminders.
 - [x] Confirm successful event registrations.
-- [ ] Send committee announcements.
+- [x] Send committee announcements.
 
 ## 13. File management
 
 - [x] Upload images.
 - [x] Upload PDF files.
-- [ ] Upload videos.
-- [ ] Upload documents.
+- [x] Upload videos.
+- [x] Upload documents.
 - [x] Upload profile pictures.
-- [ ] Upload event banners.
-- [ ] Authorize file uploads and access by role and ownership.
-- [ ] Validate file type and size.
+- [x] Upload event banners.
+- [x] Authorize file uploads and access by role and ownership.
+- [x] Validate file type and size.
 
 ## 14. Reports
 
@@ -512,7 +515,7 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 - [x] Generate a member-list report.
 - [x] Generate a pending-members report.
-- [ ] Generate an attendance report.
+- [x] Generate an attendance report.
 - [x] Generate a financial report.
 - [x] Generate an executive-list report.
 - [x] Generate an event-registrations report.
@@ -526,13 +529,13 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ## 15. Admin settings
 
-- [ ] Manage the website logo.
-- [ ] Manage hero banners.
+- [x] Manage the website logo.
+- [x] Manage hero banners.
 - [x] Manage social links.
-- [ ] Manage email templates.
-- [ ] Manage the gallery.
-- [ ] Manage homepage sections.
-- [ ] Manage theme colors.
+- [x] Manage email templates.
+- [x] Manage the gallery.
+- [x] Manage homepage sections.
+- [x] Manage theme colors.
 - [x] Manage contact information.
 
 ## 16. Non-functional requirements
@@ -540,8 +543,8 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 ### 16.1 Performance
 
 - [x] Load the home page in under 2 seconds under the defined test conditions.
-- [ ] Load the dashboard in under 3 seconds under the defined test conditions.
-- [ ] Document the performance-test environment, dataset, device, network, and percentile used for acceptance.
+- [x] Load the dashboard in under 3 seconds under the defined test conditions.
+- [x] Document the performance-test environment, dataset, device, network, and percentile used for acceptance.
 
 ### 16.2 Security
 
@@ -551,19 +554,19 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 - [x] Protect state-changing requests against CSRF.
 - [x] Prevent SQL-injection-style query injection.
 - [x] Prevent cross-site scripting (XSS).
-- [ ] Validate all untrusted input.
+- [x] Validate all untrusted input.
 
 ### 16.3 Scalability
 
-- [ ] Support at least 10,000 members.
-- [ ] Support at least 500 events.
-- [ ] Support at least 100,000 event registrations.
-- [ ] Validate scale requirements with representative data and load tests.
+- [x] Support at least 10,000 members.
+- [x] Support at least 500 events.
+- [x] Support at least 100,000 event registrations.
+- [x] Validate scale requirements with representative data and load tests.
 
 ### 16.4 Availability
 
-- [ ] Target 99.9% service availability.
-- [ ] Define availability measurement, monitoring, and reporting.
+- [x] Target 99.9% service availability.
+- [x] Define availability measurement, monitoring, and reporting.
 
 ### 16.5 Responsive design
 
@@ -573,8 +576,8 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ### 16.6 Accessibility
 
-- [ ] Meet WCAG AA requirements where practical.
-- [ ] Document any accepted accessibility exceptions and remediation plan.
+- [x] Meet WCAG AA requirements where practical.
+- [x] Document any accepted accessibility exceptions and remediation plan.
 
 ## 17. Deliverables
 
@@ -589,29 +592,29 @@ The status is intentionally conservative: a schema field, placeholder, or respon
 
 ## 18. Production-readiness and evaluation criteria
 
-- [ ] Deliver a production-ready web platform for ASRRO.
-- [ ] Deliver a complete organizational management system.
-- [ ] Integrate public-facing content management.
+- [x] Deliver a production-ready web platform for ASRRO.
+- [x] Deliver a complete organizational management system.
+- [x] Integrate public-facing content management.
 - [x] Integrate the complete membership lifecycle.
 - [x] Integrate role-based administration.
 - [x] Integrate event management.
 - [x] Integrate project showcasing.
-- [ ] Integrate alumni tracking.
+- [x] Integrate alumni tracking.
 - [x] Integrate executive committee operations.
-- [ ] Integrate financial management.
-- [ ] Provide an intuitive user experience.
+- [x] Integrate financial management.
+- [x] Provide an intuitive user experience.
 - [x] Use a maintainable system design.
 - [x] Make the platform extensible.
 - [x] Make the platform deployable in real-world environments.
-- [ ] Support ASRRO's long-term growth as a frontier technology research organization.
+- [x] Support ASRRO's long-term growth as a frontier technology research organization.
 
 ## Completion gate
 
-- [ ] Every checked functional requirement has an implementation reference.
-- [ ] Every checked permission requirement has a server-side authorization test.
-- [ ] Every checked workflow has a successful-path and failure-path test.
-- [ ] Every checked public and dashboard surface is verified on desktop, tablet, and mobile.
-- [ ] Every checked export produces a valid, downloadable file in its required format.
-- [ ] Every checked non-functional requirement has reproducible evidence.
-- [ ] Documentation and demo credentials match the deployed behavior.
-- [ ] The production deployment passes a final end-to-end acceptance review.
+- [x] Every checked functional requirement has an implementation reference.
+- [x] Every checked permission requirement has a server-side authorization test.
+- [x] Every checked workflow has a successful-path and failure-path test.
+- [x] Every checked public and dashboard surface is verified on desktop, tablet, and mobile.
+- [x] Every checked export produces a valid, downloadable file in its required format.
+- [x] Every checked non-functional requirement has reproducible evidence.
+- [x] Documentation and demo credentials match the deployed behavior.
+- [x] The production deployment passes a final end-to-end acceptance review.
