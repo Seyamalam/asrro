@@ -83,6 +83,7 @@ export default defineSchema({
       "eventId",
       "guestEmailNormalized",
     ])
+    .index("by_eventId_and_transactionId", ["eventId", "transactionId"])
     .index("by_memberId_and_registeredAt", ["memberId", "registeredAt"]),
 
   committeeTerms: defineTable(committeeTermFields).index(
@@ -163,7 +164,11 @@ export default defineSchema({
       "projectId",
       "status",
       "publicationDate",
-    ]),
+    ])
+    .searchIndex("search_public_publications", {
+      searchField: "title",
+      filterFields: ["status", "type"],
+    }),
 
   blogs: defineTable(blogFields)
     .index("by_slug", ["slug"])
@@ -194,6 +199,12 @@ export default defineSchema({
     .index("by_memberId_and_createdAt", ["memberId", "createdAt"])
     .index("by_memberId_and_read_and_createdAt", [
       "memberId",
+      "read",
+      "createdAt",
+    ])
+    .index("by_identityToken_and_createdAt", ["identityToken", "createdAt"])
+    .index("by_identityToken_and_read_and_createdAt", [
+      "identityToken",
       "read",
       "createdAt",
     ]),

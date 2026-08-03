@@ -97,6 +97,8 @@ export const applicationFields = {
   ),
   transactionId: v.string(),
   paymentAssetId: v.optional(v.id("assets")),
+  amountPaid: v.optional(v.number()),
+  currency: v.optional(v.string()),
   status: applicationStatus,
   submittedAt: v.number(),
   reviewedAt: v.optional(v.number()),
@@ -117,6 +119,8 @@ export const memberFields = {
   hscBatch: v.string(),
   studentId: v.string(),
   institute: v.string(),
+  dateOfBirth: v.optional(v.string()),
+  bloodGroup: v.optional(v.string()),
   profileAssetId: v.optional(v.id("assets")),
   address: v.optional(v.string()),
   emergencyContact: v.optional(v.string()),
@@ -169,6 +173,9 @@ export const registrationFields = {
   guestEmailNormalized: v.optional(v.string()),
   guestPhone: v.optional(v.string()),
   institution: v.optional(v.string()),
+  institutionDivision: v.optional(v.string()),
+  studentId: v.optional(v.string()),
+  eligibilityConfirmed: v.optional(v.boolean()),
   registrationCode: v.string(),
   cancellationTokenHash: v.string(),
   status: registrationStatus,
@@ -306,7 +313,9 @@ export const contactMessageFields = {
 }
 
 export const notificationFields = {
-  memberId: v.id("members"),
+  memberId: v.optional(v.id("members")),
+  identityToken: v.optional(v.string()),
+  applicationId: v.optional(v.id("membershipApplications")),
   kind: v.string(),
   title: v.string(),
   body: v.string(),

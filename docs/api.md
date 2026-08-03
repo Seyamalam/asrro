@@ -1,4 +1,4 @@
-# Convex API guide
+# Application API guide
 
 Convex functions are the application's typed API. Generated references in `convex/_generated/api` are consumed with `useQuery`, `useMutation`, or server-side Convex clients.
 
@@ -11,7 +11,6 @@ Public pages read bounded or paginated lists for events, projects, alumni, commi
 - Submit a membership application.
 - Register or cancel an eligible event registration before its deadline.
 - Send a contact message.
-- Add an optional blog comment when comments are enabled.
 
 Every write validates its complete argument shape. Membership and event workflows derive authority from the authenticated identity rather than accepting an arbitrary user ID.
 
@@ -22,6 +21,8 @@ Authenticated members can read their own profile, membership card data, event hi
 ## Administrative operations
 
 Executive operations include application approval/rejection, member status updates, event and content management, attendance, committee maintenance, finance entries, and report datasets. Functions enforce role permissions server-side; hiding controls in the browser is only a usability layer.
+
+Account creation and password changes are handled by the authentication routes. Outbound email delivery is deliberately disabled until an organization-owned mail provider and credentials are configured; in-app notifications remain available.
 
 ## Error handling
 

@@ -120,6 +120,36 @@ export const getPublicBySlug = query({
   },
 })
 
+export const listAdmin = query({
+  args: {},
+  returns: v.array(projectDoc),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [drafts, published, archived] = await Promise.all([
+      ctx.db
+        .query("projects")
+        .withIndex("by_status_and_publishedAt", (q) => q.eq("status", "draft"))
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("projects")
+        .withIndex("by_status_and_publishedAt", (q) =>
+          q.eq("status", "published")
+        )
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("projects")
+        .withIndex("by_status_and_publishedAt", (q) =>
+          q.eq("status", "archived")
+        )
+        .order("desc")
+        .take(100),
+    ])
+    return [...drafts, ...published, ...archived]
+  },
+})
+
 export const upsert = mutation({
   args: {
     projectId: v.optional(v.id("projects")),

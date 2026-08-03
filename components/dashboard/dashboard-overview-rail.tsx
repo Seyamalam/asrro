@@ -2,11 +2,6 @@ import { ArrowRight, Link2, Satellite } from "lucide-react"
 import Link from "next/link"
 
 import { ProgressBar } from "@/components/dashboard/dashboard-kit"
-import { projects } from "@/data/dashboard-data"
-
-const activeProjects = projects.filter(
-  (project) => project.status !== "Completed"
-)
 const membershipDateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "short",
@@ -35,11 +30,21 @@ export function DashboardOverviewRail({
   accountName,
   member,
   profileCompletion,
+  projects,
 }: {
   accountName: string
   member: { membershipValidUntil?: number; uuid: string } | null
   profileCompletion: number
+  projects: Array<{
+    _id: string
+    title: string
+    domain: string
+    projectState: string
+  }>
 }) {
+  const activeProjects = projects.filter(
+    (project) => project.projectState !== "completed"
+  )
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-[#081321]">
@@ -115,14 +120,14 @@ export function DashboardOverviewRail({
         </div>
         <div className="mt-4 space-y-4">
           {activeProjects.slice(0, 3).map((project) => (
-            <div key={project.title} className="flex gap-3">
+            <div key={project._id} className="flex gap-3">
               <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-cyan-500 shadow-[0_0_0_4px_rgba(6,182,212,.10)]" />
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
                   {project.title}
                 </p>
                 <p className="mt-1 font-mono text-[9px] tracking-wide text-slate-400 uppercase">
-                  {project.domain} / {project.status} / {project.progress}%
+                  {project.domain} / {project.projectState}
                 </p>
               </div>
             </div>

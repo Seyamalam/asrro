@@ -23,6 +23,48 @@ export const generateUploadUrl = mutation({
   },
 })
 
+export const generateApplicationUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => await ctx.storage.generateUploadUrl(),
+})
+
+export const registerApplicationUpload = mutation({
+  args: {
+    storageId: v.id("_storage"),
+    kind: v.union(v.literal("image"), v.literal("pdf")),
+    fileName: v.string(),
+  },
+  returns: v.id("assets"),
+  handler: async (ctx, args) => {
+    const stored = await ctx.db.system.get("_storage", args.storageId)
+    if (!stored) throw new ConvexError("Uploaded file not found")
+    if (stored.size > 5 * 1024 * 1024) {
+      throw new ConvexError("Uploads must be 5 MB or smaller")
+    }
+    const isImage = stored.contentType?.startsWith("image/") ?? false
+    const isPdf = stored.contentType === "application/pdf"
+    if (
+      (args.kind === "image" && !isImage) ||
+      (args.kind === "pdf" && !isPdf)
+    ) {
+      throw new ConvexError("Uploaded file type does not match the form")
+    }
+    const existing = await ctx.db
+      .query("assets")
+      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
+      .unique()
+    if (existing) return existing._id
+    return await ctx.db.insert("assets", {
+      storageId: args.storageId,
+      kind: args.kind,
+      fileName: cleanText(args.fileName, "File name", 200),
+      visibility: "private",
+      createdAt: Date.now(),
+    })
+  },
+})
+
 export const registerUpload = mutation({
   args: {
     storageId: v.id("_storage"),

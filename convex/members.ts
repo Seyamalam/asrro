@@ -35,7 +35,10 @@ const memberSelf = v.object({
   hscBatch: v.string(),
   studentId: v.string(),
   institute: v.string(),
+  dateOfBirth: v.optional(v.string()),
+  bloodGroup: v.optional(v.string()),
   profileAssetId: v.optional(v.id("assets")),
+  profileImageUrl: v.optional(v.string()),
   address: v.optional(v.string()),
   emergencyContact: v.optional(v.string()),
   status: v.union(
@@ -54,7 +57,51 @@ const memberSelf = v.object({
   membershipValidUntil: v.optional(v.number()),
 })
 
-function presentMember(member: Doc<"members">) {
+const membershipCredential = v.object({
+  uuid: v.string(),
+  fullName: v.string(),
+  department: v.string(),
+  hscBatch: v.string(),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("active"),
+    v.literal("suspended"),
+    v.literal("alumni"),
+    v.literal("rejected")
+  ),
+  joinedAt: v.number(),
+  membershipValidUntil: v.optional(v.number()),
+  profileImageUrl: v.optional(v.string()),
+  galaxyName: v.optional(v.string()),
+  starName: v.optional(v.string()),
+  receipt: v.optional(
+    v.object({
+      id: v.string(),
+      applicationCode: v.string(),
+      amount: v.number(),
+      currency: v.string(),
+      paidAt: v.number(),
+      paymentMethod: v.union(
+        v.literal("bkash"),
+        v.literal("nagad"),
+        v.literal("rocket")
+      ),
+      transactionId: v.string(),
+      paymentProofUrl: v.optional(v.string()),
+    })
+  ),
+})
+
+async function presentMember(
+  ctx: Parameters<typeof currentMember>[0],
+  member: Doc<"members">
+) {
+  const profileAsset = member.profileAssetId
+    ? await ctx.db.get("assets", member.profileAssetId)
+    : null
+  const profileImageUrl = profileAsset
+    ? ((await ctx.storage.getUrl(profileAsset.storageId)) ?? undefined)
+    : undefined
   return {
     _id: member._id,
     uuid: member.uuid,
@@ -65,7 +112,10 @@ function presentMember(member: Doc<"members">) {
     hscBatch: member.hscBatch,
     studentId: member.studentId,
     institute: member.institute,
+    dateOfBirth: member.dateOfBirth,
+    bloodGroup: member.bloodGroup,
     profileAssetId: member.profileAssetId,
+    profileImageUrl,
     address: member.address,
     emergencyContact: member.emergencyContact,
     status: member.status,
@@ -80,7 +130,109 @@ export const me = query({
   returns: v.union(memberSelf, v.null()),
   handler: async (ctx) => {
     const member = await currentMember(ctx)
-    return member ? presentMember(member) : null
+    return member ? await presentMember(ctx, member) : null
+  },
+})
+
+export const myMembership = query({
+  args: {},
+  returns: membershipCredential,
+  handler: async (ctx) => {
+    const member = await requireMember(ctx)
+    const mapping = await ctx.db
+      .query("uuidMappings")
+      .withIndex("by_hscBatch_and_department", (q) =>
+        q
+          .eq("hscBatch", member.hscBatch)
+          .eq("department", member.department.toLowerCase())
+      )
+      .unique()
+    const application = member.applicationId
+      ? await ctx.db.get("membershipApplications", member.applicationId)
+      : null
+    const paymentAsset = application?.paymentAssetId
+      ? await ctx.db.get("assets", application.paymentAssetId)
+      : null
+    const paymentProofUrl = paymentAsset
+      ? ((await ctx.storage.getUrl(paymentAsset.storageId)) ?? undefined)
+      : undefined
+    const profileAsset = member.profileAssetId
+      ? await ctx.db.get("assets", member.profileAssetId)
+      : null
+    const profileImageUrl = profileAsset
+      ? ((await ctx.storage.getUrl(profileAsset.storageId)) ?? undefined)
+      : undefined
+
+    return {
+      uuid: member.uuid,
+      fullName: member.fullName,
+      department: member.department,
+      hscBatch: member.hscBatch,
+      status: member.status,
+      joinedAt: member.joinedAt,
+      membershipValidUntil: member.membershipValidUntil,
+      profileImageUrl,
+      galaxyName: mapping?.galaxyName,
+      starName: mapping?.starName,
+      receipt:
+        application &&
+        application.amountPaid !== undefined &&
+        application.currency
+          ? {
+              id: `RCPT-${application.applicationCode}`,
+              applicationCode: application.applicationCode,
+              amount: application.amountPaid,
+              currency: application.currency,
+              paidAt: application.submittedAt,
+              paymentMethod: application.paymentMethod,
+              transactionId: application.transactionId,
+              paymentProofUrl,
+            }
+          : undefined,
+    }
+  },
+})
+
+export const verifyMembership = query({
+  args: { uuid: v.string() },
+  returns: v.union(
+    v.object({
+      uuid: v.string(),
+      fullName: v.string(),
+      department: v.string(),
+      hscBatch: v.string(),
+      status: v.union(
+        v.literal("active"),
+        v.literal("suspended"),
+        v.literal("alumni")
+      ),
+      joinedAt: v.number(),
+      membershipValidUntil: v.optional(v.number()),
+    }),
+    v.null()
+  ),
+  handler: async (ctx, args) => {
+    const member = await ctx.db
+      .query("members")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid.trim().toUpperCase()))
+      .unique()
+    if (
+      !member ||
+      (member.status !== "active" &&
+        member.status !== "suspended" &&
+        member.status !== "alumni")
+    ) {
+      return null
+    }
+    return {
+      uuid: member.uuid,
+      fullName: member.fullName,
+      department: member.department,
+      hscBatch: member.hscBatch,
+      status: member.status,
+      joinedAt: member.joinedAt,
+      membershipValidUntil: member.membershipValidUntil,
+    }
   },
 })
 
@@ -136,7 +288,7 @@ export const updateMyProfile = mutation({
     await ctx.db.patch("members", member._id, patch)
     const updated = await ctx.db.get("members", member._id)
     if (!updated) throw new ConvexError("Member not found after update")
-    return presentMember(updated)
+    return await presentMember(ctx, updated)
   },
 })
 

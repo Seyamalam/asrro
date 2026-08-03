@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useQuery } from "convex/react"
+import type { FunctionReturnType } from "convex/server"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -51,9 +52,11 @@ import {
 } from "@/components/motion/command-palette"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { api } from "@/convex/_generated/api"
-import type { PortalRole } from "@/data/dashboard-data"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
+
+type MemberSelf = Exclude<FunctionReturnType<typeof api.members.me>, null>
+type PortalRole = "member" | "executive" | "admin"
 
 type NavItem = {
   label: string
@@ -385,21 +388,49 @@ function getInitials(name: string) {
   return initials || "A"
 }
 
-export function PortalShell({ children }: { children: ReactNode }) {
+function minimumRoleForPath(pathname: string): PortalRole {
+  if (pathname.startsWith("/dashboard/settings")) return "admin"
+  if (
+    [
+      "/dashboard/members",
+      "/dashboard/event-management",
+      "/dashboard/committee",
+      "/dashboard/finance",
+      "/dashboard/projects",
+      "/dashboard/content",
+      "/dashboard/reports",
+    ].some((prefix) => pathname.startsWith(prefix))
+  ) {
+    return "executive"
+  }
+  return "member"
+}
+
+export function PortalShell({
+  children,
+  initialMember,
+}: {
+  children: ReactNode
+  initialMember: MemberSelf
+}) {
   const router = useRouter()
-  const member = useQuery(api.members.me)
+  const pathname = usePathname()
+  const liveMember = useQuery(api.members.me)
+  const member = liveMember === undefined ? initialMember : liveMember
+  const displayMember = member ?? initialMember
   const session = authClient.useSession()
   const [signingOut, setSigningOut] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const role: PortalRole =
-    member?.systemRole === "super_admin"
+    displayMember.systemRole === "super_admin"
       ? "admin"
-      : member?.systemRole === "executive"
+      : displayMember.systemRole === "executive"
         ? "executive"
         : "member"
   const accountName =
-    member?.fullName || session.data?.user.name || "ASRRO member"
-  const accountEmail = member?.email || session.data?.user.email || "Member"
+    displayMember.fullName || session.data?.user.name || "ASRRO member"
+  const accountEmail =
+    displayMember.email || session.data?.user.email || "Member"
   const initials = getInitials(accountName)
   const visibleNav = useMemo(
     () =>
@@ -421,6 +452,9 @@ export function PortalShell({ children }: { children: ReactNode }) {
       })),
     [router, visibleNav]
   )
+  const permitted =
+    member?.status === "active" &&
+    roleRank[role] >= roleRank[minimumRoleForPath(pathname)]
 
   const signOut = async () => {
     setSigningOut(true)
@@ -479,7 +513,26 @@ export function PortalShell({ children }: { children: ReactNode }) {
             <div className="absolute -top-52 -right-20 size-[27rem] rounded-full border border-blue-500/10" />
           </div>
           <div className="relative mx-auto w-full max-w-[1580px] px-3 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-            {children}
+            {permitted ? (
+              children
+            ) : (
+              <div className="mx-auto max-w-xl rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm dark:border-amber-400/20 dark:bg-white/5">
+                <ShieldCheck className="mx-auto size-8 text-amber-600" />
+                <h1 className="mt-4 text-xl font-semibold">
+                  Access restricted
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Your active membership does not include the role required for
+                  this operations area.
+                </p>
+                <Link
+                  href="/dashboard"
+                  className="mt-5 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white dark:bg-cyan-300 dark:text-slate-950"
+                >
+                  Return to overview
+                </Link>
+              </div>
+            )}
           </div>
         </div>
         <button

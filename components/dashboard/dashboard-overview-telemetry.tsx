@@ -5,50 +5,55 @@ import {
   UsersRound,
 } from "lucide-react"
 
-import { events, projects } from "@/data/dashboard-data"
-
-const upcomingEvents = events.filter((event) => event.status === "Upcoming")
-const activeProjects = projects.filter(
-  (project) => project.status !== "Completed"
-)
-
-const telemetry = [
-  {
-    label: "Upcoming windows",
-    value: upcomingEvents.length.toString().padStart(2, "0"),
-    detail: "Published events",
-    icon: CalendarDays,
-    tone: "text-blue-600 dark:text-blue-300",
-  },
-  {
-    label: "Registered seats",
-    value: upcomingEvents
-      .reduce((total, event) => total + event.registered, 0)
-      .toLocaleString("en-US"),
-    detail: "Across open events",
-    icon: UsersRound,
-    tone: "text-cyan-600 dark:text-cyan-300",
-  },
-  {
-    label: "Capacity remaining",
-    value: upcomingEvents
-      .reduce((total, event) => total + event.capacity - event.registered, 0)
-      .toString()
-      .padStart(3, "0"),
-    detail: "Available seats",
-    icon: CircleDotDashed,
-    tone: "text-orange-600 dark:text-orange-300",
-  },
-  {
-    label: "Active programs",
-    value: activeProjects.length.toString().padStart(2, "0"),
-    detail: "Research and build",
-    icon: FolderKanban,
-    tone: "text-violet-600 dark:text-violet-300",
-  },
-]
-
-export function DashboardOverviewTelemetry() {
+export function DashboardOverviewTelemetry({
+  events,
+  projects,
+}: {
+  events: Array<{ capacity: number; activeRegistrationCount: number }>
+  projects: Array<{ projectState: string }>
+}) {
+  const activeProjects = projects.filter(
+    (project) => project.projectState !== "completed"
+  )
+  const telemetry = [
+    {
+      label: "Upcoming windows",
+      value: events.length.toString().padStart(2, "0"),
+      detail: "Published events",
+      icon: CalendarDays,
+      tone: "text-blue-600 dark:text-blue-300",
+    },
+    {
+      label: "Registered seats",
+      value: events
+        .reduce((total, event) => total + event.activeRegistrationCount, 0)
+        .toLocaleString("en-US"),
+      detail: "Across open events",
+      icon: UsersRound,
+      tone: "text-cyan-600 dark:text-cyan-300",
+    },
+    {
+      label: "Capacity remaining",
+      value: events
+        .reduce(
+          (total, event) =>
+            total + event.capacity - event.activeRegistrationCount,
+          0
+        )
+        .toString()
+        .padStart(3, "0"),
+      detail: "Available seats",
+      icon: CircleDotDashed,
+      tone: "text-orange-600 dark:text-orange-300",
+    },
+    {
+      label: "Active programs",
+      value: activeProjects.length.toString().padStart(2, "0"),
+      detail: "Research and build",
+      icon: FolderKanban,
+      tone: "text-violet-600 dark:text-violet-300",
+    },
+  ]
   return (
     <section
       aria-label="Organization telemetry"

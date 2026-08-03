@@ -5,7 +5,7 @@ import {
 import { ConvexError, v } from "convex/values"
 import { mutation, query, type MutationCtx } from "./_generated/server"
 import type { Doc } from "./_generated/dataModel"
-import { requireFinanceAccess, writeAudit } from "./_lib/auth"
+import { currentMember, requireFinanceAccess, writeAudit } from "./_lib/auth"
 import {
   assertFiniteNonNegative,
   cleanText,
@@ -27,6 +27,50 @@ const summaryDoc = v.object({
   income: v.number(),
   expense: v.number(),
   updatedAt: v.number(),
+})
+
+const financePositions = new Set([
+  "president",
+  "vice_president",
+  "financial_secretary",
+  "organizing_secretary",
+])
+
+export const access = query({
+  args: {},
+  returns: v.object({ allowed: v.boolean(), reason: v.string() }),
+  handler: async (ctx) => {
+    const member = await currentMember(ctx)
+    if (!member || member.status !== "active") {
+      return { allowed: false, reason: "Active membership is required." }
+    }
+    if (member.systemRole === "super_admin") {
+      return { allowed: true, reason: "Super administrator access." }
+    }
+    if (member.systemRole !== "executive") {
+      return { allowed: false, reason: "Finance access is restricted." }
+    }
+    const currentTerm = await ctx.db
+      .query("committeeTerms")
+      .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
+      .order("desc")
+      .first()
+    if (!currentTerm) {
+      return { allowed: false, reason: "No current committee is configured." }
+    }
+    const appointment = await ctx.db
+      .query("committeeMembers")
+      .withIndex("by_memberId_and_termId", (q) =>
+        q.eq("memberId", member._id).eq("termId", currentTerm._id)
+      )
+      .unique()
+    return appointment && financePositions.has(appointment.positionKey)
+      ? { allowed: true, reason: `${appointment.position} access.` }
+      : {
+          allowed: false,
+          reason: "Your committee position does not include detailed finance.",
+        }
+  },
 })
 
 async function applySummary(

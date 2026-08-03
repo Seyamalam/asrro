@@ -1,36 +1,33 @@
 "use client"
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { usePaginatedQuery } from "convex/react"
 import { ArrowUpRight, Search } from "lucide-react"
-import { projects } from "@/content/public-data"
+import { api } from "@/convex/_generated/api"
 import { SignalVisual } from "@/components/shared/signal-visual"
 
-const categories = [
-  "All",
-  "Robotics",
-  "AI",
-  "Space",
-  "Embedded Systems",
-  "IoT",
-  "Electronics",
-]
-const statuses = ["All", "Ongoing", "Completed", "Research", "Competition"]
-
 export function ProjectExplorer() {
-  const [category, setCategory] = useState("All")
-  const [status, setStatus] = useState("All")
+  const [domain, setDomain] = useState("All")
+  const [state, setState] = useState("All")
   const [query, setQuery] = useState("")
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.projects.listPublic,
+    {},
+    { initialNumItems: 60 }
+  )
+  const domains = ["All", ...new Set(results.map((item) => item.domain))]
+  const states = ["All", ...new Set(results.map((item) => item.projectState))]
   const filtered = useMemo(
     () =>
-      projects.filter(
+      results.filter(
         (project) =>
-          (category === "All" || project.category === category) &&
-          (status === "All" || project.status === status) &&
-          `${project.title} ${project.summary} ${project.stack.join(" ")}`
+          (domain === "All" || project.domain === domain) &&
+          (state === "All" || project.projectState === state) &&
+          `${project.title} ${project.summary} ${project.technologyStack.join(" ")}`
             .toLowerCase()
             .includes(query.toLowerCase())
       ),
-    [category, status, query]
+    [results, domain, state, query]
   )
   return (
     <div>
@@ -46,16 +43,16 @@ export function ProjectExplorer() {
           />
         </label>
         <FilterGroup
-          label="Discipline"
-          options={categories}
-          value={category}
-          onChange={setCategory}
+          label="Domain"
+          options={domains}
+          value={domain}
+          onChange={setDomain}
         />
         <FilterGroup
-          label="Status"
-          options={statuses}
-          value={status}
-          onChange={setStatus}
+          label="Project state"
+          options={states}
+          value={state}
+          onChange={setState}
         />
       </div>
       <p className="mb-5 font-mono text-[10px] tracking-[.18em] text-[#587084] uppercase dark:text-[#8296ad]">
@@ -76,9 +73,9 @@ export function ProjectExplorer() {
               />
               <div className="p-6">
                 <div className="flex items-center justify-between font-mono text-[9px] tracking-[.17em] text-[#587084] uppercase dark:text-[#8296ad]">
-                  <span>{project.category}</span>
+                  <span>{project.domain}</span>
                   <span className="text-[#a95000] dark:text-[#ffb84d]">
-                    {project.status}
+                    {project.projectState.replaceAll("_", " ")}
                   </span>
                 </div>
                 <h2 className="mt-5 flex items-start justify-between gap-4 text-2xl font-semibold tracking-[-.035em] group-hover:text-[#007d89] dark:group-hover:text-[#65f2f1]">
@@ -89,7 +86,7 @@ export function ProjectExplorer() {
                   {project.summary}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  {project.stack.slice(0, 3).map((tag) => (
+                  {project.technologyStack.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
                       className="border border-[#2359d4]/15 bg-[#eef3f8] px-2.5 py-1 font-mono text-[9px] text-[#4b6175] dark:border-white/10 dark:bg-transparent dark:text-[#8fa7c0]"
@@ -108,6 +105,15 @@ export function ProjectExplorer() {
           clear the search.
         </div>
       )}
+      {status === "CanLoadMore" ? (
+        <button
+          type="button"
+          onClick={() => loadMore(60)}
+          className="mx-auto mt-8 block border border-[#2359d4]/20 px-5 py-2.5 text-sm font-semibold text-[#007d89] dark:border-white/15 dark:text-[#65f2f1]"
+        >
+          Load more projects
+        </button>
+      ) : null}
     </div>
   )
 }

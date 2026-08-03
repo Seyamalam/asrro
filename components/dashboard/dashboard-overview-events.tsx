@@ -2,11 +2,32 @@ import { Clock3, MapPin } from "lucide-react"
 import Link from "next/link"
 
 import { ProgressBar, StatusPill } from "@/components/dashboard/dashboard-kit"
-import { events } from "@/data/dashboard-data"
+type OverviewEvent = {
+  _id: string
+  name: string
+  scope: "intra_cuet" | "divisional" | "national"
+  startsAt: number
+  venue: string
+  capacity: number
+  activeRegistrationCount: number
+}
 
-const upcomingEvents = events.filter((event) => event.status === "Upcoming")
+const dateFormat = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "Asia/Dhaka",
+})
+const timeFormat = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Dhaka",
+})
 
-export function DashboardOverviewEvents() {
+export function DashboardOverviewEvents({
+  events,
+}: {
+  events: OverviewEvent[]
+}) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#081321]">
       <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6 dark:border-white/10">
@@ -26,33 +47,35 @@ export function DashboardOverviewEvents() {
         </Link>
       </div>
       <div className="divide-y divide-slate-200 dark:divide-white/10">
-        {upcomingEvents.map((event) => {
+        {events.slice(0, 4).map((event) => {
           const occupancy = Math.round(
-            (event.registered / event.capacity) * 100
+            (event.activeRegistrationCount / Math.max(event.capacity, 1)) * 100
           )
+          const [day, month] = dateFormat.format(event.startsAt).split(" ", 2)
           return (
             <article
-              key={event.id}
+              key={event._id}
               className="grid gap-4 px-5 py-5 transition hover:bg-slate-50/80 sm:grid-cols-[4.25rem_minmax(0,1fr)_auto] sm:items-center sm:px-6 dark:hover:bg-white/[0.025]"
             >
               <div className="flex h-16 w-16 flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
                 <span className="font-mono text-[9px] font-semibold tracking-[0.16em] text-blue-700 uppercase dark:text-cyan-300">
-                  {event.date.split(" ", 3)[1]}
+                  {month}
                 </span>
                 <span className="font-mono text-xl font-semibold text-slate-950 dark:text-white">
-                  {event.date.split(" ", 3)[0]}
+                  {day}
                 </span>
               </div>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="truncate text-sm font-semibold text-slate-950 dark:text-white">
-                    {event.title}
+                    {event.name}
                   </h3>
                   <StatusPill tone="blue">{event.scope}</StatusPill>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                   <span className="inline-flex items-center gap-1.5">
-                    <Clock3 className="size-3" /> {event.time}
+                    <Clock3 className="size-3" />{" "}
+                    {timeFormat.format(event.startsAt)}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
                     <MapPin className="size-3" /> {event.venue}
@@ -66,12 +89,17 @@ export function DashboardOverviewEvents() {
                 </div>
                 <ProgressBar value={occupancy} className="mt-2" />
                 <p className="mt-2 text-right font-mono text-[9px] text-slate-500 dark:text-slate-400">
-                  {event.registered}/{event.capacity}
+                  {event.activeRegistrationCount}/{event.capacity}
                 </p>
               </div>
             </article>
           )
         })}
+        {events.length === 0 ? (
+          <p className="px-6 py-10 text-center text-xs text-slate-500">
+            No upcoming event windows are published.
+          </p>
+        ) : null}
       </div>
     </section>
   )

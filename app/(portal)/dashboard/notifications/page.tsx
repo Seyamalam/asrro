@@ -1,10 +1,6 @@
-import { Mail, RadioTower } from "lucide-react"
+import { RadioTower } from "lucide-react"
 
-import {
-  ActionButton,
-  PageHeader,
-  Panel,
-} from "@/components/dashboard/dashboard-kit"
+import { PageHeader, Panel } from "@/components/dashboard/dashboard-kit"
 import { NotificationCenter } from "@/components/dashboard/notification-center"
 
 export default function NotificationsPage() {
@@ -14,12 +10,6 @@ export default function NotificationsPage() {
         eyebrow="Signal centre"
         title="Notifications"
         description="Event reminders, committee announcements, and membership updates in one timeline."
-        actions={
-          <ActionButton variant="secondary">
-            <Mail className="size-3.5" />
-            Email preferences
-          </ActionButton>
-        }
       />
       <div className="grid gap-4 lg:grid-cols-[1fr_17rem]">
         <Panel>
@@ -32,8 +22,8 @@ export default function NotificationsPage() {
               Delivery channels
             </h2>
             <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Critical membership and registration messages also go to your
-              verified CUET email.
+              Membership and portal messages are delivered to this live
+              dashboard timeline.
             </p>
             <div className="mt-4 space-y-2 text-[11px]">
               <div className="flex justify-between">
@@ -42,7 +32,9 @@ export default function NotificationsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Email</span>
-                <span className="font-semibold text-emerald-600">On</span>
+                <span className="font-semibold text-slate-500">
+                  Not configured
+                </span>
               </div>
             </div>
           </Panel>

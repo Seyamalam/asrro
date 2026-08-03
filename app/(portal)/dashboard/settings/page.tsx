@@ -6,8 +6,10 @@ import {
   StatusPill,
 } from "@/components/dashboard/dashboard-kit"
 import { SettingsForm } from "@/components/dashboard/settings-form"
+import { requirePortalRole } from "@/lib/admin-auth"
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await requirePortalRole("super_admin")
   return (
     <div className="space-y-6">
       <PageHeader

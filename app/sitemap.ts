@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
+import { fetchQuery } from "convex/nextjs"
 
-import { events, news, projects } from "@/content/public-data"
+import { api } from "@/convex/_generated/api"
 
 const routes = [
   "",
@@ -17,12 +18,21 @@ const routes = [
   "/search",
 ]
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date()
+  const [projectResult, eventResult, newsResult] = await Promise.all([
+    fetchQuery(api.projects.listPublic, {
+      paginationOpts: { cursor: null, numItems: 100 },
+    }),
+    fetchQuery(api.events.listDirectory, { now: Date.now() }),
+    fetchQuery(api.blogs.listPublic, {
+      paginationOpts: { cursor: null, numItems: 100 },
+    }),
+  ])
   const detailRoutes = [
-    ...projects.map((project) => `/projects/${project.slug}`),
-    ...events.map((event) => `/events/${event.slug}`),
-    ...news.map((item) => `/news/${item.slug}`),
+    ...projectResult.page.map((project) => `/projects/${project.slug}`),
+    ...eventResult.map((event) => `/events/${event.slug}`),
+    ...newsResult.page.map((item) => `/news/${item.slug}`),
   ]
 
   return [...routes, ...detailRoutes].map((route, index) => ({

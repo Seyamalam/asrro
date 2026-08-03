@@ -1,164 +1,128 @@
 "use client"
 
-import { CheckCircle2, Globe2, Mail, Palette, Save, Share2 } from "lucide-react"
-import { useState } from "react"
+import { useMutation, useQuery } from "convex/react"
+import { Save } from "lucide-react"
+import { useMemo, useState } from "react"
 
+import { api } from "@/convex/_generated/api"
 import { ActionButton } from "@/components/dashboard/dashboard-kit"
-import { Checkbox } from "@/components/motion/checkbox"
-import { Input } from "@/components/motion/input"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/motion/tabs"
+import { AssetUploader } from "@/components/dashboard/asset-uploader"
+
+const fields = [
+  ["organization.name", "Organization name"],
+  ["contact.email", "Contact email"],
+  ["contact.phone", "Contact phone"],
+  ["contact.address", "Office address"],
+  ["contact.latitude", "Latitude"],
+  ["contact.longitude", "Longitude"],
+  ["social.facebook", "Facebook URL"],
+  ["social.linkedin", "LinkedIn URL"],
+  ["social.youtube", "YouTube URL"],
+  ["social.github", "GitHub URL"],
+  ["social.instagram", "Instagram URL"],
+] as const
 
 export function SettingsForm() {
-  const [saved, setSaved] = useState(false)
-  const [sections, setSections] = useState({
-    events: true,
-    projects: true,
-    publications: true,
-    alumni: true,
-  })
+  const settings = useQuery(api.content.listSettingsAdmin)
+  const saveSetting = useMutation(api.content.upsertSetting)
+  const [edits, setEdits] = useState<Record<string, string>>({})
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle"
+  )
+  const values = useMemo(
+    () => ({
+      ...Object.fromEntries(
+        (settings ?? []).map((item) => [item.key, item.value])
+      ),
+      ...edits,
+    }),
+    [settings, edits]
+  )
+
+  async function save() {
+    setState("saving")
+    try {
+      await Promise.all(
+        [...fields, ["branding.logoAssetId", "Public logo asset"] as const].map(
+          ([key, label]) =>
+            saveSetting({
+              key,
+              value: values[key] ?? "",
+              isPublic: true,
+              description: label,
+            })
+        )
+      )
+      setState("saved")
+    } catch {
+      setState("error")
+    }
+  }
+
   return (
-    <Tabs defaultValue="website" variant="underline">
-      <TabsList className="w-full overflow-x-auto bg-transparent px-4 pt-2">
-        <TabsTrigger value="website">
-          <Globe2 className="mr-2 size-3.5" />
-          Website
-        </TabsTrigger>
-        <TabsTrigger value="branding">
-          <Palette className="mr-2 size-3.5" />
-          Branding
-        </TabsTrigger>
-        <TabsTrigger value="social">
-          <Share2 className="mr-2 size-3.5" />
-          Social
-        </TabsTrigger>
-        <TabsTrigger value="email">
-          <Mail className="mr-2 size-3.5" />
-          Email
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="website" className="p-5">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Input
-            label="Organization name"
-            defaultValue="Andromeda Space and Robotics Research Organization"
-            className="sm:col-span-2"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
+    <div className="p-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        {fields.map(([key, label]) => (
+          <label
+            key={key}
+            className={
+              key === "organization.name" || key === "contact.address"
+                ? "sm:col-span-2"
+                : ""
+            }
+          >
+            <span className="mb-2 block text-sm font-medium">{label}</span>
+            <input
+              value={values[key] ?? ""}
+              onChange={(event) =>
+                setEdits((current) => ({
+                  ...current,
+                  [key]: event.target.value,
+                }))
+              }
+              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm dark:border-white/10 dark:bg-white/5"
+            />
+          </label>
+        ))}
+        <div className="rounded-xl border border-dashed border-slate-300 p-5 sm:col-span-2 dark:border-white/15">
+          <p className="mb-3 text-sm font-semibold">Public logo / hero asset</p>
+          <AssetUploader
+            kind="image"
+            accept="image/*"
+            onUploaded={(assetId) =>
+              setEdits((current) => ({
+                ...current,
+                "branding.logoAssetId": assetId,
+              }))
+            }
           />
-          <Input
-            label="Contact email"
-            defaultValue="hello@asrro.org"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="Contact phone"
-            defaultValue="+880 1700 000 000"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <div className="sm:col-span-2">
-            <p className="mb-3 text-sm font-medium">Homepage sections</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {Object.entries(sections).map(([key, value]) => (
-                <Checkbox
-                  key={key}
-                  checked={value}
-                  onCheckedChange={(checked) =>
-                    setSections((current) => ({ ...current, [key]: checked }))
-                  }
-                  label={key[0].toUpperCase() + key.slice(1)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </TabsContent>
-      <TabsContent value="branding" className="p-5">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Input
-            label="Primary color"
-            defaultValue="#2563EB"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="Accent color"
-            defaultValue="#06B6D4"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center sm:col-span-2 dark:border-white/15">
-            <Palette className="mx-auto size-5 text-blue-600" />
-            <p className="mt-2 text-xs font-semibold">Logo and hero assets</p>
-            <p className="mt-1 text-[11px] text-slate-500">
-              PNG, SVG, or WebP · maximum 5 MB
+          {values["branding.logoAssetId"] ? (
+            <p className="mt-2 text-xs text-emerald-600">
+              Asset ready to save.
             </p>
-            <ActionButton variant="secondary" className="mt-4">
-              Upload asset
-            </ActionButton>
-          </div>
-        </div>
-      </TabsContent>
-      <TabsContent value="social" className="p-5">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Input
-            label="Facebook"
-            defaultValue="facebook.com/asrrocuet"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="LinkedIn"
-            defaultValue="linkedin.com/company/asrro"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="YouTube"
-            defaultValue="youtube.com/@asrro"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="GitHub"
-            defaultValue="github.com/asrro"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-        </div>
-      </TabsContent>
-      <TabsContent value="email" className="p-5">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Input
-            label="Sender name"
-            defaultValue="ASRRO Portal"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <Input
-            label="Reply-to address"
-            defaultValue="membership@asrro.org"
-            classNames={{ field: "rounded-xl bg-slate-50 dark:bg-white/5" }}
-          />
-          <div className="rounded-xl bg-slate-50 p-4 text-xs text-slate-500 sm:col-span-2 dark:bg-white/5">
-            Approval, rejection, event reminder, and committee announcement
-            templates are configured and active.
-          </div>
-        </div>
-      </TabsContent>
-      <div className="flex items-center justify-between border-t border-slate-100 p-5 dark:border-white/8">
-        <p
-          aria-live="polite"
-          className="flex items-center gap-2 text-xs text-emerald-600"
-        >
-          {saved ? (
-            <>
-              <CheckCircle2 className="size-4" />
-              Settings saved.
-            </>
           ) : null}
+        </div>
+      </div>
+      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5 dark:border-white/8">
+        <p
+          role="status"
+          className={
+            state === "error"
+              ? "text-xs text-rose-600"
+              : "text-xs text-emerald-600"
+          }
+        >
+          {state === "saved"
+            ? "Settings saved."
+            : state === "error"
+              ? "Settings could not be saved."
+              : ""}
         </p>
-        <ActionButton onClick={() => setSaved(true)}>
-          <Save className="size-3.5" />
-          Save changes
+        <ActionButton disabled={state === "saving"} onClick={() => void save()}>
+          <Save className="size-3.5" />{" "}
+          {state === "saving" ? "Saving…" : "Save changes"}
         </ActionButton>
       </div>
-    </Tabs>
+    </div>
   )
 }

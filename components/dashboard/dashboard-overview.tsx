@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
 
 import { DashboardOverviewEvents } from "@/components/dashboard/dashboard-overview-events"
 import { DashboardOverviewHero } from "@/components/dashboard/dashboard-overview-hero"
@@ -16,7 +17,12 @@ function getFirstName(name: string) {
 }
 
 export function DashboardOverview() {
+  const [now] = useState(() => Date.now())
   const member = useQuery(api.members.me)
+  const eventDashboard = useQuery(api.events.memberDashboard, { now })
+  const projectResult = useQuery(api.projects.listPublic, {
+    paginationOpts: { cursor: null, numItems: 20 },
+  })
   const session = authClient.useSession()
   const accountName = member?.fullName || session.data?.user.name || "Operator"
   const accountEmail = member?.email || session.data?.user.email
@@ -70,15 +76,20 @@ export function DashboardOverview() {
         accountEmail={accountEmail}
         isLoading={isLoading}
         member={member ?? null}
+        nextEvent={eventDashboard?.openEvents[0]}
       />
-      <DashboardOverviewTelemetry />
+      <DashboardOverviewTelemetry
+        events={eventDashboard?.openEvents ?? []}
+        projects={projectResult?.page ?? []}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,.6fr)]">
-        <DashboardOverviewEvents />
+        <DashboardOverviewEvents events={eventDashboard?.openEvents ?? []} />
         <DashboardOverviewRail
           accountName={accountName}
           member={member ?? null}
           profileCompletion={profileCompletion}
+          projects={projectResult?.page ?? []}
         />
       </div>
     </div>

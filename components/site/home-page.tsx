@@ -1,21 +1,40 @@
 import Link from "next/link"
-import { ArrowRight, CalendarDays, MapPin } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { fetchQuery } from "convex/nextjs"
 import { AnimatedNumber } from "@/components/motion/animated-number"
 import { TextReveal } from "@/components/motion/text-reveal"
 import { OrbitalHero } from "@/components/site/orbital-hero"
+import { HomeUpcomingEvents } from "@/components/site/home-upcoming-events"
 import { SectionHeading } from "@/components/shared/section-heading"
 import { SignalVisual } from "@/components/shared/signal-visual"
 import { SiteButton } from "@/components/shared/site-button"
-import { events, news, projects } from "@/content/public-data"
+import { api } from "@/convex/_generated/api"
 
-const stats = [
-  ["Active members", 428, "+"],
-  ["Built projects", 37, ""],
-  ["National events", 24, ""],
-  ["Research papers", 16, ""],
-] as const
-
-export function HomePage() {
+const homeNewsDateFormatter = new Intl.DateTimeFormat("en-BD", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Asia/Dhaka",
+})
+export async function HomePage() {
+  const [projectResult, newsResult, statistics] = await Promise.all([
+    fetchQuery(api.projects.listPublic, {
+      featured: true,
+      paginationOpts: { numItems: 3, cursor: null },
+    }),
+    fetchQuery(api.blogs.listPublic, {
+      paginationOpts: { numItems: 4, cursor: null },
+    }),
+    fetchQuery(api.content.publicStatistics),
+  ])
+  const projects = projectResult.page
+  const news = newsResult.page
+  const stats = [
+    ["Active members", statistics.members, "+"],
+    ["Built projects", statistics.projects, ""],
+    ["National events", statistics.events, ""],
+    ["Research papers", statistics.publications, ""],
+  ] as const
   return (
     <>
       <section className="relative overflow-hidden border-b border-[#2359d4]/15 px-5 pt-14 pb-16 sm:px-8 lg:px-12 lg:pt-20 lg:pb-24 dark:border-white/10">
@@ -99,7 +118,7 @@ export function HomePage() {
                   <div className="mb-4 flex items-center justify-between font-mono text-[9px] tracking-[.16em] text-[#587084] uppercase dark:text-[#8296ad]">
                     <span>{project.category}</span>
                     <span className="text-[#b45f00] dark:text-[#ffb84d]">
-                      {project.status}
+                      {project.projectState}
                     </span>
                   </div>
                   <h3 className="text-2xl font-semibold tracking-[-.035em] text-[#07111f] group-hover:text-[#007d89] dark:text-white dark:group-hover:text-[#65f2f1]">
@@ -121,42 +140,7 @@ export function HomePage() {
             title="Meet us where the work happens."
             copy="Compete, train, question, and build alongside a national community of student engineers."
           />
-          <div className="divide-y divide-[#2359d4]/15 border-t border-[#2359d4]/15 dark:divide-white/10 dark:border-white/10">
-            {events
-              .filter((e) => e.status === "Upcoming")
-              .map((event) => (
-                <Link
-                  key={event.slug}
-                  href={`/events/${event.slug}`}
-                  className="group grid gap-5 py-6 sm:grid-cols-[5rem_1fr_auto] sm:items-center"
-                >
-                  <div>
-                    <span className="block font-mono text-[10px] tracking-[.18em] text-[#007d89] dark:text-[#65f2f1]">
-                      {event.month}
-                    </span>
-                    <span className="text-4xl font-semibold tracking-[-.05em]">
-                      {event.day}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold group-hover:text-[#007d89] dark:group-hover:text-[#65f2f1]">
-                      {event.title}
-                    </h3>
-                    <p className="mt-2 flex flex-wrap gap-4 text-sm text-[#587084] dark:text-[#8fa7c0]">
-                      <span className="flex items-center gap-1">
-                        <CalendarDays className="size-4" />
-                        {event.time}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="size-4" />
-                        {event.venue}
-                      </span>
-                    </p>
-                  </div>
-                  <ArrowRight className="hidden size-5 text-[#007d89] sm:block dark:text-[#65f2f1]" />
-                </Link>
-              ))}
-          </div>
+          <HomeUpcomingEvents />
         </div>
       </section>
       <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
@@ -187,7 +171,10 @@ export function HomePage() {
                   {item.title}
                 </h3>
                 <p className="mt-5 text-sm text-[#587084] dark:text-[#8296ad]">
-                  {item.date} · {item.read}
+                  {item.publishedAt
+                    ? homeNewsDateFormatter.format(item.publishedAt)
+                    : "Unscheduled"}{" "}
+                  · {item.authorName}
                 </p>
               </Link>
             ))}

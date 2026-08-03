@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { fetchQuery } from "convex/nextjs"
 import {
   Eye,
   Flag,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react"
 import { PageHero } from "@/components/shared/page-hero"
 import { SectionHeading } from "@/components/shared/section-heading"
+import { api } from "@/convex/_generated/api"
 
 export const metadata: Metadata = {
   title: "About",
@@ -68,7 +70,31 @@ const values = [
     "Build confidence and community alongside technical skill.",
   ],
 ]
-export default function AboutPage() {
+export default async function AboutPage() {
+  const managed = await fetchQuery(api.content.getPage, { slug: "about" })
+  if (managed) {
+    return (
+      <>
+        <PageHero
+          eyebrow="Organization / managed content"
+          title={managed.title}
+          intro={
+            managed.summary ??
+            "Learn about ASRRO's mission and research culture."
+          }
+        />
+        <section className="px-5 py-20 sm:px-8 lg:px-12">
+          <div className="mx-auto max-w-3xl space-y-7 text-lg leading-9 text-[#425a70] dark:text-[#b9c8d9]">
+            {managed.body.split(/\n{2,}/).map((paragraph) => (
+              <p key={paragraph.slice(0, 80)} className="whitespace-pre-wrap">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+      </>
+    )
+  }
   return (
     <>
       <PageHero

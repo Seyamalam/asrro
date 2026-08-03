@@ -13,7 +13,7 @@ The product is split into three surfaces so public content, member workflows, an
 - Pages and layouts stay server components unless browser state or animation requires a client boundary.
 - `components/site`, `components/dashboard`, and `components/shared` hold product components.
 - `components/motion` contains vendored BeUI primitives. Shared easing and spring constants live in `lib/ease.ts`.
-- Domain fixtures live outside components so swapping them for Convex hooks does not rewrite presentation code.
+- Operational screens read live, bounded domain queries; loading and empty states stay inside focused feature components.
 
 ## Visual system
 

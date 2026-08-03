@@ -9,6 +9,7 @@ import {
   eventFields,
   memberFields,
   projectFields,
+  publicationFields,
 } from "./model"
 
 const memberDoc = v.object({
@@ -41,6 +42,11 @@ const committeeDoc = v.object({
   _creationTime: v.number(),
   ...committeeMemberFields,
 })
+const publicationDoc = v.object({
+  _id: v.id("publications"),
+  _creationTime: v.number(),
+  ...publicationFields,
+})
 
 function limitValue(value: number) {
   if (!Number.isFinite(value)) throw new ConvexError("Invalid result limit")
@@ -55,6 +61,7 @@ export const publicSearch = query({
     alumni: v.array(alumniDoc),
     blogs: v.array(blogDoc),
     committee: v.array(committeeDoc),
+    publications: v.array(publicationDoc),
   }),
   handler: async (ctx, args) => {
     const search = cleanText(args.search, "Search", 200)
@@ -64,44 +71,51 @@ export const publicSearch = query({
       .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
       .order("desc")
       .first()
-    const [events, projects, alumni, blogs, committee] = await Promise.all([
-      ctx.db
-        .query("events")
-        .withSearchIndex("search_public_events", (q) =>
-          q.search("name", search).eq("status", "published")
-        )
-        .take(limit),
-      ctx.db
-        .query("projects")
-        .withSearchIndex("search_public_projects", (q) =>
-          q.search("title", search).eq("status", "published")
-        )
-        .take(limit),
-      ctx.db
-        .query("alumni")
-        .withSearchIndex("search_public_alumni", (q) =>
-          q.search("name", search).eq("status", "published")
-        )
-        .take(limit),
-      ctx.db
-        .query("blogs")
-        .withSearchIndex("search_public_blogs", (q) =>
-          q.search("title", search).eq("status", "published")
-        )
-        .take(limit),
-      currentTerm
-        ? ctx.db
-            .query("committeeMembers")
-            .withSearchIndex("search_committee", (q) =>
-              q
-                .search("name", search)
-                .eq("termId", currentTerm._id)
-                .eq("isPublic", true)
-            )
-            .take(limit)
-        : Promise.resolve([]),
-    ])
-    return { events, projects, alumni, blogs, committee }
+    const [events, projects, alumni, blogs, committee, publications] =
+      await Promise.all([
+        ctx.db
+          .query("events")
+          .withSearchIndex("search_public_events", (q) =>
+            q.search("name", search).eq("status", "published")
+          )
+          .take(limit),
+        ctx.db
+          .query("projects")
+          .withSearchIndex("search_public_projects", (q) =>
+            q.search("title", search).eq("status", "published")
+          )
+          .take(limit),
+        ctx.db
+          .query("alumni")
+          .withSearchIndex("search_public_alumni", (q) =>
+            q.search("name", search).eq("status", "published")
+          )
+          .take(limit),
+        ctx.db
+          .query("blogs")
+          .withSearchIndex("search_public_blogs", (q) =>
+            q.search("title", search).eq("status", "published")
+          )
+          .take(limit),
+        currentTerm
+          ? ctx.db
+              .query("committeeMembers")
+              .withSearchIndex("search_committee", (q) =>
+                q
+                  .search("name", search)
+                  .eq("termId", currentTerm._id)
+                  .eq("isPublic", true)
+              )
+              .take(limit)
+          : Promise.resolve([]),
+        ctx.db
+          .query("publications")
+          .withSearchIndex("search_public_publications", (q) =>
+            q.search("title", search).eq("status", "published")
+          )
+          .take(limit),
+      ])
+    return { events, projects, alumni, blogs, committee, publications }
   },
 })
 
