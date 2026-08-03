@@ -268,15 +268,13 @@ export const sendAnnouncement = mutation({
           name: committeeMember.name,
           subject: args.subject,
           message: args.message,
+          template: "committee_announcement",
         })
         const outboxId = await enqueueEmail(ctx, {
           recipient: committeeMember.email,
           recipientName: committeeMember.name,
           memberId: committeeMember.memberId,
-          template: "committee_announcement",
-          subject: content.subject,
-          textBody: content.textBody,
-          htmlBody: content.htmlBody,
+          ...content,
         })
         await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
           outboxId,

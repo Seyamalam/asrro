@@ -43,14 +43,22 @@ bunx convex env set BETTER_AUTH_SECRET
 ```
 
 To deliver password-reset links, approval/rejection messages, reminders, and
-announcements, also set an organization-owned sender and provider key. Without
-these values, messages are retained in the administrative outbox with a
-failed-delivery reason while dashboard notifications continue to work.
+announcements through Gmail, enable two-step verification, create a revocable
+Google app password, and enter it interactively. Do not use the mailbox's main
+password. Without a configured transport, messages remain visible in the
+administrative outbox with a failed-delivery reason while dashboard
+notifications continue to work.
 
 ```bash
-bunx convex env set EMAIL_FROM
-bunx convex env set EMAIL_PROVIDER_API_KEY
+bunx convex env set EMAIL_TRANSPORT gmail_smtp
+bunx convex env set GMAIL_SMTP_USER your-mailbox@gmail.com
+bunx convex env set GMAIL_SMTP_APP_PASSWORD
+bunx convex env set EMAIL_FROM_NAME ASRRO
 ```
+
+The existing Resend-compatible HTTP transport remains available by omitting
+`EMAIL_TRANSPORT` and setting `EMAIL_FROM` plus either
+`EMAIL_PROVIDER_API_KEY` or `RESEND_API_KEY`.
 
 4. Start the website.
 
@@ -95,11 +103,13 @@ Never commit `.env.local`. `SITE_URL`, `TRUSTED_ORIGINS`, and
 deployment environment, not `.env.local`. `SITE_URL` must be one exact origin,
 for example `https://asrro.vercel.app`, with no path or trailing slash.
 `TRUSTED_ORIGINS` is a comma-separated list of any additional local or preview
-origins allowed to authenticate. Email delivery also requires `EMAIL_FROM` and
-either `EMAIL_PROVIDER_API_KEY` or `RESEND_API_KEY`; set
-`EMAIL_PROVIDER_URL` only when using another provider with the same request
-shape. Set `BETTER_AUTH_ADMIN_USER_IDS` to the comma-separated account IDs that
-may perform administrator account creation and password reset operations.
+origins allowed to authenticate. Gmail delivery uses `EMAIL_TRANSPORT`,
+`GMAIL_SMTP_USER`, `GMAIL_SMTP_APP_PASSWORD`, and optionally
+`EMAIL_FROM_NAME`. The HTTP provider alternative uses `EMAIL_FROM` and either
+`EMAIL_PROVIDER_API_KEY` or `RESEND_API_KEY`; set `EMAIL_PROVIDER_URL` only for
+a compatible endpoint. Set `BETTER_AUTH_ADMIN_USER_IDS` to the comma-separated
+account IDs that may perform administrator account creation and password reset
+operations.
 
 ## Quality checks
 
@@ -144,8 +154,10 @@ bunx convex deploy
 bunx convex env set --prod SITE_URL https://your-domain.example
 bunx convex env set --prod TRUSTED_ORIGINS https://your-preview.example
 bunx convex env set --prod BETTER_AUTH_SECRET
-bunx convex env set --prod EMAIL_FROM
-bunx convex env set --prod EMAIL_PROVIDER_API_KEY
+bunx convex env set --prod EMAIL_TRANSPORT gmail_smtp
+bunx convex env set --prod GMAIL_SMTP_USER your-mailbox@gmail.com
+bunx convex env set --prod GMAIL_SMTP_APP_PASSWORD
+bunx convex env set --prod EMAIL_FROM_NAME ASRRO
 bunx convex env set --prod BETTER_AUTH_ADMIN_USER_IDS
 ```
 
