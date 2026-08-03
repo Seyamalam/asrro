@@ -33,6 +33,14 @@ const POSITION_PERMISSIONS: Record<string, readonly PortalPermission[]> = {
     "notifications_send",
     "finance_summary",
   ],
+  joint_general_secretary: [
+    "membership_manage",
+    "events_manage",
+    "committee_manage",
+    "reports_view",
+    "notifications_send",
+    "finance_summary",
+  ],
   organizing_secretary: [
     "membership_manage",
     "events_manage",
@@ -42,6 +50,18 @@ const POSITION_PERMISSIONS: Record<string, readonly PortalPermission[]> = {
     "finance_summary",
   ],
   financial_secretary: ["reports_view", "finance_manage", "finance_summary"],
+  public_relations_secretary: [
+    "content_manage",
+    "files_manage",
+    "notifications_send",
+  ],
+  research_publication_secretary: [
+    "projects_manage",
+    "content_manage",
+    "reports_view",
+    "files_manage",
+  ],
+  technical_secretary: ["content_manage", "files_manage", "reports_view"],
   office_secretary: ["committee_manage", "content_manage", "files_manage"],
   education_secretary: ["projects_manage", "content_manage", "files_manage"],
   publication_secretary: ["content_manage", "files_manage"],

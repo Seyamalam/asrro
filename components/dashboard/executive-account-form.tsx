@@ -46,8 +46,12 @@ export function ExecutiveAccountForm() {
           | "president"
           | "vice_president"
           | "general_secretary"
+          | "joint_general_secretary"
           | "organizing_secretary"
           | "financial_secretary"
+          | "public_relations_secretary"
+          | "research_publication_secretary"
+          | "technical_secretary"
           | "office_secretary"
           | "education_secretary"
           | "publication_secretary"
@@ -102,8 +106,12 @@ export function ExecutiveAccountForm() {
           "president",
           "vice_president",
           "general_secretary",
+          "joint_general_secretary",
           "organizing_secretary",
           "financial_secretary",
+          "public_relations_secretary",
+          "research_publication_secretary",
+          "technical_secretary",
           "office_secretary",
           "education_secretary",
           "publication_secretary",
