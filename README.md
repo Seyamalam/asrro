@@ -23,9 +23,25 @@ bunx convex dev
 bun dev
 ```
 
-Open `http://localhost:3000`. Use **Member portal** in the header or visit
+Open `http://localhost:3000`. Use **Dashboard** in the header or visit
 `/login`, create an email/password account, and you will be taken directly to
 `/dashboard`. Development authentication does not send a verification code.
+
+## Public demo accounts
+
+These shared, member-level accounts are available on the configured ASRRO
+development deployment. They are intentionally not granted executive or
+administrative permissions.
+
+| Account         | Email                       | Password      |
+| --------------- | --------------------------- | ------------- |
+| Demo member     | `demo.member@asrro.org`     | `demo12345`   |
+| Demo researcher | `demo.researcher@asrro.org` | `research123` |
+
+Sign in at `/login`; no email verification code is required. These credentials
+are public, so do not store personal or sensitive information in either
+account. A fresh Convex deployment has its own database, and users can create a
+new local account from the same screen.
 
 ## Environment
 
