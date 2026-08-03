@@ -50,6 +50,8 @@ suffixes.
 | `/news`                                       | ![News](screenshots/pages/public-news-light-desktop.png)                                        |
 | `/news/riverwatch-field-notes`                | ![RiverWatch field notes](screenshots/pages/news-riverwatch-field-notes-light-desktop.png)      |
 | `/login`                                      | ![Login](screenshots/pages/auth-login-light-desktop.png)                                        |
+| `/forgot-password`                            | ![Forgot password](screenshots/pages/auth-forgot-password-light-desktop.png)                    |
+| `/reset-password?error=INVALID_TOKEN`         | ![Invalid reset link](screenshots/pages/auth-reset-password-invalid-light-desktop.png)          |
 | Unknown route                                 | ![Not found](screenshots/pages/not-found-light-desktop.png)                                     |
 
 ## Applicant and dashboard routes
