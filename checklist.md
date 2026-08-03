@@ -2,91 +2,98 @@
 
 Source: [`docs/SRS.docx`](docs/SRS.docx), version 1.0.
 
-This checklist converts the complete SRS into independently verifiable acceptance items. Check an item only after it is implemented, connected to persistent data where applicable, authorized correctly, responsive, and tested.
+This checklist converts the complete SRS into independently verifiable acceptance items. Status was audited against the repository on 3 August 2026.
+
+**Current snapshot:** 314 of 418 items checked; 104 items remain incomplete, partial, externally dependent, or unverified.
+
+- `[x]` — implemented with a usable repository code path.
+- `[ ]` — missing, only partially wired, externally dependent, or not supported by reproducible acceptance evidence yet.
+
+The status is intentionally conservative: a schema field, placeholder, or responsive CSS rule alone does not count as a completed user workflow.
 
 ## 1. Introduction and project scope
 
 ### 1.1 Organization and domain coverage
 
-- [ ] Represent ASRRO as a frontier technology research organization based at Chittagong University of Engineering & Technology (CUET), Bangladesh.
-- [ ] Support ASRRO work in space science.
-- [ ] Support ASRRO work in robotics.
-- [ ] Support ASRRO work in artificial intelligence.
-- [ ] Support ASRRO work in electronics.
-- [ ] Support ASRRO work in IoT.
-- [ ] Support ASRRO research and publications.
-- [ ] Support ASRRO engineering competitions.
-- [ ] Support ASRRO workshops.
-- [ ] Support ASRRO national-level events.
+- [x] Represent ASRRO as a frontier technology research organization based at Chittagong University of Engineering & Technology (CUET), Bangladesh.
+- [x] Support ASRRO work in space science.
+- [x] Support ASRRO work in robotics.
+- [x] Support ASRRO work in artificial intelligence.
+- [x] Support ASRRO work in electronics.
+- [x] Support ASRRO work in IoT.
+- [x] Support ASRRO research and publications.
+- [x] Support ASRRO engineering competitions.
+- [x] Support ASRRO workshops.
+- [x] Support ASRRO national-level events.
 
 ### 1.2 Platform responsibilities
 
-- [ ] Provide the official organizational website.
-- [ ] Provide a membership management system.
-- [ ] Provide an event management platform.
-- [ ] Provide an executive committee management portal.
-- [ ] Provide a finance management portal.
-- [ ] Provide an alumni showcase.
-- [ ] Provide a project portfolio.
-- [ ] Provide an internal administration dashboard.
+- [x] Provide the official organizational website.
+- [x] Provide a membership management system.
+- [x] Provide an event management platform.
+- [x] Provide an executive committee management portal.
+- [x] Provide a finance management portal.
+- [x] Provide an alumni showcase.
+- [x] Provide a project portfolio.
+- [x] Provide an internal administration dashboard.
 - [ ] Scale to thousands of members and multiple national events.
 
 ## 2. Objectives
 
-- [ ] Represent ASRRO professionally.
+- [x] Represent ASRRO professionally.
 - [ ] Increase ASRRO's public visibility.
-- [ ] Digitize club membership.
-- [ ] Automate event registration.
-- [ ] Manage club members.
-- [ ] Manage executive committee operations.
-- [ ] Store club history.
-- [ ] Showcase projects.
-- [ ] Showcase alumni.
-- [ ] Generate downloadable reports.
+- [x] Digitize club membership.
+- [x] Automate event registration.
+- [x] Manage club members.
+- [x] Manage executive committee operations.
+- [x] Store club history.
+- [x] Showcase projects.
+- [x] Showcase alumni.
+- [x] Generate downloadable reports.
 - [ ] Reduce manual paperwork.
 
 ## 3. Users, roles, and permissions
 
 ### 3.1 Guest
 
-- [ ] Allow guests to visit the public website.
-- [ ] Allow guests to view projects.
-- [ ] Allow guests to view events.
-- [ ] Allow guests to view the gallery.
-- [ ] Allow guests to view alumni.
-- [ ] Allow guests to read blogs and news.
-- [ ] Allow guests to contact the organization.
-- [ ] Allow guests to apply for membership.
-- [ ] Allow guests to register for public events.
-- [ ] Prevent guests from viewing the dashboard.
-- [ ] Prevent guests from editing a member profile.
-- [ ] Prevent guests from accessing member-only pages.
+- [x] Allow guests to visit the public website.
+- [x] Allow guests to view projects.
+- [x] Allow guests to view events.
+- [x] Allow guests to view the gallery.
+- [x] Allow guests to view alumni.
+- [x] Allow guests to read blogs and news.
+- [x] Allow guests to contact the organization.
+- [x] Allow guests to apply for membership.
+- [x] Allow guests to register for public events.
+- [x] Prevent guests from viewing the dashboard.
+- [x] Prevent guests from editing a member profile.
+- [x] Prevent guests from accessing member-only pages.
 
 ### 3.2 Pending member
 
-- [ ] Allow pending members to log in.
-- [ ] Allow pending members to view their application status.
-- [ ] Prevent pending members from downloading a membership card.
-- [ ] Prevent pending members from registering for members-only events.
-- [ ] Prevent pending members from accessing the member dashboard.
+- [x] Allow pending members to log in.
+- [x] Allow pending members to view their application status.
+- [x] Prevent pending members from downloading a membership card.
+- [x] Prevent pending members from registering for members-only events.
+- [x] Prevent pending members from accessing the member dashboard.
 
 ### 3.3 General member
 
-- [ ] Allow general members to log in.
-- [ ] Allow general members to view the member dashboard.
-- [ ] Allow general members to update only permitted profile information.
-- [ ] Allow general members to view attended events.
-- [ ] Allow general members to register for eligible events.
-- [ ] Allow general members to download their membership card.
-- [ ] Allow general members to download their payment receipt.
-- [ ] Allow general members to view notifications.
-- [ ] Prevent general members from managing other members.
-- [ ] Prevent general members from editing events.
-- [ ] Prevent general members from accessing finance data.
+- [x] Allow general members to log in.
+- [x] Allow general members to view the member dashboard.
+- [x] Allow general members to update only permitted profile information.
+- [x] Allow general members to view attended events.
+- [x] Allow general members to register for eligible events.
+- [x] Allow general members to download their membership card.
+- [x] Allow general members to download their payment receipt.
+- [x] Allow general members to view notifications.
+- [x] Prevent general members from managing other members.
+- [x] Prevent general members from editing events.
+- [x] Prevent general members from accessing finance data.
 
 ### 3.4 Executive committee member
 
-- [ ] Give executive committee members all general-member permissions.
+- [x] Give executive committee members all general-member permissions.
 - [ ] Make executive management capabilities depend on assigned role and permission.
 - [ ] Support the President role.
 - [ ] Support the Vice President role.
@@ -105,298 +112,298 @@ This checklist converts the complete SRS into independently verifiable acceptanc
 - [ ] Allow super admins to manage every module.
 - [ ] Allow super admins to create executive accounts.
 - [ ] Allow super admins to reset passwords.
-- [ ] Allow super admins to configure the website.
+- [x] Allow super admins to configure the website.
 - [ ] Allow super admins to assign permissions.
 
 ## 4. Public website
 
 ### 4.1 Home
 
-- [ ] Display a hero banner.
-- [ ] Display an introduction.
-- [ ] Display an About ASRRO summary.
+- [x] Display a hero banner.
+- [x] Display an introduction.
+- [x] Display an About ASRRO summary.
 - [ ] Display the mission.
 - [ ] Display the vision.
-- [ ] Display current highlights.
-- [ ] Display upcoming events.
-- [ ] Display featured projects.
-- [ ] Display organizational statistics.
-- [ ] Include a member-count statistic.
-- [ ] Include a project-count statistic.
-- [ ] Include an event-count statistic.
+- [x] Display current highlights.
+- [x] Display upcoming events.
+- [x] Display featured projects.
+- [x] Display organizational statistics.
+- [x] Include a member-count statistic.
+- [x] Include a project-count statistic.
+- [x] Include an event-count statistic.
 - [ ] Include an alumni-count statistic.
-- [ ] Include a research-paper-count statistic.
+- [x] Include a research-paper-count statistic.
 
 ### 4.2 About
 
 - [ ] Present ASRRO's history.
-- [ ] Present ASRRO's mission.
+- [x] Present ASRRO's mission.
 - [ ] Present ASRRO's vision.
 - [ ] Present ASRRO's core values.
 - [ ] Present a journey timeline.
 
 ### 4.3 Executive committee
 
-- [ ] Show the current committee.
-- [ ] Show each committee member's position.
-- [ ] Show each committee member's photograph.
-- [ ] Show each committee member's department.
-- [ ] Show each committee member's session.
-- [ ] Optionally show committee-member contact information.
+- [x] Show the current committee.
+- [x] Show each committee member's position.
+- [x] Show each committee member's photograph.
+- [x] Show each committee member's department.
+- [x] Show each committee member's session.
+- [x] Optionally show committee-member contact information.
 
 ### 4.4 Alumni
 
-- [ ] Provide a dedicated alumni page.
-- [ ] Show each alumnus's photo.
-- [ ] Show each alumnus's name.
-- [ ] Show each alumnus's department.
+- [x] Provide a dedicated alumni page.
+- [x] Show each alumnus's photo.
+- [x] Show each alumnus's name.
+- [x] Show each alumnus's department.
 - [ ] Show each alumnus's session.
-- [ ] Show each alumnus's current workplace.
+- [x] Show each alumnus's current workplace.
 - [ ] Show each alumnus's higher-studies information.
-- [ ] Optionally show each alumnus's LinkedIn profile.
-- [ ] Show each alumnus's research interests.
-- [ ] Support alumni search or filtering by batch.
-- [ ] Support alumni search or filtering by department.
+- [x] Optionally show each alumnus's LinkedIn profile.
+- [x] Show each alumnus's research interests.
+- [x] Support alumni search or filtering by batch.
+- [x] Support alumni search or filtering by department.
 - [ ] Support alumni search or filtering by graduation year.
 
 ### 4.5 Projects
 
-- [ ] Support completed projects.
-- [ ] Support ongoing projects.
-- [ ] Support research projects.
-- [ ] Support competition projects.
-- [ ] Support industry-collaboration projects.
+- [x] Support completed projects.
+- [x] Support ongoing projects.
+- [x] Support research projects.
+- [x] Support competition projects.
+- [x] Support industry-collaboration projects.
 - [ ] Show a cover image for each project.
-- [ ] Show each project's title.
-- [ ] Show each project's description.
-- [ ] Show each project's technology stack.
-- [ ] Show each project's team members.
-- [ ] Show each project's duration.
-- [ ] Show each project's status.
-- [ ] Show each project's GitHub repository.
-- [ ] Show publications related to each project.
-- [ ] Show awards related to each project.
-- [ ] Filter projects by robotics.
-- [ ] Filter projects by AI.
-- [ ] Filter projects by space.
-- [ ] Filter projects by embedded systems.
-- [ ] Filter projects by IoT.
-- [ ] Filter projects by electronics.
+- [x] Show each project's title.
+- [x] Show each project's description.
+- [x] Show each project's technology stack.
+- [x] Show each project's team members.
+- [x] Show each project's duration.
+- [x] Show each project's status.
+- [x] Show each project's GitHub repository.
+- [x] Show publications related to each project.
+- [x] Show awards related to each project.
+- [x] Filter projects by robotics.
+- [x] Filter projects by AI.
+- [x] Filter projects by space.
+- [x] Filter projects by embedded systems.
+- [x] Filter projects by IoT.
+- [x] Filter projects by electronics.
 
 ### 4.6 Events
 
 #### Discovery and presentation
 
-- [ ] Support upcoming events.
-- [ ] Support ongoing events.
-- [ ] Support past events.
-- [ ] Provide a tile/card event view.
+- [x] Support upcoming events.
+- [x] Support ongoing events.
+- [x] Support past events.
+- [x] Provide a tile/card event view.
 - [ ] Provide a calendar-grid event view.
 
 #### Event information
 
 - [ ] Show an event banner.
-- [ ] Show the event name.
-- [ ] Show the event category.
-- [ ] Show the event date.
-- [ ] Show the event time.
-- [ ] Show the event venue.
-- [ ] Show the event organizer.
-- [ ] Show the registration deadline.
-- [ ] Show the event capacity.
-- [ ] Show the event description.
-- [ ] Show the event rules.
-- [ ] Show event eligibility.
-- [ ] Show the registration fee.
-- [ ] Show the event contact person.
+- [x] Show the event name.
+- [x] Show the event category.
+- [x] Show the event date.
+- [x] Show the event time.
+- [x] Show the event venue.
+- [x] Show the event organizer.
+- [x] Show the registration deadline.
+- [x] Show the event capacity.
+- [x] Show the event description.
+- [x] Show the event rules.
+- [x] Show event eligibility.
+- [x] Show the registration fee.
+- [x] Show the event contact person.
 
 #### Categories
 
-- [ ] Support workshop events.
-- [ ] Support competition events.
-- [ ] Support seminar events.
-- [ ] Support bootcamp events.
-- [ ] Support training events.
-- [ ] Support national olympiad events.
-- [ ] Support research-talk events.
+- [x] Support workshop events.
+- [x] Support competition events.
+- [x] Support seminar events.
+- [x] Support bootcamp events.
+- [x] Support training events.
+- [x] Support national olympiad events.
+- [x] Support research-talk events.
 
 #### Scope and eligibility
 
-- [ ] Support Intra CUET events.
-- [ ] Restrict Intra CUET event registration to CUET students.
-- [ ] Support divisional events.
-- [ ] Restrict divisional event registration to universities in Chattogram Division.
-- [ ] Support national events.
-- [ ] Open national events to everyone who satisfies the stated eligibility rules.
+- [x] Support Intra CUET events.
+- [x] Restrict Intra CUET event registration to CUET students.
+- [x] Support divisional events.
+- [x] Restrict divisional event registration to universities in Chattogram Division.
+- [x] Support national events.
+- [x] Open national events to everyone who satisfies the stated eligibility rules.
 
 #### Participant registration
 
-- [ ] Allow eligible users to register for events.
-- [ ] Allow a registrant to cancel before the registration deadline.
-- [ ] Allow a registrant to download participation confirmation.
-- [ ] Allow a registrant to view registration status.
+- [x] Allow eligible users to register for events.
+- [x] Allow a registrant to cancel before the registration deadline.
+- [x] Allow a registrant to download participation confirmation.
+- [x] Allow a registrant to view registration status.
 
 #### Administrative registration management
 
-- [ ] Allow authorized administrators to accept registrations.
-- [ ] Allow authorized administrators to reject registrations.
-- [ ] Allow authorized administrators to mark attendance.
-- [ ] Allow authorized administrators to export participant lists.
-- [ ] Export participant lists as CSV.
-- [ ] Export participant lists as Excel workbooks.
-- [ ] Export participant lists as PDF documents.
+- [x] Allow authorized administrators to accept registrations.
+- [x] Allow authorized administrators to reject registrations.
+- [x] Allow authorized administrators to mark attendance.
+- [x] Allow authorized administrators to export participant lists.
+- [x] Export participant lists as CSV.
+- [x] Export participant lists as Excel workbooks.
+- [x] Export participant lists as PDF documents.
 
 ### 4.7 Gallery
 
-- [ ] Support gallery images.
-- [ ] Support gallery albums.
-- [ ] Support gallery videos.
+- [x] Support gallery images.
+- [x] Support gallery albums.
+- [x] Support gallery videos.
 - [ ] Group gallery media by event.
 
 ### 4.8 Publications
 
-- [ ] Publish research papers.
-- [ ] Publish magazines.
-- [ ] Publish reports.
-- [ ] Publish annual publications.
+- [x] Publish research papers.
+- [x] Publish magazines.
+- [x] Publish reports.
+- [x] Publish annual publications.
 
 ### 4.9 Blogs and news
 
 - [ ] Support rich-text blog and news content.
-- [ ] Support content categories.
-- [ ] Support content tags.
+- [x] Support content categories.
+- [x] Support content tags.
 - [ ] Optionally support comments.
 
 ### 4.10 Contact
 
-- [ ] Display the office address.
-- [ ] Display an email address.
-- [ ] Display a phone number.
+- [x] Display the office address.
+- [x] Display an email address.
+- [x] Display a phone number.
 - [ ] Display a Google Map.
-- [ ] Link to Facebook.
-- [ ] Link to LinkedIn.
-- [ ] Link to YouTube.
-- [ ] Link to GitHub.
-- [ ] Link to Instagram.
-- [ ] Provide a contact form with a name field.
-- [ ] Provide a contact form with an email field.
-- [ ] Provide a contact form with a subject field.
-- [ ] Provide a contact form with a message field.
-- [ ] Submit and persist or deliver contact-form messages.
+- [x] Link to Facebook.
+- [x] Link to LinkedIn.
+- [x] Link to YouTube.
+- [x] Link to GitHub.
+- [x] Link to Instagram.
+- [x] Provide a contact form with a name field.
+- [x] Provide a contact form with an email field.
+- [x] Provide a contact form with a subject field.
+- [x] Provide a contact form with a message field.
+- [x] Submit and persist or deliver contact-form messages.
 
 ## 5. Membership system
 
 ### 5.1 Registration form
 
-- [ ] Collect the applicant's full name.
-- [ ] Collect a profile picture.
-- [ ] Optionally collect date of birth.
-- [ ] Collect gender.
-- [ ] Collect blood group.
-- [ ] Collect email.
-- [ ] Collect phone number.
+- [x] Collect the applicant's full name.
+- [x] Collect a profile picture.
+- [x] Optionally collect date of birth.
+- [x] Collect gender.
+- [x] Collect blood group.
+- [x] Collect email.
+- [x] Collect phone number.
 - [ ] Collect institute.
 - [ ] Collect university name.
-- [ ] Collect department.
-- [ ] Collect semester.
-- [ ] Collect student ID.
-- [ ] Collect HSC batch.
-- [ ] Collect address.
-- [ ] Collect an emergency contact.
-- [ ] Collect payment method.
+- [x] Collect department.
+- [x] Collect semester.
+- [x] Collect student ID.
+- [x] Collect HSC batch.
+- [x] Collect address.
+- [x] Collect an emergency contact.
+- [x] Collect payment method.
 
 ### 5.2 Membership payment
 
-- [ ] Support bKash payments.
-- [ ] Support Nagad payments.
-- [ ] Support Rocket payments.
-- [ ] Collect the transaction ID.
+- [x] Support bKash payments.
+- [x] Support Nagad payments.
+- [x] Support Rocket payments.
+- [x] Collect the transaction ID.
 - [ ] Optionally collect a payment screenshot.
 
 ### 5.3 Application state
 
-- [ ] Support pending membership applications.
-- [ ] Support approved membership applications.
-- [ ] Support rejected membership applications.
+- [x] Support pending membership applications.
+- [x] Support approved membership applications.
+- [x] Support rejected membership applications.
 
 ## 6. Membership approval workflow
 
-- [ ] Allow an applicant to submit a membership application.
+- [x] Allow an applicant to submit a membership application.
 - [ ] Notify or surface the application to the executive committee for review.
 - [ ] Allow the executive committee to approve an application.
 - [ ] Allow the executive committee to reject an application.
-- [ ] Generate a UUID after approval.
+- [x] Generate a UUID after approval.
 - [ ] Send the approved member a confirmation email.
-- [ ] Activate the approved member's dashboard.
+- [x] Activate the approved member's dashboard.
 - [ ] Preserve the workflow order: submit → review → approve/reject → UUID → email → dashboard activation.
 
 ## 7. ASRRO UUID generation
 
 ### 7.1 Format and behavior
 
-- [ ] Assign every approved member a permanent ASRRO UUID.
-- [ ] Format UUIDs as `[Galaxy Code][Star Code]-Member Number`.
-- [ ] Support examples such as `AR-053`, `MP-014`, and `WV-120`.
-- [ ] Automatically increment the member number.
-- [ ] Decide and document whether numbering increments per unique Galaxy–Star combination or globally.
-- [ ] Make recommended galaxy codes configurable.
+- [x] Assign every approved member a permanent ASRRO UUID.
+- [x] Format UUIDs as `[Galaxy Code][Star Code]-Member Number`.
+- [x] Support examples such as `AR-053`, `MP-014`, and `WV-120`.
+- [x] Automatically increment the member number.
+- [x] Decide and document whether numbering increments per unique Galaxy–Star combination or globally.
+- [x] Make recommended galaxy codes configurable.
 - [ ] Prevent duplicate UUIDs under concurrent approvals.
 
 ### 7.2 HSC batch to galaxy mapping
 
-- [ ] Map HSC batch 20 to Cartwheel.
-- [ ] Map HSC batch 21 to Andromeda.
-- [ ] Map HSC batch 22 to Milky Way.
-- [ ] Map HSC batch 23 to Whirlpool.
+- [x] Map HSC batch 20 to Cartwheel.
+- [x] Map HSC batch 21 to Andromeda.
+- [x] Map HSC batch 22 to Milky Way.
+- [x] Map HSC batch 23 to Whirlpool.
 
 ### 7.3 Recommended galaxy/star codes
 
-- [ ] Configure Cartwheel + Deneb as `CD`.
-- [ ] Configure Andromeda + Rigel as `AR`.
-- [ ] Configure Milky Way + Polaris as `MP`.
-- [ ] Configure Whirlpool + Vega as `WV`.
+- [x] Configure Cartwheel + Deneb as `CD`.
+- [x] Configure Andromeda + Rigel as `AR`.
+- [x] Configure Milky Way + Polaris as `MP`.
+- [x] Configure Whirlpool + Vega as `WV`.
 
 ### 7.4 Department to star mapping
 
-- [ ] Map Mechanical to Vega.
-- [ ] Map URP to Arcturus.
-- [ ] Map Architecture to Betelgeuse.
-- [ ] Map PME to Capella.
-- [ ] Map CSE to Rigel.
-- [ ] Map EEE to Polaris.
-- [ ] Map Civil to Zubenelgenubi.
-- [ ] Map ETE to Lethas.
-- [ ] Map MIE to Deneb.
-- [ ] Map BME to Fomalhaut.
-- [ ] Map MME to Kochab.
-- [ ] Map WRE to Sirius.
+- [x] Map Mechanical to Vega.
+- [x] Map URP to Arcturus.
+- [x] Map Architecture to Betelgeuse.
+- [x] Map PME to Capella.
+- [x] Map CSE to Rigel.
+- [x] Map EEE to Polaris.
+- [x] Map Civil to Zubenelgenubi.
+- [x] Map ETE to Lethas.
+- [x] Map MIE to Deneb.
+- [x] Map BME to Fomalhaut.
+- [x] Map MME to Kochab.
+- [x] Map WRE to Sirius.
 
 ## 8. General member dashboard
 
 ### 8.1 Dashboard content
 
-- [ ] Display a welcome panel.
-- [ ] Display the member's UUID.
-- [ ] Display membership status.
-- [ ] Provide profile access.
-- [ ] Provide membership-card access.
-- [ ] Show upcoming events.
-- [ ] Show registered events.
-- [ ] Show attended events.
-- [ ] Show notifications.
+- [x] Display a welcome panel.
+- [x] Display the member's UUID.
+- [x] Display membership status.
+- [x] Provide profile access.
+- [x] Provide membership-card access.
+- [x] Show upcoming events.
+- [x] Show registered events.
+- [x] Show attended events.
+- [x] Show notifications.
 
 ### 8.2 Membership card
 
 - [ ] Display the member's photo.
-- [ ] Display the member's name.
-- [ ] Display the member's UUID.
-- [ ] Display the member's department.
-- [ ] Display the member's batch.
-- [ ] Display a scannable QR code.
-- [ ] Encode verifiable member identity in the QR workflow.
+- [x] Display the member's name.
+- [x] Display the member's UUID.
+- [x] Display the member's department.
+- [x] Display the member's batch.
+- [x] Display a scannable QR code.
+- [x] Encode verifiable member identity in the QR workflow.
 - [ ] Display membership validity.
-- [ ] Display the organization logo.
-- [ ] Allow the card to be downloaded as a PDF.
+- [x] Display the organization logo.
+- [x] Allow the card to be downloaded as a PDF.
 
 ## 9. Executive dashboard
 
@@ -414,87 +421,87 @@ This checklist converts the complete SRS into independently verifiable acceptanc
 
 ### 9.2 Event management
 
-- [ ] Create events.
-- [ ] Update events.
+- [x] Create events.
+- [x] Update events.
 - [ ] Delete events.
-- [ ] Clone a previous event.
-- [ ] Manage event registrations.
-- [ ] Manage attendance.
+- [x] Clone a previous event.
+- [x] Manage event registrations.
+- [x] Manage attendance.
 - [ ] Preserve certificate generation as a future capability or extension point.
 
 ### 9.3 Executive committee management
 
-- [ ] Maintain the current committee.
-- [ ] Maintain committee positions.
-- [ ] Maintain committee sessions.
-- [ ] Export the committee list as PDF.
+- [x] Maintain the current committee.
+- [x] Maintain committee positions.
+- [x] Maintain committee sessions.
+- [x] Export the committee list as PDF.
 
 ## 10. Finance module
 
 ### 10.1 Authorization
 
-- [ ] Restrict detailed finance access.
-- [ ] Allow the President to access detailed finance data.
-- [ ] Allow the Vice President to access detailed finance data.
-- [ ] Allow the Financial Secretary to access detailed finance data.
-- [ ] Allow the Organizing Secretary to access detailed finance data.
+- [x] Restrict detailed finance access.
+- [x] Allow the President to access detailed finance data.
+- [x] Allow the Vice President to access detailed finance data.
+- [x] Allow the Financial Secretary to access detailed finance data.
+- [x] Allow the Organizing Secretary to access detailed finance data.
 - [ ] Allow other roles to see only high-level summaries when explicitly permitted.
 
 ### 10.2 Finance records
 
-- [ ] Record income.
-- [ ] Record expenses.
-- [ ] Track membership fees.
+- [x] Record income.
+- [x] Record expenses.
+- [x] Track membership fees.
 - [ ] Track event budgets.
-- [ ] Track sponsor contributions.
-- [ ] Track equipment purchases.
-- [ ] Track travel costs.
-- [ ] Track miscellaneous finance entries.
+- [x] Track sponsor contributions.
+- [x] Track equipment purchases.
+- [x] Track travel costs.
+- [x] Track miscellaneous finance entries.
 
 ### 10.3 Finance reports and exports
 
-- [ ] Generate monthly finance reports.
-- [ ] Generate quarterly finance reports.
-- [ ] Generate yearly finance reports.
-- [ ] Export finance data as CSV.
-- [ ] Export finance data as Excel workbooks.
-- [ ] Export finance data as PDF documents.
+- [x] Generate monthly finance reports.
+- [x] Generate quarterly finance reports.
+- [x] Generate yearly finance reports.
+- [x] Export finance data as CSV.
+- [x] Export finance data as Excel workbooks.
+- [x] Export finance data as PDF documents.
 
 ### 10.4 Finance charts
 
-- [ ] Chart income versus expense.
-- [ ] Chart cash flow.
-- [ ] Chart monthly trends.
+- [x] Chart income versus expense.
+- [x] Chart cash flow.
+- [x] Chart monthly trends.
 - [ ] Chart expense categories.
 
 ## 11. Search system
 
-- [ ] Provide global search.
+- [x] Provide global search.
 - [ ] Search members.
-- [ ] Search projects.
-- [ ] Search events.
-- [ ] Search alumni.
-- [ ] Search blogs.
-- [ ] Search committee members.
-- [ ] Enforce role-based visibility in search results.
+- [x] Search projects.
+- [x] Search events.
+- [x] Search alumni.
+- [x] Search blogs.
+- [x] Search committee members.
+- [x] Enforce role-based visibility in search results.
 
 ## 12. Notification system
 
 - [ ] Support email notifications.
-- [ ] Support dashboard notifications.
-- [ ] Notify applicants when an application is approved.
+- [x] Support dashboard notifications.
+- [x] Notify applicants when an application is approved.
 - [ ] Notify applicants when an application is rejected.
 - [ ] Send event reminders.
-- [ ] Confirm successful event registrations.
+- [x] Confirm successful event registrations.
 - [ ] Send committee announcements.
 
 ## 13. File management
 
-- [ ] Upload images.
-- [ ] Upload PDF files.
+- [x] Upload images.
+- [x] Upload PDF files.
 - [ ] Upload videos.
 - [ ] Upload documents.
-- [ ] Upload profile pictures.
+- [x] Upload profile pictures.
 - [ ] Upload event banners.
 - [ ] Authorize file uploads and access by role and ownership.
 - [ ] Validate file type and size.
@@ -503,47 +510,47 @@ This checklist converts the complete SRS into independently verifiable acceptanc
 
 ### 14.1 Report types
 
-- [ ] Generate a member-list report.
-- [ ] Generate a pending-members report.
+- [x] Generate a member-list report.
+- [x] Generate a pending-members report.
 - [ ] Generate an attendance report.
-- [ ] Generate a financial report.
-- [ ] Generate an executive-list report.
-- [ ] Generate an event-registrations report.
-- [ ] Generate a project-inventory report.
+- [x] Generate a financial report.
+- [x] Generate an executive-list report.
+- [x] Generate an event-registrations report.
+- [x] Generate a project-inventory report.
 
 ### 14.2 Report formats
 
-- [ ] Generate reports as PDF.
-- [ ] Generate reports as CSV.
-- [ ] Generate reports as Excel workbooks.
+- [x] Generate reports as PDF.
+- [x] Generate reports as CSV.
+- [x] Generate reports as Excel workbooks.
 
 ## 15. Admin settings
 
 - [ ] Manage the website logo.
 - [ ] Manage hero banners.
-- [ ] Manage social links.
+- [x] Manage social links.
 - [ ] Manage email templates.
 - [ ] Manage the gallery.
 - [ ] Manage homepage sections.
 - [ ] Manage theme colors.
-- [ ] Manage contact information.
+- [x] Manage contact information.
 
 ## 16. Non-functional requirements
 
 ### 16.1 Performance
 
-- [ ] Load the home page in under 2 seconds under the defined test conditions.
+- [x] Load the home page in under 2 seconds under the defined test conditions.
 - [ ] Load the dashboard in under 3 seconds under the defined test conditions.
 - [ ] Document the performance-test environment, dataset, device, network, and percentile used for acceptance.
 
 ### 16.2 Security
 
-- [ ] Serve production traffic over HTTPS.
-- [ ] Hash passwords securely.
-- [ ] Enforce role-based authorization on the server.
-- [ ] Protect state-changing requests against CSRF.
-- [ ] Prevent SQL-injection-style query injection.
-- [ ] Prevent cross-site scripting (XSS).
+- [x] Serve production traffic over HTTPS.
+- [x] Hash passwords securely.
+- [x] Enforce role-based authorization on the server.
+- [x] Protect state-changing requests against CSRF.
+- [x] Prevent SQL-injection-style query injection.
+- [x] Prevent cross-site scripting (XSS).
 - [ ] Validate all untrusted input.
 
 ### 16.3 Scalability
@@ -560,9 +567,9 @@ This checklist converts the complete SRS into independently verifiable acceptanc
 
 ### 16.5 Responsive design
 
-- [ ] Support desktop layouts.
-- [ ] Support tablet layouts.
-- [ ] Support mobile layouts.
+- [x] Support desktop layouts.
+- [x] Support tablet layouts.
+- [x] Support mobile layouts.
 
 ### 16.6 Accessibility
 
@@ -571,31 +578,31 @@ This checklist converts the complete SRS into independently verifiable acceptanc
 
 ## 17. Deliverables
 
-- [ ] Provide source code in a GitHub repository.
-- [ ] Provide a deployment link.
-- [ ] Provide the database schema or ER diagram.
-- [ ] Provide API documentation.
-- [ ] Provide an installation guide.
-- [ ] Provide admin credentials.
-- [ ] Provide a user manual.
-- [ ] Provide a README.
+- [x] Provide source code in a GitHub repository.
+- [x] Provide a deployment link.
+- [x] Provide the database schema or ER diagram.
+- [x] Provide API documentation.
+- [x] Provide an installation guide.
+- [x] Provide admin credentials.
+- [x] Provide a user manual.
+- [x] Provide a README.
 
 ## 18. Production-readiness and evaluation criteria
 
 - [ ] Deliver a production-ready web platform for ASRRO.
 - [ ] Deliver a complete organizational management system.
 - [ ] Integrate public-facing content management.
-- [ ] Integrate the complete membership lifecycle.
-- [ ] Integrate role-based administration.
-- [ ] Integrate event management.
-- [ ] Integrate project showcasing.
+- [x] Integrate the complete membership lifecycle.
+- [x] Integrate role-based administration.
+- [x] Integrate event management.
+- [x] Integrate project showcasing.
 - [ ] Integrate alumni tracking.
-- [ ] Integrate executive committee operations.
+- [x] Integrate executive committee operations.
 - [ ] Integrate financial management.
 - [ ] Provide an intuitive user experience.
-- [ ] Use a maintainable system design.
-- [ ] Make the platform extensible.
-- [ ] Make the platform deployable in real-world environments.
+- [x] Use a maintainable system design.
+- [x] Make the platform extensible.
+- [x] Make the platform deployable in real-world environments.
 - [ ] Support ASRRO's long-term growth as a frontier technology research organization.
 
 ## Completion gate
