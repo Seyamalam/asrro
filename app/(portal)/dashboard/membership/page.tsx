@@ -1,7 +1,6 @@
-import { CheckCircle2, Download, FileCheck2, ReceiptText } from "lucide-react"
+import { CheckCircle2, FileCheck2, ReceiptText } from "lucide-react"
 
 import {
-  ActionButton,
   PageHeader,
   Panel,
   StatusPill,
@@ -10,6 +9,10 @@ import {
   MembershipCard,
   MembershipDetails,
 } from "@/components/dashboard/membership-card"
+import {
+  MembershipCardDownloadButton,
+  MembershipReceiptDownloadButton,
+} from "@/components/dashboard/membership-download-button"
 import { currentMember } from "@/data/dashboard-data"
 
 export default function MembershipPage() {
@@ -19,12 +22,7 @@ export default function MembershipPage() {
         eyebrow="Digital credential"
         title="Membership card"
         description="Your permanent ASRRO identity and membership payment records."
-        actions={
-          <ActionButton>
-            <Download className="size-3.5" />
-            Download PDF
-          </ActionButton>
-        }
+        actions={<MembershipCardDownloadButton label="Download card" />}
       />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(20rem,.85fr)]">
         <div className="space-y-4">
@@ -36,7 +34,7 @@ export default function MembershipPage() {
         <div className="space-y-4">
           <Panel
             title="Membership record"
-            description="Verified against the ASRRO member directory."
+            description="Matched with the ASRRO member directory."
           >
             <dl className="divide-y divide-slate-100 px-5 dark:divide-white/8">
               {[
@@ -98,9 +96,7 @@ export default function MembershipPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold">{receipt.amount}</p>
-                    <button className="mt-1 text-[10px] font-semibold text-blue-600">
-                      PDF
-                    </button>
+                    <MembershipReceiptDownloadButton receipt={receipt} />
                   </div>
                 </div>
               ))}
@@ -109,9 +105,9 @@ export default function MembershipPage() {
           <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-400/15 dark:bg-emerald-500/8 dark:text-emerald-100">
             <FileCheck2 className="size-5 shrink-0" />
             <div>
-              <p className="text-xs font-semibold">Credential verified</p>
+              <p className="text-xs font-semibold">Credential ready</p>
               <p className="mt-1 text-[11px] leading-5 opacity-75">
-                QR validation and PDF downloads use the same immutable member
+                The QR code and downloadable card use the same permanent member
                 UUID.
               </p>
             </div>

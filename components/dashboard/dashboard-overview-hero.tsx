@@ -65,7 +65,7 @@ export function DashboardOverviewHero({
               </p>
               <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-100">
                 <ShieldCheck className="size-4 text-emerald-500" />
-                Better Auth verified
+                Secure account active
               </div>
               <p className="mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400">
                 {accountEmail || "Authenticated session"}
