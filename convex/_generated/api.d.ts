@@ -8,13 +8,55 @@
  * @module
  */
 
+import type * as _lib_auth from "../_lib/auth.js";
+import type * as _lib_counters from "../_lib/counters.js";
+import type * as _lib_validation from "../_lib/validation.js";
+import type * as alumni from "../alumni.js";
+import type * as assets from "../assets.js";
+import type * as blogs from "../blogs.js";
+import type * as committee from "../committee.js";
+import type * as contact from "../contact.js";
+import type * as content from "../content.js";
+import type * as events from "../events.js";
+import type * as finance from "../finance.js";
+import type * as gallery from "../gallery.js";
+import type * as members from "../members.js";
+import type * as membership from "../membership.js";
+import type * as model from "../model.js";
+import type * as notifications from "../notifications.js";
+import type * as projects from "../projects.js";
+import type * as publications from "../publications.js";
+import type * as reports from "../reports.js";
+import type * as search from "../search.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  "_lib/auth": typeof _lib_auth;
+  "_lib/counters": typeof _lib_counters;
+  "_lib/validation": typeof _lib_validation;
+  alumni: typeof alumni;
+  assets: typeof assets;
+  blogs: typeof blogs;
+  committee: typeof committee;
+  contact: typeof contact;
+  content: typeof content;
+  events: typeof events;
+  finance: typeof finance;
+  gallery: typeof gallery;
+  members: typeof members;
+  membership: typeof membership;
+  model: typeof model;
+  notifications: typeof notifications;
+  projects: typeof projects;
+  publications: typeof publications;
+  reports: typeof reports;
+  search: typeof search;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
