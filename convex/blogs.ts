@@ -5,13 +5,18 @@ import {
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 import { requireExecutive, writeAudit } from "./_lib/auth"
-import { cleanText } from "./_lib/validation"
-import { blogFields } from "./model"
+import { cleanText, normalizeEmail } from "./_lib/validation"
+import { blogCommentFields, blogFields } from "./model"
 
 const blogDoc = v.object({
   _id: v.id("blogs"),
   _creationTime: v.number(),
   ...blogFields,
+})
+const commentDoc = v.object({
+  _id: v.id("blogComments"),
+  _creationTime: v.number(),
+  ...blogCommentFields,
 })
 
 export const listPublic = query({
@@ -86,6 +91,105 @@ export const getPublicBySlug = query({
       .withIndex("by_slug", (q) => q.eq("slug", args.slug.trim().toLowerCase()))
       .unique()
     return item?.status === "published" ? item : null
+  },
+})
+
+export const listComments = query({
+  args: { blogId: v.id("blogs") },
+  returns: v.array(commentDoc),
+  handler: async (ctx, args) => {
+    const blog = await ctx.db.get("blogs", args.blogId)
+    if (!blog || blog.status !== "published") return []
+    return await ctx.db
+      .query("blogComments")
+      .withIndex("by_blogId_and_status_and_createdAt", (q) =>
+        q.eq("blogId", args.blogId).eq("status", "approved")
+      )
+      .order("desc")
+      .take(100)
+  },
+})
+
+export const submitComment = mutation({
+  args: {
+    blogId: v.id("blogs"),
+    name: v.string(),
+    email: v.string(),
+    body: v.string(),
+    website: v.optional(v.string()),
+  },
+  returns: v.object({ status: v.literal("pending") }),
+  handler: async (ctx, args) => {
+    const blog = await ctx.db.get("blogs", args.blogId)
+    if (!blog || blog.status !== "published")
+      throw new ConvexError("Article not found")
+    if (args.website?.trim()) return { status: "pending" as const }
+    const emailNormalized = normalizeEmail(args.email)
+    const latest = await ctx.db
+      .query("blogComments")
+      .withIndex("by_emailNormalized_and_createdAt", (q) =>
+        q.eq("emailNormalized", emailNormalized)
+      )
+      .order("desc")
+      .first()
+    const now = Date.now()
+    if (latest && now - latest.createdAt < 60_000)
+      throw new ConvexError("Please wait before sending another comment")
+    await ctx.db.insert("blogComments", {
+      blogId: args.blogId,
+      name: cleanText(args.name, "Name", 120),
+      emailNormalized,
+      body: cleanText(args.body, "Comment", 2_000),
+      status: "pending",
+      createdAt: now,
+    })
+    return { status: "pending" as const }
+  },
+})
+
+export const listCommentsAdmin = query({
+  args: {
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("spam")
+    ),
+  },
+  returns: v.array(commentDoc),
+  handler: async (ctx, args) => {
+    await requireExecutive(ctx)
+    return await ctx.db
+      .query("blogComments")
+      .withIndex("by_status_and_createdAt", (q) => q.eq("status", args.status))
+      .order("desc")
+      .take(200)
+  },
+})
+
+export const moderateComment = mutation({
+  args: {
+    commentId: v.id("blogComments"),
+    status: v.union(v.literal("approved"), v.literal("spam")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requireExecutive(ctx)
+    const comment = await ctx.db.get("blogComments", args.commentId)
+    if (!comment) throw new ConvexError("Comment not found")
+    await ctx.db.patch("blogComments", comment._id, {
+      status: args.status,
+      moderatedAt: Date.now(),
+      moderatedBy: actor._id,
+    })
+    await writeAudit(
+      ctx,
+      actor,
+      "blog.comment_moderate",
+      "blogComment",
+      comment._id,
+      `Marked comment ${args.status}`
+    )
+    return null
   },
 })
 

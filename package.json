@@ -16,6 +16,8 @@
     "doctor:staged": "react-doctor . --staged --no-telemetry --blocking error --max-duration 90",
     "test": "vitest",
     "test:once": "vitest run",
+    "test:capacity": "RUN_CAPACITY=1 vitest run convex/capacity.test.ts",
+    "verify:runtime": "node scripts/verify-runtime.mjs",
     "check": "bun run lint && bun run typecheck && bun run format:check && bun run test:once && bun run doctor",
     "prepare": "husky"
   },

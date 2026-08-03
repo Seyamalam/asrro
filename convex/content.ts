@@ -146,6 +146,70 @@ export const publicSettings = query({
       .take(100),
 })
 
+export const publicBranding = query({
+  args: {},
+  returns: v.object({
+    organizationName: v.string(),
+    logoUrl: v.union(v.string(), v.null()),
+    heroUrl: v.union(v.string(), v.null()),
+    primaryColor: v.string(),
+    accentColor: v.string(),
+    aboutTitle: v.string(),
+    aboutCopy: v.string(),
+    mission: v.string(),
+    vision: v.string(),
+    highlightsEnabled: v.boolean(),
+  }),
+  handler: async (ctx) => {
+    const rows = await ctx.db
+      .query("settings")
+      .withIndex("by_isPublic_and_key", (q) => q.eq("isPublic", true))
+      .order("asc")
+      .take(100)
+    const settings = new Map(rows.map((row) => [row.key, row.value]))
+    const assetUrl = async (key: string) => {
+      const raw = settings.get(key)
+      if (!raw) return null
+      const assetId = ctx.db.normalizeId("assets", raw)
+      if (!assetId) return null
+      const asset = await ctx.db.get("assets", assetId)
+      return asset?.visibility === "public"
+        ? await ctx.storage.getUrl(asset.storageId)
+        : null
+    }
+    const color = (key: string, fallback: string) => {
+      const value = settings.get(key)
+      return value && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+    }
+    const [logoUrl, heroUrl] = await Promise.all([
+      assetUrl("branding.logoassetid"),
+      assetUrl("home.heroassetid"),
+    ])
+    return {
+      organizationName:
+        settings.get("organization.name") ??
+        "Andromeda Space and Robotics Research Organization",
+      logoUrl,
+      heroUrl,
+      primaryColor: color("theme.primary", "#2359d4"),
+      accentColor: color("theme.accent", "#00a6b2"),
+      aboutTitle:
+        settings.get("home.about.title") ??
+        "Research becomes credible when curiosity meets discipline.",
+      aboutCopy:
+        settings.get("home.about.copy") ??
+        "ASRRO is CUET’s cross-disciplinary home for students building, testing, documenting, and sharing frontier technology.",
+      mission:
+        settings.get("home.mission") ??
+        "Make frontier research practical, collaborative, and locally meaningful.",
+      vision:
+        settings.get("home.vision") ??
+        "A Bangladesh where student researchers shape the technologies defining our future.",
+      highlightsEnabled: settings.get("home.highlights.enabled") !== "false",
+    }
+  },
+})
+
 export const upsertSetting = mutation({
   args: {
     key: v.string(),

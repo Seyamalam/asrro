@@ -26,6 +26,34 @@ export const systemRole = v.union(
   v.literal("super_admin")
 )
 
+export const executivePosition = v.union(
+  v.literal("president"),
+  v.literal("vice_president"),
+  v.literal("general_secretary"),
+  v.literal("organizing_secretary"),
+  v.literal("financial_secretary"),
+  v.literal("office_secretary"),
+  v.literal("education_secretary"),
+  v.literal("publication_secretary"),
+  v.literal("it_secretary"),
+  v.literal("event_coordinator"),
+  v.literal("membership_coordinator"),
+  v.literal("executive_member")
+)
+
+export const portalPermission = v.union(
+  v.literal("membership_manage"),
+  v.literal("events_manage"),
+  v.literal("committee_manage"),
+  v.literal("projects_manage"),
+  v.literal("content_manage"),
+  v.literal("reports_view"),
+  v.literal("files_manage"),
+  v.literal("notifications_send"),
+  v.literal("finance_manage"),
+  v.literal("finance_summary")
+)
+
 export const eventStatus = v.union(
   v.literal("draft"),
   v.literal("published"),
@@ -109,6 +137,7 @@ export const applicationFields = {
 
 export const memberFields = {
   identityToken: v.optional(v.string()),
+  authUserId: v.optional(v.string()),
   applicationId: v.optional(v.id("membershipApplications")),
   uuid: v.string(),
   fullName: v.string(),
@@ -126,6 +155,8 @@ export const memberFields = {
   emergencyContact: v.optional(v.string()),
   status: memberStatus,
   systemRole,
+  executivePosition: v.optional(executivePosition),
+  permissions: v.optional(v.array(portalPermission)),
   joinedAt: v.number(),
   membershipValidUntil: v.optional(v.number()),
   updatedAt: v.number(),
@@ -153,12 +184,16 @@ export const eventFields = {
   activeRegistrationCount: v.number(),
   rules: v.optional(v.string()),
   eligibility: v.string(),
+  eligibilityEvidenceRequired: v.optional(v.boolean()),
+  allowedInstitutionEmailDomains: v.optional(v.array(v.string())),
   registrationFee: v.number(),
   currency: v.string(),
   contactName: v.string(),
   contactEmail: v.optional(v.string()),
   contactPhone: v.optional(v.string()),
   bannerAssetId: v.optional(v.id("assets")),
+  reminderHoursBefore: v.optional(v.number()),
+  certificatesEnabled: v.optional(v.boolean()),
   publishedAt: v.optional(v.number()),
   createdBy: v.id("members"),
   updatedAt: v.number(),
@@ -174,8 +209,13 @@ export const registrationFields = {
   guestPhone: v.optional(v.string()),
   institution: v.optional(v.string()),
   institutionDivision: v.optional(v.string()),
+  institutionEmail: v.optional(v.string()),
   studentId: v.optional(v.string()),
   eligibilityConfirmed: v.optional(v.boolean()),
+  eligibilityEvidenceAssetId: v.optional(v.id("assets")),
+  eligibilityEvidenceNote: v.optional(v.string()),
+  eligibilityVerifiedAt: v.optional(v.number()),
+  eligibilityVerifiedBy: v.optional(v.id("members")),
   registrationCode: v.string(),
   cancellationTokenHash: v.string(),
   status: registrationStatus,
@@ -185,6 +225,10 @@ export const registrationFields = {
   reviewedAt: v.optional(v.number()),
   reviewedBy: v.optional(v.id("members")),
   attendanceMarkedAt: v.optional(v.number()),
+  reminderSentAt: v.optional(v.number()),
+  certificateCode: v.optional(v.string()),
+  certificateIssuedAt: v.optional(v.number()),
+  certificateIssuedBy: v.optional(v.id("members")),
 }
 
 export const committeeTermFields = {
@@ -295,6 +339,21 @@ export const blogFields = {
   updatedAt: v.number(),
 }
 
+export const blogCommentFields = {
+  blogId: v.id("blogs"),
+  name: v.string(),
+  emailNormalized: v.string(),
+  body: v.string(),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("approved"),
+    v.literal("spam")
+  ),
+  createdAt: v.number(),
+  moderatedAt: v.optional(v.number()),
+  moderatedBy: v.optional(v.id("members")),
+}
+
 export const contactMessageFields = {
   name: v.string(),
   email: v.string(),
@@ -325,6 +384,31 @@ export const notificationFields = {
   readAt: v.optional(v.number()),
 }
 
+export const emailOutboxFields = {
+  recipient: v.string(),
+  recipientName: v.optional(v.string()),
+  template: v.string(),
+  subject: v.string(),
+  textBody: v.string(),
+  htmlBody: v.optional(v.string()),
+  status: v.union(
+    v.literal("queued"),
+    v.literal("sending"),
+    v.literal("sent"),
+    v.literal("failed")
+  ),
+  memberId: v.optional(v.id("members")),
+  applicationId: v.optional(v.id("membershipApplications")),
+  eventId: v.optional(v.id("events")),
+  registrationId: v.optional(v.id("eventRegistrations")),
+  attempts: v.number(),
+  lastError: v.optional(v.string()),
+  providerMessageId: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  sentAt: v.optional(v.number()),
+}
+
 export const financeTransactionFields = {
   direction: moneyDirection,
   category: v.string(),
@@ -346,6 +430,8 @@ export const assetFields = {
   storageId: v.id("_storage"),
   kind: assetKind,
   fileName: v.string(),
+  contentType: v.optional(v.string()),
+  size: v.optional(v.number()),
   altText: v.optional(v.string()),
   ownerMemberId: v.optional(v.id("members")),
   visibility: v.union(v.literal("public"), v.literal("private")),

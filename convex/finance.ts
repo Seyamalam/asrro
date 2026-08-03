@@ -5,7 +5,13 @@ import {
 import { ConvexError, v } from "convex/values"
 import { mutation, query, type MutationCtx } from "./_generated/server"
 import type { Doc } from "./_generated/dataModel"
-import { currentMember, requireFinanceAccess, writeAudit } from "./_lib/auth"
+import {
+  currentMember,
+  hasPermission,
+  requireFinanceAccess,
+  requirePermission,
+  writeAudit,
+} from "./_lib/auth"
 import {
   assertFiniteNonNegative,
   cleanText,
@@ -28,48 +34,131 @@ const summaryDoc = v.object({
   expense: v.number(),
   updatedAt: v.number(),
 })
-
-const financePositions = new Set([
-  "president",
-  "vice_president",
-  "financial_secretary",
-  "organizing_secretary",
-])
+const financeAccessLevel = v.union(
+  v.literal("manage"),
+  v.literal("summary"),
+  v.literal("none")
+)
 
 export const access = query({
   args: {},
-  returns: v.object({ allowed: v.boolean(), reason: v.string() }),
+  returns: v.object({
+    allowed: v.boolean(),
+    level: financeAccessLevel,
+    reason: v.string(),
+  }),
   handler: async (ctx) => {
     const member = await currentMember(ctx)
     if (!member || member.status !== "active") {
-      return { allowed: false, reason: "Active membership is required." }
+      return {
+        allowed: false,
+        level: "none" as const,
+        reason: "Active membership is required.",
+      }
     }
-    if (member.systemRole === "super_admin") {
-      return { allowed: true, reason: "Super administrator access." }
+    if (hasPermission(member, "finance_manage")) {
+      return {
+        allowed: true,
+        level: "manage" as const,
+        reason: "Detailed finance access granted.",
+      }
     }
-    if (member.systemRole !== "executive") {
-      return { allowed: false, reason: "Finance access is restricted." }
+    if (hasPermission(member, "finance_summary")) {
+      return {
+        allowed: true,
+        level: "summary" as const,
+        reason: "High-level finance summary access granted.",
+      }
     }
-    const currentTerm = await ctx.db
-      .query("committeeTerms")
-      .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
-      .order("desc")
-      .first()
-    if (!currentTerm) {
-      return { allowed: false, reason: "No current committee is configured." }
+    return {
+      allowed: false,
+      level: "none" as const,
+      reason: "Finance access is restricted.",
     }
-    const appointment = await ctx.db
-      .query("committeeMembers")
-      .withIndex("by_memberId_and_termId", (q) =>
-        q.eq("memberId", member._id).eq("termId", currentTerm._id)
-      )
-      .unique()
-    return appointment && financePositions.has(appointment.positionKey)
-      ? { allowed: true, reason: `${appointment.position} access.` }
-      : {
-          allowed: false,
-          reason: "Your committee position does not include detailed finance.",
-        }
+  },
+})
+
+export const summaryView = query({
+  args: {
+    currency: v.string(),
+    from: v.number(),
+    to: v.number(),
+    fromMonth: v.string(),
+    toMonth: v.string(),
+  },
+  returns: v.object({
+    income: v.number(),
+    expense: v.number(),
+    net: v.number(),
+    transactionCount: v.number(),
+    truncated: v.boolean(),
+    months: v.array(
+      v.object({
+        monthKey: v.string(),
+        income: v.number(),
+        expense: v.number(),
+      })
+    ),
+    expenseCategories: v.array(
+      v.object({ category: v.string(), amount: v.number() })
+    ),
+  }),
+  handler: async (ctx, args) => {
+    await requirePermission(ctx, "finance_summary")
+    if (args.to < args.from) throw new ConvexError("Invalid reporting period")
+    const currency = cleanText(args.currency, "Currency", 10).toUpperCase()
+    const [months, transactions] = await Promise.all([
+      ctx.db
+        .query("financeMonthlySummaries")
+        .withIndex("by_currency_and_monthKey", (q) =>
+          q
+            .eq("currency", currency)
+            .gte("monthKey", args.fromMonth)
+            .lte("monthKey", args.toMonth)
+        )
+        .order("asc")
+        .take(120),
+      ctx.db
+        .query("financeTransactions")
+        .withIndex("by_status_and_occurredAt", (q) =>
+          q
+            .eq("status", "posted")
+            .gte("occurredAt", args.from)
+            .lte("occurredAt", args.to)
+        )
+        .take(5_001),
+    ])
+    const bounded = transactions.slice(0, 5_000)
+    const categories = new Map<string, number>()
+    for (const transaction of bounded) {
+      if (
+        transaction.currency === currency &&
+        transaction.direction === "expense"
+      ) {
+        categories.set(
+          transaction.category,
+          (categories.get(transaction.category) ?? 0) + transaction.amount
+        )
+      }
+    }
+    const income = months.reduce((total, month) => total + month.income, 0)
+    const expense = months.reduce((total, month) => total + month.expense, 0)
+    return {
+      income,
+      expense,
+      net: income - expense,
+      transactionCount: bounded.length,
+      truncated: transactions.length > bounded.length,
+      months: months.map((month) => ({
+        monthKey: month.monthKey,
+        income: month.income,
+        expense: month.expense,
+      })),
+      expenseCategories: [...categories.entries()]
+        .map(([category, amount]) => ({ category, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 12),
+    }
   },
 })
 

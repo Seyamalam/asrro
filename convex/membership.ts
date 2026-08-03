@@ -4,11 +4,15 @@ import {
 } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { action } from "./_generated/server"
+import { api, internal } from "./_generated/api"
 import type { MutationCtx } from "./_generated/server"
 import type { Id } from "./_generated/dataModel"
 import { currentMember } from "./_lib/auth"
-import { requireExecutive, writeAudit } from "./_lib/auth"
+import { requirePermission, writeAudit } from "./_lib/auth"
 import { adjustCounter } from "./_lib/counters"
+import { enqueueEmail, membershipDecisionEmail } from "./_lib/email"
+import { defaultUuidMapping } from "./_lib/uuid"
 import {
   cleanText,
   hashSecret,
@@ -87,32 +91,6 @@ async function requirePrivateAsset(
   if (!asset || asset.visibility !== "private") {
     throw new ConvexError(`${label} upload is invalid`)
   }
-}
-
-function defaultUuidCode(hscBatch: string, department: string) {
-  const galaxies: Record<string, string> = {
-    "20": "C",
-    "21": "A",
-    "22": "M",
-    "23": "W",
-  }
-  const stars: Record<string, string> = {
-    mechanical: "V",
-    urp: "A",
-    architecture: "B",
-    pme: "C",
-    cse: "R",
-    eee: "P",
-    civil: "Z",
-    ete: "L",
-    mie: "D",
-    bme: "F",
-    mme: "K",
-    wre: "S",
-  }
-  const galaxy = galaxies[hscBatch.trim().slice(-2)]
-  const star = stars[department.trim().toLowerCase()]
-  return galaxy && star ? `${galaxy}${star}` : null
 }
 
 export const submitApplication = mutation({
@@ -328,6 +306,11 @@ export const initializeFirstAdmin = mutation({
       membershipValidUntil: now + 366 * 86_400_000,
       updatedAt: now,
     })
+    await ctx.db.insert("uuidCounters", {
+      key: "uuid.AR",
+      nextNumber: 2,
+      updatedAt: now,
+    })
     await adjustCounter(ctx, "members.total", 1)
     await adjustCounter(ctx, "members.active", 1)
     return { uuid: "AR-001" }
@@ -432,7 +415,7 @@ export const listApplications = query({
   },
   returns: paginationResultValidator(applicationDoc),
   handler: async (ctx, args) => {
-    await requireExecutive(ctx)
+    await requirePermission(ctx, "membership_manage")
     return await ctx.db
       .query("membershipApplications")
       .withIndex("by_status_and_submittedAt", (q) =>
@@ -455,7 +438,7 @@ export const reviewApplication = mutation({
     uuid: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
-    const actor = await requireExecutive(ctx)
+    const actor = await requirePermission(ctx, "membership_manage")
     const application = await ctx.db.get(
       "membershipApplications",
       args.applicationId
@@ -489,6 +472,20 @@ export const reviewApplication = mutation({
           createdAt: now,
         })
       }
+      const email = membershipDecisionEmail({
+        name: application.fullName,
+        decision: "rejected",
+        note: reviewNote,
+      })
+      const outboxId = await enqueueEmail(ctx, {
+        recipient: application.email,
+        recipientName: application.fullName,
+        applicationId: application._id,
+        ...email,
+      })
+      await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
+        outboxId,
+      })
       await writeAudit(
         ctx,
         actor,
@@ -516,9 +513,11 @@ export const reviewApplication = mutation({
           .eq("department", application.department.toLowerCase())
       )
       .unique()
-    const code = mapping?.active
-      ? mapping.code
-      : defaultUuidCode(application.hscBatch, application.department)
+    const fallbackMapping = defaultUuidMapping(
+      application.hscBatch,
+      application.department
+    )
+    const code = mapping?.active ? mapping.code : fallbackMapping?.code
     if (!code)
       throw new ConvexError(
         "No UUID mapping is configured for this batch and department"
@@ -570,6 +569,7 @@ export const reviewApplication = mutation({
       status: "active",
       systemRole: "member",
       joinedAt: now,
+      membershipValidUntil: now + 366 * 86_400_000,
       updatedAt: now,
     })
     await ctx.db.patch("membershipApplications", application._id, {
@@ -590,6 +590,19 @@ export const reviewApplication = mutation({
       read: false,
       createdAt: now,
     })
+    const email = membershipDecisionEmail({
+      name: application.fullName,
+      decision: "approved",
+      uuid,
+    })
+    const outboxId = await enqueueEmail(ctx, {
+      recipient: application.email,
+      recipientName: application.fullName,
+      memberId,
+      applicationId: application._id,
+      ...email,
+    })
+    await ctx.scheduler.runAfter(0, internal.emailActions.deliver, { outboxId })
     await adjustCounter(ctx, "membershipApplications.pending", -1)
     await adjustCounter(ctx, "members.active", 1)
     await adjustCounter(ctx, "membershipApplications.approved", 1)
@@ -616,7 +629,7 @@ export const upsertUuidMapping = mutation({
   },
   returns: v.id("uuidMappings"),
   handler: async (ctx, args) => {
-    const actor = await requireExecutive(ctx)
+    const actor = await requirePermission(ctx, "membership_manage")
     const hscBatch = cleanText(args.hscBatch, "HSC batch", 20)
     const department = cleanText(
       args.department,
@@ -653,5 +666,47 @@ export const upsertUuidMapping = mutation({
       `Configured ${hscBatch}/${department} as ${code}`
     )
     return id
+  },
+})
+
+export const bulkApproveApplications = action({
+  args: { applicationIds: v.array(v.id("membershipApplications")) },
+  returns: v.array(
+    v.object({
+      applicationId: v.id("membershipApplications"),
+      uuid: v.string(),
+    })
+  ),
+  handler: async (
+    ctx,
+    args
+  ): Promise<
+    Array<{ applicationId: Id<"membershipApplications">; uuid: string }>
+  > => {
+    const applicationIds = [...new Set(args.applicationIds)]
+    if (applicationIds.length === 0 || applicationIds.length > 25) {
+      throw new ConvexError("Select between 1 and 25 pending applications")
+    }
+    return await Promise.all(
+      applicationIds.map(
+        async (
+          applicationId
+        ): Promise<{
+          applicationId: Id<"membershipApplications">
+          uuid: string
+        }> => {
+          const result: { uuid?: string } = await ctx.runMutation(
+            api.membership.reviewApplication,
+            {
+              applicationId,
+              decision: "approve",
+            }
+          )
+          if (!result.uuid)
+            throw new ConvexError("Approval did not create a UUID")
+          return { applicationId, uuid: result.uuid }
+        }
+      )
+    )
   },
 })

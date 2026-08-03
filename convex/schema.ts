@@ -5,12 +5,14 @@ import {
   assetFields,
   auditLogFields,
   blogFields,
+  blogCommentFields,
   committeeMemberFields,
   committeeTermFields,
   contactMessageFields,
   contentPageFields,
   counterFields,
   eventFields,
+  emailOutboxFields,
   financeTransactionFields,
   galleryAlbumFields,
   galleryItemFields,
@@ -42,6 +44,7 @@ export default defineSchema({
 
   members: defineTable(memberFields)
     .index("by_identityToken", ["identityToken"])
+    .index("by_authUserId", ["authUserId"])
     .index("by_uuid", ["uuid"])
     .index("by_emailNormalized", ["emailNormalized"])
     .index("by_status_and_joinedAt", ["status", "joinedAt"])
@@ -84,6 +87,12 @@ export default defineSchema({
       "guestEmailNormalized",
     ])
     .index("by_eventId_and_transactionId", ["eventId", "transactionId"])
+    .index("by_eventId_and_status_and_reminderSentAt_and_registeredAt", [
+      "eventId",
+      "status",
+      "reminderSentAt",
+      "registeredAt",
+    ])
     .index("by_memberId_and_registeredAt", ["memberId", "registeredAt"]),
 
   committeeTerms: defineTable(committeeTermFields).index(
@@ -187,6 +196,17 @@ export default defineSchema({
       searchField: "title",
       filterFields: ["status", "category"],
     }),
+  blogComments: defineTable(blogCommentFields)
+    .index("by_blogId_and_status_and_createdAt", [
+      "blogId",
+      "status",
+      "createdAt",
+    ])
+    .index("by_status_and_createdAt", ["status", "createdAt"])
+    .index("by_emailNormalized_and_createdAt", [
+      "emailNormalized",
+      "createdAt",
+    ]),
 
   contactMessages: defineTable(contactMessageFields)
     .index("by_status_and_submittedAt", ["status", "submittedAt"])
@@ -208,6 +228,13 @@ export default defineSchema({
       "read",
       "createdAt",
     ]),
+
+  emailOutbox: defineTable(emailOutboxFields)
+    .index("by_status_and_createdAt", ["status", "createdAt"])
+    .index("by_memberId_and_createdAt", ["memberId", "createdAt"])
+    .index("by_applicationId_and_createdAt", ["applicationId", "createdAt"])
+    .index("by_eventId_and_createdAt", ["eventId", "createdAt"])
+    .index("by_registrationId_and_createdAt", ["registrationId", "createdAt"]),
 
   financeTransactions: defineTable(financeTransactionFields)
     .index("by_status_and_occurredAt", ["status", "occurredAt"])
@@ -231,6 +258,24 @@ export default defineSchema({
   })
     .index("by_monthKey_and_currency", ["monthKey", "currency"])
     .index("by_currency_and_monthKey", ["currency", "monthKey"]),
+  financeBudgets: defineTable({
+    eventId: v.optional(v.id("events")),
+    fiscalYear: v.number(),
+    name: v.string(),
+    currency: v.string(),
+    plannedIncome: v.number(),
+    plannedExpense: v.number(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("approved"),
+      v.literal("closed")
+    ),
+    notes: v.optional(v.string()),
+    createdBy: v.id("members"),
+    updatedAt: v.number(),
+  })
+    .index("by_fiscalYear_and_status", ["fiscalYear", "status"])
+    .index("by_eventId_and_fiscalYear", ["eventId", "fiscalYear"]),
 
   assets: defineTable(assetFields)
     .index("by_storageId", ["storageId"])

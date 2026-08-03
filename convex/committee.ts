@@ -1,6 +1,8 @@
 import { ConvexError, v } from "convex/values"
+import { internal } from "./_generated/api"
 import { mutation, query } from "./_generated/server"
-import { requireExecutive, writeAudit } from "./_lib/auth"
+import { requireExecutive, requirePermission, writeAudit } from "./_lib/auth"
+import { announcementEmail, enqueueEmail } from "./_lib/email"
 import {
   assertTimestampOrder,
   cleanText,
@@ -236,5 +238,51 @@ export const upsertMember = mutation({
       `Updated ${value.name} as ${value.position}`
     )
     return id
+  },
+})
+
+export const sendAnnouncement = mutation({
+  args: { subject: v.string(), message: v.string() },
+  returns: v.object({ queued: v.number() }),
+  handler: async (ctx, args) => {
+    await requirePermission(ctx, "committee_manage")
+    const term = await ctx.db
+      .query("committeeTerms")
+      .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
+      .order("desc")
+      .first()
+    if (!term) throw new ConvexError("No current committee is configured")
+    const members = await ctx.db
+      .query("committeeMembers")
+      .withIndex("by_termId_and_displayOrder", (q) => q.eq("termId", term._id))
+      .take(100)
+    const recipients = members.filter(
+      (
+        committeeMember
+      ): committeeMember is typeof committeeMember & { email: string } =>
+        committeeMember.email !== undefined
+    )
+    await Promise.all(
+      recipients.map(async (committeeMember) => {
+        const content = announcementEmail({
+          name: committeeMember.name,
+          subject: args.subject,
+          message: args.message,
+        })
+        const outboxId = await enqueueEmail(ctx, {
+          recipient: committeeMember.email,
+          recipientName: committeeMember.name,
+          memberId: committeeMember.memberId,
+          template: "committee_announcement",
+          subject: content.subject,
+          textBody: content.textBody,
+          htmlBody: content.htmlBody,
+        })
+        await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
+          outboxId,
+        })
+      })
+    )
+    return { queued: recipients.length }
   },
 })

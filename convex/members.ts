@@ -7,18 +7,25 @@ import { mutation, query } from "./_generated/server"
 import type { Doc } from "./_generated/dataModel"
 import {
   currentMember,
-  requireExecutive,
+  effectivePermissions,
+  requirePermission,
   requireMember,
   requireSuperAdmin,
   writeAudit,
 } from "./_lib/auth"
+import { defaultUuidMapping } from "./_lib/uuid"
 import {
   cleanText,
   hashSecret,
   normalizeEmail,
   optionalText,
 } from "./_lib/validation"
-import { memberFields } from "./model"
+import {
+  executivePosition,
+  memberFields,
+  memberStatus,
+  portalPermission,
+} from "./model"
 
 const memberDoc = v.object({
   _id: v.id("members"),
@@ -53,6 +60,8 @@ const memberSelf = v.object({
     v.literal("executive"),
     v.literal("super_admin")
   ),
+  executivePosition: v.optional(executivePosition),
+  permissions: v.array(portalPermission),
   joinedAt: v.number(),
   membershipValidUntil: v.optional(v.number()),
 })
@@ -120,6 +129,8 @@ async function presentMember(
     emergencyContact: member.emergencyContact,
     status: member.status,
     systemRole: member.systemRole,
+    executivePosition: member.executivePosition,
+    permissions: effectivePermissions(member),
     joinedAt: member.joinedAt,
     membershipValidUntil: member.membershipValidUntil,
   }
@@ -147,6 +158,10 @@ export const myMembership = query({
           .eq("department", member.department.toLowerCase())
       )
       .unique()
+    const fallbackMapping = defaultUuidMapping(
+      member.hscBatch,
+      member.department
+    )
     const application = member.applicationId
       ? await ctx.db.get("membershipApplications", member.applicationId)
       : null
@@ -172,8 +187,8 @@ export const myMembership = query({
       joinedAt: member.joinedAt,
       membershipValidUntil: member.membershipValidUntil,
       profileImageUrl,
-      galaxyName: mapping?.galaxyName,
-      starName: mapping?.starName,
+      galaxyName: mapping?.galaxyName ?? fallbackMapping?.galaxyName,
+      starName: mapping?.starName ?? fallbackMapping?.starName,
       receipt:
         application &&
         application.amountPaid !== undefined &&
@@ -305,7 +320,7 @@ export const list = query({
   },
   returns: paginationResultValidator(memberDoc),
   handler: async (ctx, args) => {
-    await requireExecutive(ctx)
+    await requirePermission(ctx, "membership_manage")
     return await ctx.db
       .query("members")
       .withIndex("by_status_and_joinedAt", (q) => q.eq("status", args.status))
@@ -318,7 +333,7 @@ export const getByUuid = query({
   args: { uuid: v.string() },
   returns: v.union(memberDoc, v.null()),
   handler: async (ctx, args) => {
-    await requireExecutive(ctx)
+    await requirePermission(ctx, "membership_manage")
     return await ctx.db
       .query("members")
       .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid.trim().toUpperCase()))
@@ -337,7 +352,7 @@ export const setStatus = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const actor = await requireExecutive(ctx)
+    const actor = await requirePermission(ctx, "membership_manage")
     const member = await ctx.db.get("members", args.memberId)
     if (!member) throw new ConvexError("Member not found")
     if (
@@ -380,6 +395,10 @@ export const setRole = mutation({
     if (!member) throw new ConvexError("Member not found")
     await ctx.db.patch("members", member._id, {
       systemRole: args.systemRole,
+      executivePosition:
+        args.systemRole === "executive" ? member.executivePosition : undefined,
+      permissions:
+        args.systemRole === "executive" ? member.permissions : undefined,
       updatedAt: Date.now(),
     })
     await writeAudit(
@@ -390,6 +409,209 @@ export const setRole = mutation({
       member._id,
       `Changed ${member.uuid} role to ${args.systemRole}`
     )
+    return null
+  },
+})
+
+export const setExecutiveAccess = mutation({
+  args: {
+    memberId: v.id("members"),
+    executivePosition,
+    permissions: v.array(portalPermission),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requireSuperAdmin(ctx)
+    const member = await ctx.db.get("members", args.memberId)
+    if (!member) throw new ConvexError("Member not found")
+    if (args.permissions.length > 10) {
+      throw new ConvexError("Too many permissions were selected")
+    }
+    await ctx.db.patch("members", member._id, {
+      systemRole: "executive",
+      executivePosition: args.executivePosition,
+      permissions: [...new Set(args.permissions)],
+      updatedAt: Date.now(),
+    })
+    await writeAudit(
+      ctx,
+      actor,
+      "member.executive_access",
+      "member",
+      member._id,
+      `Assigned ${args.executivePosition} with ${args.permissions.length} permissions`
+    )
+    return null
+  },
+})
+
+export const searchAdmin = query({
+  args: {
+    search: v.optional(v.string()),
+    status: v.optional(memberStatus),
+    department: v.optional(v.string()),
+  },
+  returns: v.array(memberDoc),
+  handler: async (ctx, args) => {
+    await requirePermission(ctx, "membership_manage")
+    const search = args.search?.trim()
+    let rows
+    if (search && args.status && args.department) {
+      rows = await ctx.db
+        .query("members")
+        .withSearchIndex("search_members", (q) =>
+          q
+            .search("fullName", search)
+            .eq("status", args.status!)
+            .eq("department", args.department!)
+        )
+        .take(100)
+    } else if (search && args.status) {
+      rows = await ctx.db
+        .query("members")
+        .withSearchIndex("search_members", (q) =>
+          q.search("fullName", search).eq("status", args.status!)
+        )
+        .take(100)
+    } else if (search && args.department) {
+      rows = await ctx.db
+        .query("members")
+        .withSearchIndex("search_members", (q) =>
+          q.search("fullName", search).eq("department", args.department!)
+        )
+        .take(100)
+    } else if (search) {
+      rows = await ctx.db
+        .query("members")
+        .withSearchIndex("search_members", (q) => q.search("fullName", search))
+        .take(100)
+    } else if (args.status) {
+      rows = await ctx.db
+        .query("members")
+        .withIndex("by_status_and_joinedAt", (q) =>
+          q.eq("status", args.status!)
+        )
+        .order("desc")
+        .take(100)
+    } else if (args.department) {
+      rows = await ctx.db
+        .query("members")
+        .withIndex("by_department_and_joinedAt", (q) =>
+          q.eq("department", args.department!)
+        )
+        .order("desc")
+        .take(100)
+    } else {
+      rows = await ctx.db.query("members").order("desc").take(100)
+    }
+    return args.department && !search && args.status
+      ? rows.filter((row) => row.department === args.department)
+      : rows
+  },
+})
+
+export const adminUpdate = mutation({
+  args: {
+    memberId: v.id("members"),
+    fullName: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    department: v.optional(v.string()),
+    hscBatch: v.optional(v.string()),
+    studentId: v.optional(v.string()),
+    institute: v.optional(v.string()),
+    membershipValidUntil: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requirePermission(ctx, "membership_manage")
+    const member = await ctx.db.get("members", args.memberId)
+    if (!member) throw new ConvexError("Member not found")
+    if (
+      member.systemRole === "super_admin" &&
+      actor.systemRole !== "super_admin"
+    ) {
+      throw new ConvexError("Only a super administrator may edit this account")
+    }
+    const patch: Partial<Doc<"members">> & { updatedAt: number } = {
+      updatedAt: Date.now(),
+    }
+    if (args.fullName !== undefined)
+      patch.fullName = cleanText(args.fullName, "Full name", 120)
+    if (args.phone !== undefined)
+      patch.phone = cleanText(args.phone, "Phone", 30)
+    if (args.department !== undefined)
+      patch.department = cleanText(args.department, "Department", 100)
+    if (args.hscBatch !== undefined)
+      patch.hscBatch = cleanText(args.hscBatch, "HSC batch", 20)
+    if (args.studentId !== undefined)
+      patch.studentId = cleanText(args.studentId, "Student ID", 80)
+    if (args.institute !== undefined)
+      patch.institute = cleanText(args.institute, "Institute", 160)
+    if (args.membershipValidUntil !== undefined)
+      patch.membershipValidUntil = args.membershipValidUntil
+    if (args.email !== undefined) {
+      const email = normalizeEmail(args.email)
+      const duplicate = await ctx.db
+        .query("members")
+        .withIndex("by_emailNormalized", (q) => q.eq("emailNormalized", email))
+        .unique()
+      if (duplicate && duplicate._id !== member._id) {
+        throw new ConvexError("Email address is already in use")
+      }
+      patch.email = email
+      patch.emailNormalized = email
+    }
+    await ctx.db.patch("members", member._id, patch)
+    await writeAudit(
+      ctx,
+      actor,
+      "member.update",
+      "member",
+      member._id,
+      `Updated ${member.uuid}`
+    )
+    return null
+  },
+})
+
+export const remove = mutation({
+  args: { memberId: v.id("members") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requirePermission(ctx, "membership_manage")
+    const member = await ctx.db.get("members", args.memberId)
+    if (!member) throw new ConvexError("Member not found")
+    if (member._id === actor._id)
+      throw new ConvexError("You cannot delete your own member record")
+    if (member.systemRole === "super_admin") {
+      throw new ConvexError("Super administrator records cannot be deleted")
+    }
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_memberId_and_createdAt", (q) =>
+        q.eq("memberId", member._id)
+      )
+      .take(200)
+    await Promise.all(
+      notifications.map((notification) =>
+        ctx.db.delete("notifications", notification._id)
+      )
+    )
+    if (member.applicationId) {
+      await ctx.db.patch("membershipApplications", member.applicationId, {
+        memberId: undefined,
+      })
+    }
+    await writeAudit(
+      ctx,
+      actor,
+      "member.delete",
+      "member",
+      member._id,
+      `Deleted ${member.uuid}`
+    )
+    await ctx.db.delete("members", member._id)
     return null
   },
 })

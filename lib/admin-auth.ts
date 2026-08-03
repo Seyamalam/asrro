@@ -14,3 +14,27 @@ export async function requirePortalRole(
   if (!allowed) redirect("/dashboard")
   return member
 }
+
+export async function requirePortalPermission(
+  permission:
+    | "membership_manage"
+    | "events_manage"
+    | "committee_manage"
+    | "projects_manage"
+    | "content_manage"
+    | "reports_view"
+    | "files_manage"
+    | "notifications_send"
+    | "finance_manage"
+    | "finance_summary"
+) {
+  const member = await fetchAuthQuery(api.members.me)
+  if (
+    member?.status !== "active" ||
+    (member.systemRole !== "super_admin" &&
+      !member.permissions.includes(permission))
+  ) {
+    redirect("/dashboard")
+  }
+  return member
+}
