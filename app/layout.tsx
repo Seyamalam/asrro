@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next"
 import { Geist_Mono, Manrope, Space_Grotesk } from "next/font/google"
-import Script from "next/script"
 
 import "./globals.css"
 import { AppProviders } from "@/components/providers/app-providers"
+import { getToken } from "@/lib/auth-server"
 import { cn } from "@/lib/utils"
 
 const manrope = Manrope({
@@ -69,15 +69,18 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const initialToken = await getToken()
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={cn(
         "font-sans antialiased",
         manrope.variable,
@@ -86,14 +89,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-svh overflow-x-clip bg-background text-foreground">
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="https://unpkg.com/react-scan/dist/auto.global.js"
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
-        <AppProviders>{children}</AppProviders>
+        <AppProviders initialToken={initialToken}>{children}</AppProviders>
       </body>
     </html>
   )

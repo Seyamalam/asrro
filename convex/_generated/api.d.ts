@@ -20,6 +20,7 @@ import type * as content from "../content.js";
 import type * as events from "../events.js";
 import type * as finance from "../finance.js";
 import type * as gallery from "../gallery.js";
+import type * as http from "../http.js";
 import type * as members from "../members.js";
 import type * as membership from "../membership.js";
 import type * as model from "../model.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   finance: typeof finance;
   gallery: typeof gallery;
+  http: typeof http;
   members: typeof members;
   membership: typeof membership;
   model: typeof model;
@@ -84,4 +86,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+};

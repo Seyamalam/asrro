@@ -5,6 +5,37 @@ import type { ReactNode } from "react"
 import { AnimatedNumber } from "@/components/motion/animated-number"
 import { cn } from "@/lib/utils"
 
+const metricToneClasses = {
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  cyan: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
+  violet:
+    "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  emerald:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+}
+
+const statusToneClasses = {
+  slate: "bg-slate-100 text-slate-600 dark:bg-white/8 dark:text-slate-300",
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/12 dark:text-blue-300",
+  green:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300",
+  amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300",
+  red: "bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300",
+  violet:
+    "bg-violet-50 text-violet-700 dark:bg-violet-500/12 dark:text-violet-300",
+}
+
+const actionVariantClasses = {
+  primary: "bg-blue-600 text-white shadow-sm hover:bg-blue-700",
+  secondary:
+    "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10",
+  quiet:
+    "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/8",
+  danger:
+    "bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/12 dark:text-rose-300",
+}
+
 export function PageHeader({
   eyebrow,
   title,
@@ -12,8 +43,8 @@ export function PageHeader({
   actions,
 }: {
   eyebrow?: string
-  title: string
-  description?: string
+  title: ReactNode
+  description?: ReactNode
   actions?: ReactNode
 }) {
   return (
@@ -100,17 +131,6 @@ export function MetricCard({
   prefix?: string
   suffix?: string
 }) {
-  const toneClasses = {
-    blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-    cyan: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
-    violet:
-      "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
-    amber:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-    emerald:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  }
-
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-white/10 dark:bg-slate-950/60">
       <div className="flex items-start justify-between gap-3">
@@ -127,7 +147,7 @@ export function MetricCard({
         <span
           className={cn(
             "grid size-9 place-items-center rounded-xl",
-            toneClasses[tone]
+            metricToneClasses[tone]
           )}
         >
           <Icon className="size-4" aria-hidden />
@@ -147,22 +167,11 @@ export function StatusPill({
   children: ReactNode
   tone?: "slate" | "blue" | "green" | "amber" | "red" | "violet"
 }) {
-  const tones = {
-    slate: "bg-slate-100 text-slate-600 dark:bg-white/8 dark:text-slate-300",
-    blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/12 dark:text-blue-300",
-    green:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/12 dark:text-emerald-300",
-    amber:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/12 dark:text-amber-300",
-    red: "bg-rose-50 text-rose-700 dark:bg-rose-500/12 dark:text-rose-300",
-    violet:
-      "bg-violet-50 text-violet-700 dark:bg-violet-500/12 dark:text-violet-300",
-  }
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
-        tones[tone]
+        statusToneClasses[tone]
       )}
     >
       <span className="size-1 rounded-full bg-current opacity-70" />
@@ -205,21 +214,12 @@ export function ActionButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "quiet" | "danger"
 }) {
-  const variants = {
-    primary: "bg-blue-600 text-white shadow-sm hover:bg-blue-700",
-    secondary:
-      "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10",
-    quiet:
-      "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/8",
-    danger:
-      "bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/12 dark:text-rose-300",
-  }
   return (
     <button
       type="button"
       className={cn(
         "inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-3 text-xs font-semibold transition outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-offset-slate-950",
-        variants[variant],
+        actionVariantClasses[variant],
         className
       )}
       {...props}
@@ -272,12 +272,4 @@ export function Insight({ children }: { children: ReactNode }) {
       <p>{children}</p>
     </div>
   )
-}
-
-export function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-BD", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(value)
 }

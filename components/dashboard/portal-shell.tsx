@@ -12,6 +12,7 @@ import {
   Gauge,
   Menu,
   Moon,
+  LogOut,
   PanelLeftClose,
   Search,
   Settings,
@@ -22,7 +23,9 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react"
+import { useQuery } from "convex/react"
 import Image from "next/image"
+import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useMemo, useState, type ReactNode } from "react"
@@ -49,7 +52,9 @@ import {
   CommandPalette,
   type CommandItem,
 } from "@/components/motion/command-palette"
-import { currentMember, type PortalRole } from "@/data/dashboard-data"
+import { api } from "@/convex/_generated/api"
+import type { PortalRole } from "@/data/dashboard-data"
+import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 type NavItem = {
@@ -170,7 +175,13 @@ function isActivePath(pathname: string, href: string) {
   return href === "/dashboard" ? pathname === href : pathname.startsWith(href)
 }
 
-function ShellTopbar({ onSearch }: { onSearch: () => void }) {
+function ShellTopbar({
+  onSearch,
+  initials,
+}: {
+  onSearch: () => void
+  initials: string
+}) {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
   const active = [...memberNav, ...executiveNav].find((item) =>
@@ -218,20 +229,20 @@ function ShellTopbar({ onSearch }: { onSearch: () => void }) {
         <Sun className="hidden size-4 dark:block" />
         <Moon className="size-4 dark:hidden" />
       </button>
-      <a
+      <Link
         href="/dashboard/notifications"
         aria-label="Notifications, 2 unread"
         className="relative grid size-9 place-items-center rounded-xl text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/8"
       >
         <Bell className="size-4" />
         <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-blue-600 ring-2 ring-white dark:ring-[#07101e]" />
-      </a>
-      <a
+      </Link>
+      <Link
         href="/dashboard/profile"
         className="grid size-9 place-items-center rounded-xl bg-slate-950 text-[11px] font-bold text-white ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-blue-600"
       >
-        {currentMember.initials}
-      </a>
+        {initials}
+      </Link>
     </header>
   )
 }
@@ -272,9 +283,8 @@ function SidebarBrand() {
 function SidebarNav({ role }: { role: PortalRole }) {
   const pathname = usePathname()
   const renderItems = (items: NavItem[]) =>
-    items
-      .filter((item) => roleRank[role] >= roleRank[item.minimumRole])
-      .map((item) => (
+    items.map((item) =>
+      roleRank[role] >= roleRank[item.minimumRole] ? (
         <AnimatedSidebarMenuItem key={item.href}>
           <AnimatedSidebarMenuButton
             href={item.href}
@@ -292,7 +302,8 @@ function SidebarNav({ role }: { role: PortalRole }) {
             {item.label}
           </AnimatedSidebarMenuButton>
         </AnimatedSidebarMenuItem>
-      ))
+      ) : null
+    )
 
   return (
     <>
@@ -320,19 +331,25 @@ function SidebarNav({ role }: { role: PortalRole }) {
   )
 }
 
-function RoleSwitcher({
+function AccountSummary({
   role,
-  onRoleChange,
+  name,
+  email,
+  onSignOut,
+  signingOut,
 }: {
   role: PortalRole
-  onRoleChange: (role: PortalRole) => void
+  name: string
+  email: string
+  onSignOut: () => void
+  signingOut: boolean
 }) {
   const { state } = useAnimatedSidebar()
   const collapsed = state === "collapsed"
   return (
     <div className="flex items-center gap-2 overflow-hidden">
       <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-500 text-[10px] font-bold text-white">
-        SR
+        {getInitials(name)}
       </div>
       <div
         className={cn(
@@ -341,37 +358,58 @@ function RoleSwitcher({
         )}
         aria-hidden={collapsed}
       >
-        <p className="truncate text-xs font-semibold text-white">
-          {currentMember.name}
+        <p className="truncate text-xs font-semibold text-white">{name}</p>
+        <p className="truncate text-[10px] text-slate-400">
+          {role === "admin"
+            ? "Super administrator"
+            : role === "executive"
+              ? "Executive"
+              : email}
         </p>
-        <label className="sr-only" htmlFor="portal-role">
-          Preview portal role
-        </label>
-        <select
-          id="portal-role"
-          value={role}
-          onChange={(event) => onRoleChange(event.target.value as PortalRole)}
-          className="mt-0.5 w-full appearance-none bg-transparent text-[10px] text-slate-400 outline-none focus:text-white"
-        >
-          <option value="member" className="text-slate-950">
-            General member
-          </option>
-          <option value="executive" className="text-slate-950">
-            Executive
-          </option>
-          <option value="admin" className="text-slate-950">
-            Super admin
-          </option>
-        </select>
       </div>
+      <button
+        type="button"
+        onClick={onSignOut}
+        disabled={signingOut}
+        aria-label="Sign out"
+        title="Sign out"
+        className={cn(
+          "grid size-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none disabled:opacity-50",
+          collapsed && "hidden"
+        )}
+      >
+        <LogOut className="size-3.5" />
+      </button>
     </div>
   )
 }
 
+function getInitials(name: string) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+  return initials || "A"
+}
+
 export function PortalShell({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const [role, setRole] = useState<PortalRole>(currentMember.access)
+  const member = useQuery(api.members.me)
+  const session = authClient.useSession()
+  const [signingOut, setSigningOut] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const role: PortalRole =
+    member?.systemRole === "super_admin"
+      ? "admin"
+      : member?.systemRole === "executive"
+        ? "executive"
+        : "member"
+  const accountName =
+    member?.fullName || session.data?.user.name || "ASRRO member"
+  const accountEmail = member?.email || session.data?.user.email || "Member"
+  const initials = getInitials(accountName)
   const visibleNav = useMemo(
     () =>
       [...memberNav, ...executiveNav].filter(
@@ -393,9 +431,11 @@ export function PortalShell({ children }: { children: ReactNode }) {
     [router, visibleNav]
   )
 
-  const updateRole = (nextRole: PortalRole) => {
-    setRole(nextRole)
-    localStorage.setItem("asrro-portal-role", nextRole)
+  const signOut = async () => {
+    setSigningOut(true)
+    await authClient.signOut()
+    router.replace("/login")
+    router.refresh()
   }
 
   return (
@@ -424,12 +464,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
           <SidebarNav role={role} />
         </AnimatedSidebarContent>
         <AnimatedSidebarFooter className="border-white/8 p-3">
-          <RoleSwitcher role={role} onRoleChange={updateRole} />
+          <AccountSummary
+            role={role}
+            name={accountName}
+            email={accountEmail}
+            onSignOut={() => {
+              void signOut()
+            }}
+            signingOut={signingOut}
+          />
         </AnimatedSidebarFooter>
         <AnimatedSidebarRail className="hover:after:bg-blue-400/40" />
       </AnimatedSidebar>
       <AnimatedSidebarInset className="bg-[#f5f7fb] dark:bg-[#07101e]">
-        <ShellTopbar onSearch={() => setSearchOpen(true)} />
+        <ShellTopbar onSearch={() => setSearchOpen(true)} initials={initials} />
         <div className="relative flex-1">
           <div
             aria-hidden

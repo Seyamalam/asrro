@@ -7,8 +7,13 @@ import {
   Orbit,
   UsersRound,
 } from "lucide-react"
+import Link from "next/link"
 
 import { MembershipCard } from "@/components/dashboard/membership-card"
+import {
+  DashboardGreeting,
+  DashboardMembershipSummary,
+} from "@/components/dashboard/dashboard-welcome"
 import {
   MetricCard,
   PageHeader,
@@ -31,15 +36,15 @@ export default function DashboardPage() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader
         eyebrow="Member overview"
-        title={`Good morning, ${currentMember.firstName}.`}
-        description="Your membership is active. Here is what is moving across ASRRO this week."
+        title={<DashboardGreeting />}
+        description={<DashboardMembershipSummary />}
         actions={
-          <a
+          <Link
             href="/dashboard/events"
             className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-blue-600 px-3 text-xs font-semibold text-white shadow-sm outline-none hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             Explore events <ArrowRight className="size-3.5" />
-          </a>
+          </Link>
         }
       />
 
@@ -106,12 +111,12 @@ export default function DashboardPage() {
           title="Upcoming events"
           description="Your registrations and events open to members"
           action={
-            <a
+            <Link
               href="/dashboard/events"
               className="text-xs font-semibold text-blue-600 hover:underline"
             >
               View all
-            </a>
+            </Link>
           }
         >
           <div className="divide-y divide-slate-100 dark:divide-white/8">
@@ -149,13 +154,13 @@ export default function DashboardPage() {
                     {event.time} · {event.venue}
                   </p>
                 </div>
-                <a
+                <Link
                   href="/dashboard/events"
                   aria-label={`View ${event.title}`}
                   className="grid size-9 place-items-center rounded-xl text-slate-400 outline-none hover:bg-slate-100 hover:text-blue-600 focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/8"
                 >
                   <ArrowRight className="size-4" />
-                </a>
+                </Link>
               </div>
             ))}
           </div>
@@ -166,12 +171,12 @@ export default function DashboardPage() {
           <Panel
             title="Latest signals"
             action={
-              <a
+              <Link
                 href="/dashboard/notifications"
                 className="text-xs font-semibold text-blue-600 hover:underline"
               >
                 All notifications
-              </a>
+              </Link>
             }
           >
             <div className="divide-y divide-slate-100 dark:divide-white/8">
@@ -211,12 +216,12 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <a
+          <Link
             href="/dashboard/projects"
             className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
           >
             Browse projects
-          </a>
+          </Link>
         </div>
       </Panel>
     </div>

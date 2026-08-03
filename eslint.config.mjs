@@ -66,6 +66,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "convex/_generated/**",
+    "convex/**/_generated/**",
     "next-env.d.ts",
   ]),
 ])

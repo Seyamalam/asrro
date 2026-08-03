@@ -15,12 +15,12 @@ import {
 import {
   ActionButton,
   Delta,
-  formatMoney,
   MetricCard,
   PageHeader,
   Panel,
   StatusPill,
 } from "@/components/dashboard/dashboard-kit"
+import { formatMoney } from "@/lib/format"
 import {
   Tabs,
   TabsContent,
@@ -128,7 +128,7 @@ export default function FinancePage() {
         title="Recent transactions"
         description="Latest verified ledger activity"
         action={
-          <button className="text-xs font-semibold text-blue-600">
+          <button type="button" className="text-xs font-semibold text-blue-600">
             View ledger
           </button>
         }

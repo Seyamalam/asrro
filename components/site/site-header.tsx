@@ -11,6 +11,7 @@ import {
   Newspaper,
   Users,
   FileText,
+  LogIn,
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
@@ -111,6 +112,13 @@ export function SiteHeader() {
         >
           Join ASRRO
         </Link>
+        <Link
+          href="/login"
+          className="hidden min-h-11 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-[#dbe9f5] transition hover:border-[#57e6e6]/50 hover:text-white focus-visible:ring-2 focus-visible:ring-[#57e6e6] focus-visible:outline-none sm:flex"
+        >
+          <LogIn className="size-4" />
+          Portal
+        </Link>
         <button
           type="button"
           onClick={() => setMenuOpen((value) => !value)}
@@ -159,6 +167,14 @@ export function SiteHeader() {
               className="mt-3 rounded-full bg-[#57e6e6] px-4 py-3 text-center font-semibold text-[#03101e]"
             >
               Join ASRRO
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="mt-2 flex items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-3 text-center font-semibold text-[#dbe9f5]"
+            >
+              <LogIn className="size-4" />
+              Member portal
             </Link>
           </div>
         </nav>

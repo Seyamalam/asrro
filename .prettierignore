@@ -3,6 +3,7 @@
 .next/
 convex/_generated/
 convex/_generated/ai/
+convex/**/_generated/
 components/motion/
 lib/ease.ts
 node_modules/
