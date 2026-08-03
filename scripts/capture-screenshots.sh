@@ -34,6 +34,8 @@ public_routes=(
   "public-news|/news"
   "news-riverwatch-field-notes|/news/riverwatch-field-notes"
   "auth-login|/login"
+  "auth-forgot-password|/forgot-password"
+  "auth-reset-password-invalid|/reset-password?error=INVALID_TOKEN"
   "not-found|/this-route-does-not-exist"
 )
 

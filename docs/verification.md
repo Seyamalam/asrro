@@ -1,21 +1,22 @@
 # Verification record
 
-Last verified on 3 August 2026 against the configured development backend and
+Last verified on 4 August 2026 against the configured development backend and
 an optimized local production build.
 
 ## Automated gates
 
-- Production build: passed for all 38 generated routes.
+- Production build: passed for all 40 generated routes.
 - Strict TypeScript: passed.
 - ESLint with zero warnings: passed.
 - Prettier check: passed.
 - React Doctor changed-scope audit: no issues across bugs, performance,
   accessibility, and maintainability diagnostics.
-- Backend and export tests: 13 passed. Coverage includes applicant isolation,
+- Backend and export tests: 15 passed. Coverage includes applicant isolation,
   duplicate membership payments, granular authorization, one-time
   administrator bootstrap, concurrent UUID allocation, email outbox behavior,
   event eligibility, duplicate event payments, comment moderation, branding
-  defaults, and valid CSV/XLSX/PDF event exports.
+  defaults, branded password-recovery email safety, and valid CSV/XLSX/PDF
+  event exports.
 - Backend schema/function synchronization: passed.
 - Capacity test: passed with 10,000 members, 500 events, and 100,000 event
   registrations; the in-memory run completed in 1.20 seconds.
@@ -29,6 +30,9 @@ an optimized local production build.
   authentication, and authenticated dashboard routes at 1440 × 1000 and
   390 × 844. Interactive controls exposed accessible names and the dashboard
   redirected unauthenticated visitors to login.
+- Password recovery was exercised end to end with a real single-use token:
+  request, callback, same-password reset, prior-session revocation, success,
+  generic unknown-account response, and invalid-link states all passed.
 
 ## Performance acceptance
 

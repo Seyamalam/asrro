@@ -5,6 +5,17 @@ contract. Browser code calls queries and mutations through the application
 provider; server-rendered routes use the authenticated server client. Internal
 functions and actions are never callable directly from a browser.
 
+## Authentication and password recovery
+
+`authClient.requestPasswordReset` accepts an email address and the local
+`/reset-password` callback URL. The response is deliberately identical whether
+or not an account exists. Existing accounts receive a single-use link that
+expires after 60 minutes through the durable email outbox. The callback
+validates the token before exposing it to the reset form, and
+`authClient.resetPassword` changes the credential and revokes existing
+sessions. The email includes text and branded, escaped HTML alternatives from
+`convex/_lib/passwordResetEmail.ts`.
+
 ## Public content and discovery
 
 | Module         | Public functions                                                                  | Purpose                                                                   |

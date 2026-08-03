@@ -11,6 +11,7 @@
 import type * as _lib_auth from "../_lib/auth.js";
 import type * as _lib_counters from "../_lib/counters.js";
 import type * as _lib_email from "../_lib/email.js";
+import type * as _lib_passwordResetEmail from "../_lib/passwordResetEmail.js";
 import type * as _lib_uuid from "../_lib/uuid.js";
 import type * as _lib_validation from "../_lib/validation.js";
 import type * as adminAccounts from "../adminAccounts.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "_lib/auth": typeof _lib_auth;
   "_lib/counters": typeof _lib_counters;
   "_lib/email": typeof _lib_email;
+  "_lib/passwordResetEmail": typeof _lib_passwordResetEmail;
   "_lib/uuid": typeof _lib_uuid;
   "_lib/validation": typeof _lib_validation;
   adminAccounts: typeof adminAccounts;

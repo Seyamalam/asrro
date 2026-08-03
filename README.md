@@ -42,10 +42,10 @@ bunx convex env set TRUSTED_ORIGINS http://localhost:3000
 bunx convex env set BETTER_AUTH_SECRET
 ```
 
-To deliver approval, rejection, reminder, and announcement emails, also set an
-organization-owned sender and provider key. Without these values, messages are
-retained in the administrative outbox with a failed-delivery reason while
-dashboard notifications continue to work.
+To deliver password-reset links, approval/rejection messages, reminders, and
+announcements, also set an organization-owned sender and provider key. Without
+these values, messages are retained in the administrative outbox with a
+failed-delivery reason while dashboard notifications continue to work.
 
 ```bash
 bunx convex env set EMAIL_FROM
