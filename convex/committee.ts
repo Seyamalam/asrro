@@ -19,6 +19,10 @@ const committeeMemberDoc = v.object({
   _creationTime: v.number(),
   ...committeeMemberFields,
 })
+const publicCommitteeMember = v.object({
+  member: committeeMemberDoc,
+  photoUrl: v.union(v.string(), v.null()),
+})
 
 export const current = query({
   args: {},
@@ -41,6 +45,85 @@ export const current = query({
       .order("asc")
       .take(100)
     return { term, members }
+  },
+})
+
+export const currentWithPhotos = query({
+  args: {},
+  returns: v.union(
+    v.object({ term: termDoc, members: v.array(publicCommitteeMember) }),
+    v.null()
+  ),
+  handler: async (ctx) => {
+    const term = await ctx.db
+      .query("committeeTerms")
+      .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
+      .order("desc")
+      .first()
+    if (!term) return null
+    const members = await ctx.db
+      .query("committeeMembers")
+      .withIndex("by_termId_and_isPublic_and_displayOrder", (q) =>
+        q.eq("termId", term._id).eq("isPublic", true)
+      )
+      .order("asc")
+      .take(100)
+    return {
+      term,
+      members: await Promise.all(
+        members.map(async (member) => {
+          const asset = member.photoAssetId
+            ? await ctx.db.get("assets", member.photoAssetId)
+            : null
+          return {
+            member,
+            photoUrl:
+              asset?.visibility === "public"
+                ? await ctx.storage.getUrl(asset.storageId)
+                : null,
+          }
+        })
+      ),
+    }
+  },
+})
+
+export const listAdmin = query({
+  args: {},
+  returns: v.object({
+    terms: v.array(termDoc),
+    currentMembers: v.array(committeeMemberDoc),
+  }),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [drafts, currentTerms, past] = await Promise.all([
+      ctx.db
+        .query("committeeTerms")
+        .withIndex("by_status_and_startsAt", (q) => q.eq("status", "draft"))
+        .order("desc")
+        .take(50),
+      ctx.db
+        .query("committeeTerms")
+        .withIndex("by_status_and_startsAt", (q) => q.eq("status", "current"))
+        .order("desc")
+        .take(10),
+      ctx.db
+        .query("committeeTerms")
+        .withIndex("by_status_and_startsAt", (q) => q.eq("status", "past"))
+        .order("desc")
+        .take(50),
+    ])
+    const current = currentTerms[0]
+    const currentMembers = current
+      ? await ctx.db
+          .query("committeeMembers")
+          .withIndex("by_termId_and_displayOrder", (q) =>
+            q.eq("termId", current._id)
+          )
+          .order("asc")
+          .take(100)
+      : []
+    return { terms: [...currentTerms, ...drafts, ...past], currentMembers }
   },
 })
 

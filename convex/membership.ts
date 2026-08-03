@@ -4,6 +4,9 @@ import {
 } from "convex/server"
 import { ConvexError, v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import type { MutationCtx } from "./_generated/server"
+import type { Id } from "./_generated/dataModel"
+import { currentMember } from "./_lib/auth"
 import { requireExecutive, writeAudit } from "./_lib/auth"
 import { adjustCounter } from "./_lib/counters"
 import {
@@ -58,6 +61,34 @@ const trackedApplication = v.object({
   memberUuid: v.optional(v.string()),
 })
 
+const accountApplication = v.object({
+  applicationCode: v.string(),
+  fullName: v.string(),
+  email: v.string(),
+  status: v.union(
+    v.literal("pending"),
+    v.literal("approved"),
+    v.literal("rejected")
+  ),
+  submittedAt: v.number(),
+  reviewedAt: v.optional(v.number()),
+  reviewNote: v.optional(v.string()),
+  memberUuid: v.optional(v.string()),
+  linked: v.boolean(),
+})
+
+async function requirePrivateAsset(
+  ctx: MutationCtx,
+  assetId: Id<"assets"> | undefined,
+  label: string
+) {
+  if (!assetId) return
+  const asset = await ctx.db.get("assets", assetId)
+  if (!asset || asset.visibility !== "private") {
+    throw new ConvexError(`${label} upload is invalid`)
+  }
+}
+
 function defaultUuidCode(hscBatch: string, department: string) {
   const galaxies: Record<string, string> = {
     "20": "C",
@@ -79,7 +110,7 @@ function defaultUuidCode(hscBatch: string, department: string) {
     mme: "K",
     wre: "S",
   }
-  const galaxy = galaxies[hscBatch.trim()]
+  const galaxy = galaxies[hscBatch.trim().slice(-2)]
   const star = stars[department.trim().toLowerCase()]
   return galaxy && star ? `${galaxy}${star}` : null
 }
@@ -93,6 +124,8 @@ export const submitApplication = mutation({
     status: v.literal("pending"),
   }),
   handler: async (ctx, args) => {
+    await requirePrivateAsset(ctx, args.profileAssetId, "Profile photo")
+    await requirePrivateAsset(ctx, args.paymentAssetId, "Payment proof")
     const emailNormalized = normalizeEmail(args.email)
     const transactionId = cleanText(args.transactionId, "Transaction ID", 100)
     const duplicatePayment = await ctx.db
@@ -149,6 +182,8 @@ export const submitApplication = mutation({
       paymentMethod: args.paymentMethod,
       transactionId,
       paymentAssetId: args.paymentAssetId,
+      amountPaid: 300,
+      currency: "BDT",
       status: "pending",
       submittedAt: now,
     })
@@ -159,6 +194,201 @@ export const submitApplication = mutation({
       applicationCode,
       trackingToken,
       status: "pending" as const,
+    }
+  },
+})
+
+export const accountStatus = query({
+  args: {},
+  returns: v.union(
+    v.object({ state: v.literal("signed_out") }),
+    v.object({
+      state: v.literal("member"),
+      memberStatus: v.union(
+        v.literal("pending"),
+        v.literal("active"),
+        v.literal("suspended"),
+        v.literal("alumni"),
+        v.literal("rejected")
+      ),
+      uuid: v.string(),
+      fullName: v.string(),
+      email: v.string(),
+    }),
+    v.object({
+      state: v.literal("applicant"),
+      accountName: v.optional(v.string()),
+      accountEmail: v.optional(v.string()),
+      application: accountApplication,
+    }),
+    v.object({
+      state: v.literal("unlinked"),
+      accountName: v.optional(v.string()),
+      accountEmail: v.optional(v.string()),
+      canBootstrap: v.boolean(),
+    })
+  ),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) return { state: "signed_out" as const }
+    const member = await currentMember(ctx)
+    if (member) {
+      return {
+        state: "member" as const,
+        memberStatus: member.status,
+        uuid: member.uuid,
+        fullName: member.fullName,
+        email: member.email,
+      }
+    }
+
+    let application = await ctx.db
+      .query("membershipApplications")
+      .withIndex("by_identityToken_and_submittedAt", (q) =>
+        q.eq("identityToken", identity.tokenIdentifier)
+      )
+      .order("desc")
+      .first()
+    const identityEmail = identity.email
+    if (!application && identityEmail) {
+      application = await ctx.db
+        .query("membershipApplications")
+        .withIndex("by_emailNormalized_and_submittedAt", (q) =>
+          q.eq("emailNormalized", normalizeEmail(identityEmail))
+        )
+        .order("desc")
+        .first()
+    }
+    if (!application) {
+      const firstMember = await ctx.db.query("members").first()
+      return {
+        state: "unlinked" as const,
+        accountName: identity.name,
+        accountEmail: identity.email,
+        canBootstrap: firstMember === null,
+      }
+    }
+    const applicationMember = application.memberId
+      ? await ctx.db.get("members", application.memberId)
+      : null
+    return {
+      state: "applicant" as const,
+      accountName: identity.name,
+      accountEmail: identity.email,
+      application: {
+        applicationCode: application.applicationCode,
+        fullName: application.fullName,
+        email: application.email,
+        status: application.status,
+        submittedAt: application.submittedAt,
+        reviewedAt: application.reviewedAt,
+        reviewNote: application.reviewNote,
+        memberUuid: applicationMember?.uuid,
+        linked: application.identityToken === identity.tokenIdentifier,
+      },
+    }
+  },
+})
+
+export const initializeFirstAdmin = mutation({
+  args: {
+    phone: v.string(),
+    institute: v.string(),
+    department: v.string(),
+    studentId: v.string(),
+    hscBatch: v.string(),
+  },
+  returns: v.object({ uuid: v.string() }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity?.email) throw new ConvexError("Authentication is required")
+    if (await ctx.db.query("members").first()) {
+      throw new ConvexError("The first administrator is already configured")
+    }
+    const now = Date.now()
+    const email = normalizeEmail(identity.email)
+    await ctx.db.insert("members", {
+      identityToken: identity.tokenIdentifier,
+      uuid: "AR-001",
+      fullName: cleanText(
+        identity.name ?? email.split("@", 1)[0],
+        "Full name",
+        120
+      ),
+      email,
+      emailNormalized: email,
+      phone: cleanText(args.phone, "Phone", 30),
+      department: cleanText(args.department, "Department", 100),
+      hscBatch: cleanText(args.hscBatch, "HSC batch", 20),
+      studentId: cleanText(args.studentId, "Student ID", 80),
+      institute: cleanText(args.institute, "Institute", 160),
+      status: "active",
+      systemRole: "super_admin",
+      joinedAt: now,
+      membershipValidUntil: now + 366 * 86_400_000,
+      updatedAt: now,
+    })
+    await adjustCounter(ctx, "members.total", 1)
+    await adjustCounter(ctx, "members.active", 1)
+    return { uuid: "AR-001" }
+  },
+})
+
+export const linkApplicationToMyAccount = mutation({
+  args: { applicationCode: v.string(), trackingToken: v.string() },
+  returns: v.object({
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    memberId: v.optional(v.id("members")),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new ConvexError("Authentication is required")
+    const application = await ctx.db
+      .query("membershipApplications")
+      .withIndex("by_applicationCode", (q) =>
+        q.eq("applicationCode", args.applicationCode.trim())
+      )
+      .unique()
+    if (
+      !application ||
+      application.trackingTokenHash !== (await hashSecret(args.trackingToken))
+    ) {
+      throw new ConvexError("Invalid application code or tracking token")
+    }
+    if (
+      application.identityToken &&
+      application.identityToken !== identity.tokenIdentifier
+    ) {
+      throw new ConvexError("Application is already linked to another account")
+    }
+    const existingMember = await currentMember(ctx)
+    if (existingMember && existingMember._id !== application.memberId) {
+      throw new ConvexError("This account is already linked to a member")
+    }
+    await ctx.db.patch("membershipApplications", application._id, {
+      identityToken: identity.tokenIdentifier,
+    })
+    if (application.memberId) {
+      const member = await ctx.db.get("members", application.memberId)
+      if (!member) throw new ConvexError("Member record not found")
+      if (
+        member.identityToken &&
+        member.identityToken !== identity.tokenIdentifier
+      ) {
+        throw new ConvexError("Member is already linked to another account")
+      }
+      await ctx.db.patch("members", member._id, {
+        identityToken: identity.tokenIdentifier,
+        updatedAt: Date.now(),
+      })
+    }
+    return {
+      status: application.status,
+      memberId: application.memberId,
     }
   },
 })
@@ -245,6 +475,20 @@ export const reviewApplication = mutation({
       })
       await adjustCounter(ctx, "membershipApplications.pending", -1)
       await adjustCounter(ctx, "membershipApplications.rejected", 1)
+      if (application.identityToken) {
+        await ctx.db.insert("notifications", {
+          identityToken: application.identityToken,
+          applicationId: application._id,
+          kind: "membership_rejected",
+          title: "Membership application update",
+          body:
+            reviewNote ??
+            "Your membership application was not approved. Contact the membership team if you need help.",
+          link: "/applicant-status",
+          read: false,
+          createdAt: now,
+        })
+      }
       await writeAudit(
         ctx,
         actor,
@@ -318,6 +562,8 @@ export const reviewApplication = mutation({
       hscBatch: application.hscBatch,
       studentId: application.studentId,
       institute: application.institute,
+      dateOfBirth: application.dateOfBirth,
+      bloodGroup: application.bloodGroup,
       profileAssetId: application.profileAssetId,
       address: application.address,
       emergencyContact: application.emergencyContact,
@@ -335,9 +581,12 @@ export const reviewApplication = mutation({
     })
     await ctx.db.insert("notifications", {
       memberId,
+      identityToken: application.identityToken,
+      applicationId: application._id,
       kind: "membership_approved",
       title: "Membership approved",
       body: `Welcome to ASRRO. Your member UUID is ${uuid}.`,
+      link: "/dashboard/membership",
       read: false,
       createdAt: now,
     })

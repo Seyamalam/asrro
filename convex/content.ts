@@ -44,6 +44,36 @@ export const listPages = query({
       .paginate(args.paginationOpts),
 })
 
+export const listPagesAdmin = query({
+  args: {},
+  returns: v.array(pageDoc),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [drafts, published, archived] = await Promise.all([
+      ctx.db
+        .query("contentPages")
+        .withIndex("by_status_and_publishedAt", (q) => q.eq("status", "draft"))
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("contentPages")
+        .withIndex("by_status_and_publishedAt", (q) =>
+          q.eq("status", "published")
+        )
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("contentPages")
+        .withIndex("by_status_and_publishedAt", (q) =>
+          q.eq("status", "archived")
+        )
+        .order("desc")
+        .take(100),
+    ])
+    return [...drafts, ...published, ...archived]
+  },
+})
+
 export const upsertPage = mutation({
   args: {
     pageId: v.optional(v.id("contentPages")),
@@ -153,6 +183,27 @@ export const upsertSetting = mutation({
       `Updated ${key}`
     )
     return id
+  },
+})
+
+export const listSettingsAdmin = query({
+  args: {},
+  returns: v.array(settingDoc),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [publicItems, privateItems] = await Promise.all([
+      ctx.db
+        .query("settings")
+        .withIndex("by_isPublic_and_key", (q) => q.eq("isPublic", true))
+        .order("asc")
+        .take(200),
+      ctx.db
+        .query("settings")
+        .withIndex("by_isPublic_and_key", (q) => q.eq("isPublic", false))
+        .order("asc")
+        .take(200),
+    ])
+    return [...publicItems, ...privateItems]
   },
 })
 

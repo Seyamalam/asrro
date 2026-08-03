@@ -18,6 +18,13 @@ const itemDoc = v.object({
   _creationTime: v.number(),
   ...galleryItemFields,
 })
+const albumCard = v.object({
+  album: albumDoc,
+  coverUrl: v.union(v.string(), v.null()),
+  imageCount: v.number(),
+  videoCount: v.number(),
+  videoUrl: v.union(v.string(), v.null()),
+})
 
 export const listPublicAlbums = query({
   args: { paginationOpts: paginationOptsValidator },
@@ -67,6 +74,79 @@ export const getPublicAlbum = query({
       })
     )
     return { album, items }
+  },
+})
+
+export const listPublicCards = query({
+  args: {},
+  returns: v.array(albumCard),
+  handler: async (ctx) => {
+    const albums = await ctx.db
+      .query("galleryAlbums")
+      .withIndex("by_status_and_occurredAt", (q) => q.eq("status", "published"))
+      .order("desc")
+      .take(100)
+    return await Promise.all(
+      albums.map(async (album) => {
+        const items = await ctx.db
+          .query("galleryItems")
+          .withIndex("by_albumId_and_isPublic_and_displayOrder", (q) =>
+            q.eq("albumId", album._id).eq("isPublic", true)
+          )
+          .order("asc")
+          .take(500)
+        const assets = await Promise.all(
+          items.map(async (item) => await ctx.db.get("assets", item.assetId))
+        )
+        const cover = album.coverAssetId
+          ? await ctx.db.get("assets", album.coverAssetId)
+          : assets.find((asset) => asset?.kind === "image")
+        const video = assets.find((asset) => asset?.kind === "video")
+        return {
+          album,
+          coverUrl:
+            cover?.visibility === "public"
+              ? await ctx.storage.getUrl(cover.storageId)
+              : null,
+          imageCount: assets.filter((asset) => asset?.kind === "image").length,
+          videoCount: assets.filter((asset) => asset?.kind === "video").length,
+          videoUrl:
+            video?.visibility === "public"
+              ? await ctx.storage.getUrl(video.storageId)
+              : null,
+        }
+      })
+    )
+  },
+})
+
+export const listAdmin = query({
+  args: {},
+  returns: v.array(albumDoc),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [drafts, published, archived] = await Promise.all([
+      ctx.db
+        .query("galleryAlbums")
+        .withIndex("by_status_and_occurredAt", (q) => q.eq("status", "draft"))
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("galleryAlbums")
+        .withIndex("by_status_and_occurredAt", (q) =>
+          q.eq("status", "published")
+        )
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("galleryAlbums")
+        .withIndex("by_status_and_occurredAt", (q) =>
+          q.eq("status", "archived")
+        )
+        .order("desc")
+        .take(100),
+    ])
+    return [...drafts, ...published, ...archived]
   },
 })
 

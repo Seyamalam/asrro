@@ -57,6 +57,79 @@ export const getPublicBySlug = query({
   },
 })
 
+const publicPublicationCard = v.object({
+  publication: publicationDoc,
+  downloadUrl: v.union(v.string(), v.null()),
+})
+
+export const listPublicCards = query({
+  args: { type: v.optional(publicationType) },
+  returns: v.array(publicPublicationCard),
+  handler: async (ctx, args) => {
+    const publications = args.type
+      ? await ctx.db
+          .query("publications")
+          .withIndex("by_status_and_type_and_publicationDate", (q) =>
+            q.eq("status", "published").eq("type", args.type!)
+          )
+          .order("desc")
+          .take(100)
+      : await ctx.db
+          .query("publications")
+          .withIndex("by_status_and_publicationDate", (q) =>
+            q.eq("status", "published")
+          )
+          .order("desc")
+          .take(100)
+    return await Promise.all(
+      publications.map(async (publication) => {
+        const asset = publication.assetId
+          ? await ctx.db.get("assets", publication.assetId)
+          : null
+        return {
+          publication,
+          downloadUrl:
+            asset?.visibility === "public"
+              ? await ctx.storage.getUrl(asset.storageId)
+              : null,
+        }
+      })
+    )
+  },
+})
+
+export const listAdmin = query({
+  args: {},
+  returns: v.array(publicationDoc),
+  handler: async (ctx) => {
+    await requireExecutive(ctx)
+    const [drafts, published, archived] = await Promise.all([
+      ctx.db
+        .query("publications")
+        .withIndex("by_status_and_publicationDate", (q) =>
+          q.eq("status", "draft")
+        )
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("publications")
+        .withIndex("by_status_and_publicationDate", (q) =>
+          q.eq("status", "published")
+        )
+        .order("desc")
+        .take(100),
+      ctx.db
+        .query("publications")
+        .withIndex("by_status_and_publicationDate", (q) =>
+          q.eq("status", "archived")
+        )
+        .order("desc")
+        .take(100),
+    ])
+    return [...drafts, ...published, ...archived]
+  },
+})
+
 export const upsert = mutation({
   args: {
     publicationId: v.optional(v.id("publications")),
