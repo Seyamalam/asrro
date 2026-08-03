@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Manrope, Space_Grotesk } from "next/font/google"
+import { Geist_Mono, Manrope, Sora } from "next/font/google"
 
 import "./globals.css"
 import { AppProviders } from "@/components/providers/app-providers"
@@ -11,7 +11,7 @@ const manrope = Manrope({
   variable: "--font-sans",
 })
 
-const spaceGrotesk = Space_Grotesk({
+const sora = Sora({
   subsets: ["latin"],
   variable: "--font-display",
 })
@@ -84,7 +84,7 @@ export default async function RootLayout({
       className={cn(
         "font-sans antialiased",
         manrope.variable,
-        spaceGrotesk.variable,
+        sora.variable,
         fontMono.variable
       )}
     >

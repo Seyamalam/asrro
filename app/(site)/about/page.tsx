@@ -79,9 +79,9 @@ export default function AboutPage() {
       <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
         <div className="mx-auto max-w-[88rem]">
           <div className="grid gap-4 lg:grid-cols-2">
-            <article className="rounded-2xl border border-white/10 bg-[#09182a] p-8 sm:p-10">
-              <Flag className="size-6 text-[#57e6e6]" />
-              <p className="mt-16 font-mono text-[10px] tracking-[.2em] text-[#71869e] uppercase">
+            <article className="rounded-2xl border border-[#2359d4]/15 bg-white/80 p-8 shadow-[0_18px_50px_rgba(35,89,212,.07)] sm:p-10 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none">
+              <Flag className="size-6 text-[#007d89] dark:text-[#65f2f1]" />
+              <p className="mt-16 font-mono text-[10px] tracking-[.2em] text-[#587084] uppercase dark:text-[#71869e]">
                 Mission
               </p>
               <h2 className="mt-4 text-3xl font-semibold tracking-[-.04em]">
@@ -89,9 +89,9 @@ export default function AboutPage() {
                 meaningful.
               </h2>
             </article>
-            <article className="rounded-2xl border border-[#3d8bff]/30 bg-[#0b1d31] p-8 sm:p-10">
-              <Eye className="size-6 text-[#ffb84d]" />
-              <p className="mt-16 font-mono text-[10px] tracking-[.2em] text-[#71869e] uppercase">
+            <article className="rounded-2xl border border-[#2359d4]/25 bg-[#eef3ff] p-8 shadow-[0_18px_50px_rgba(35,89,212,.08)] sm:p-10 dark:border-[#3d8bff]/30 dark:bg-[#0b1d31] dark:shadow-none">
+              <Eye className="size-6 text-[#d97706] dark:text-[#ffb84d]" />
+              <p className="mt-16 font-mono text-[10px] tracking-[.2em] text-[#587084] uppercase dark:text-[#71869e]">
                 Vision
               </p>
               <h2 className="mt-4 text-3xl font-semibold tracking-[-.04em]">
@@ -102,22 +102,26 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-      <section className="border-y border-white/10 bg-[#081524] px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+      <section className="border-y border-[#2359d4]/15 bg-[#eaf0f6] px-5 py-20 sm:px-8 lg:px-12 lg:py-28 dark:border-white/10 dark:bg-[#081524]">
         <div className="mx-auto max-w-[88rem]">
           <SectionHeading
             eyebrow="Journey log / 2016—present"
             title="Built one capability at a time."
           />
-          <ol className="relative border-l border-[#3d8bff]/35 lg:ml-[10rem]">
+          <ol className="relative border-l border-[#2359d4]/30 lg:ml-[10rem] dark:border-[#3d8bff]/35">
             {timeline.map(([year, title, copy]) => (
               <li
                 key={year}
-                className="relative grid gap-3 border-b border-white/10 py-8 pl-8 lg:grid-cols-[7rem_1fr_1.2fr]"
+                className="relative grid gap-3 border-b border-[#2359d4]/15 py-8 pl-8 lg:grid-cols-[7rem_1fr_1.2fr] dark:border-white/10"
               >
-                <span className="absolute top-10 -left-1.5 size-3 rounded-full border-2 border-[#081524] bg-[#57e6e6]" />
-                <span className="font-mono text-sm text-[#57e6e6]">{year}</span>
+                <span className="absolute top-10 -left-1.5 size-3 rounded-full border-2 border-[#eaf0f6] bg-[#00a6b2] dark:border-[#081524] dark:bg-[#65f2f1]" />
+                <span className="font-mono text-sm text-[#007d89] dark:text-[#65f2f1]">
+                  {year}
+                </span>
                 <h3 className="text-xl font-semibold">{title}</h3>
-                <p className="leading-7 text-[#9fb1c5]">{copy}</p>
+                <p className="leading-7 text-[#425a70] dark:text-[#9fb1c5]">
+                  {copy}
+                </p>
               </li>
             ))}
           </ol>
@@ -129,12 +133,17 @@ export default function AboutPage() {
             eyebrow="Operating principles"
             title="What holds the orbit together."
           />
-          <div className="grid gap-px overflow-hidden rounded-2xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px overflow-hidden rounded-2xl bg-[#2359d4]/15 shadow-[0_18px_50px_rgba(35,89,212,.06)] sm:grid-cols-2 lg:grid-cols-4 dark:bg-white/10 dark:shadow-none">
             {values.map(([Icon, title, copy]) => (
-              <article key={String(title)} className="bg-[#09182a] p-7">
-                <Icon className="size-5 text-[#57e6e6]" />
+              <article
+                key={String(title)}
+                className="bg-white/90 p-7 dark:bg-[#09182a]"
+              >
+                <Icon className="size-5 text-[#007d89] dark:text-[#65f2f1]" />
                 <h3 className="mt-12 text-xl font-semibold">{String(title)}</h3>
-                <p className="mt-3 leading-7 text-[#9fb1c5]">{String(copy)}</p>
+                <p className="mt-3 leading-7 text-[#425a70] dark:text-[#9fb1c5]">
+                  {String(copy)}
+                </p>
               </article>
             ))}
           </div>

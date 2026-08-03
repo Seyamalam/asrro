@@ -10,9 +10,9 @@ import {
   FileBarChart,
   FolderKanban,
   Gauge,
+  LogOut,
   Menu,
   Moon,
-  LogOut,
   PanelLeftClose,
   Search,
   Settings,
@@ -100,7 +100,6 @@ const memberNav: NavItem[] = [
     href: "/dashboard/notifications",
     icon: Bell,
     minimumRole: "member",
-    badge: "2",
     keywords: ["updates", "announcements"],
   },
 ]
@@ -111,7 +110,6 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/members",
     icon: UsersRound,
     minimumRole: "executive",
-    badge: "5",
     keywords: ["approval", "applications", "bulk"],
   },
   {
@@ -189,26 +187,29 @@ function ShellTopbar({
   )
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8 dark:border-white/8 dark:bg-[#07101e]/85">
-      <AnimatedSidebarTrigger className="-ml-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden dark:hover:bg-white/8 dark:hover:text-white">
+    <header className="sticky top-0 z-30 flex h-[4.5rem] items-center gap-2.5 border-b border-slate-200/80 bg-[#f8fafc]/90 px-3 backdrop-blur-xl sm:gap-3 sm:px-6 lg:px-8 dark:border-white/8 dark:bg-[#07111f]/88">
+      <AnimatedSidebarTrigger className="-ml-1 border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-cyan-300 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-cyan-400/40 dark:hover:text-white">
         <Menu className="size-5" />
       </AnimatedSidebarTrigger>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">
-          {active?.label ?? "ASRRO portal"}
-        </p>
-        <p className="hidden text-[10px] tracking-[0.16em] text-slate-400 uppercase sm:block">
-          Mission operations · CUET
+        <div className="flex items-center gap-2">
+          <span className="hidden size-1.5 rounded-full bg-cyan-500 shadow-[0_0_0_4px_rgba(6,182,212,.12)] sm:block" />
+          <p className="font-display truncate text-sm font-semibold tracking-[-0.02em] text-slate-950 dark:text-white">
+            {active?.label ?? "ASRRO portal"}
+          </p>
+        </div>
+        <p className="mt-0.5 hidden font-mono text-[9px] tracking-[0.16em] text-slate-400 uppercase sm:block">
+          OPS / CUET / {active?.minimumRole ?? "member"} channel
         </p>
       </div>
       <button
         type="button"
         onClick={onSearch}
-        className="hidden h-9 w-full max-w-[18rem] items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-xs text-slate-400 transition outline-none hover:border-slate-300 hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-500 sm:flex dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/8"
+        className="hidden h-10 w-full max-w-[19rem] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-left text-xs text-slate-400 shadow-sm transition outline-none hover:border-cyan-300 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-cyan-500 sm:flex dark:border-white/10 dark:bg-white/5 dark:text-slate-500 dark:hover:border-cyan-400/40 dark:hover:text-slate-300"
       >
         <Search className="size-3.5" />
         <span className="flex-1">Search portal</span>
-        <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[9px] dark:border-white/10 dark:bg-white/5">
+        <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[9px] dark:border-white/10 dark:bg-white/5">
           ⌘K
         </kbd>
       </button>
@@ -216,30 +217,33 @@ function ShellTopbar({
         type="button"
         aria-label="Search portal"
         onClick={onSearch}
-        className="grid size-9 place-items-center rounded-xl text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 sm:hidden dark:hover:bg-white/8"
+        className="grid size-10 place-items-center rounded-lg text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-500 sm:hidden dark:hover:bg-white/8"
       >
         <Search className="size-4" />
       </button>
       <button
         type="button"
-        aria-label="Toggle color theme"
         onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-        className="grid size-9 place-items-center rounded-xl text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/8"
+        aria-label="Toggle light and dark theme"
+        title="Toggle light and dark theme (D)"
+        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition outline-none hover:border-cyan-300 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-500 lg:px-3 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-cyan-400/40 dark:hover:text-white"
       >
-        <Sun className="hidden size-4 dark:block" />
-        <Moon className="size-4 dark:hidden" />
+        <Sun className="hidden size-4 dark:block" aria-hidden />
+        <Moon className="size-4 dark:hidden" aria-hidden />
+        <span className="hidden lg:inline">Theme</span>
       </button>
       <Link
         href="/dashboard/notifications"
-        aria-label="Notifications, 2 unread"
-        className="relative grid size-9 place-items-center rounded-xl text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/8"
+        aria-label="Notifications"
+        className="relative hidden size-10 place-items-center rounded-lg text-slate-500 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-500 sm:grid dark:hover:bg-white/8"
       >
         <Bell className="size-4" />
-        <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-blue-600 ring-2 ring-white dark:ring-[#07101e]" />
       </Link>
       <Link
         href="/dashboard/profile"
-        className="grid size-9 place-items-center rounded-xl bg-slate-950 text-[11px] font-bold text-white ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:bg-blue-600"
+        aria-label="Open your profile"
+        title="Open your profile"
+        className="grid size-10 place-items-center rounded-lg bg-[#0b1b31] font-mono text-[10px] font-bold text-white ring-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:bg-cyan-400 dark:text-[#06101d]"
       >
         {initials}
       </Link>
@@ -251,14 +255,14 @@ function SidebarBrand() {
   const { state } = useAnimatedSidebar()
   const collapsed = state === "collapsed"
   return (
-    <div className="flex h-12 items-center gap-3 overflow-hidden">
-      <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white ring-1 ring-slate-200 dark:bg-white/95 dark:ring-white/10">
+    <div className="flex h-14 items-center gap-3 overflow-hidden">
+      <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white shadow-[0_0_0_1px_rgba(255,255,255,.14),0_8px_30px_rgba(34,211,238,.13)]">
         <Image
           src="/asrro-logo.png"
           alt="ASRRO"
-          width={34}
-          height={34}
-          className="size-8 object-contain"
+          width={38}
+          height={38}
+          className="size-9 object-contain"
           priority
         />
       </div>
@@ -269,11 +273,11 @@ function SidebarBrand() {
         )}
         aria-hidden={collapsed}
       >
-        <p className="truncate text-sm font-bold tracking-[-0.02em] text-white">
+        <p className="font-display truncate text-base font-semibold tracking-[-0.035em] text-white">
           ASRRO
         </p>
-        <p className="truncate text-[9px] tracking-[0.15em] text-slate-400 uppercase">
-          Mission portal
+        <p className="truncate font-mono text-[8px] tracking-[0.18em] text-cyan-300 uppercase">
+          Orbital operations
         </p>
       </div>
     </div>
@@ -297,7 +301,7 @@ function SidebarNav({ role }: { role: PortalRole }) {
               ) : undefined
             }
             isActive={isActivePath(pathname, item.href)}
-            className="text-slate-400 hover:text-white focus-visible:bg-white/8 focus-visible:ring-blue-400 data-[active=true]:text-white"
+            className="min-h-11 rounded-lg px-2.5 text-slate-400 hover:bg-white/5 hover:text-white focus-visible:bg-white/8 focus-visible:ring-cyan-400 data-[active=true]:bg-cyan-400/10 data-[active=true]:text-cyan-100 md:min-h-10"
           >
             {item.label}
           </AnimatedSidebarMenuButton>
@@ -308,8 +312,8 @@ function SidebarNav({ role }: { role: PortalRole }) {
   return (
     <>
       <AnimatedSidebarGroup>
-        <AnimatedSidebarGroupLabel className="text-slate-500">
-          Member space
+        <AnimatedSidebarGroupLabel className="font-mono text-slate-500">
+          Personal channel
         </AnimatedSidebarGroupLabel>
         <AnimatedSidebarGroupContent>
           <AnimatedSidebarMenu>{renderItems(memberNav)}</AnimatedSidebarMenu>
@@ -317,8 +321,8 @@ function SidebarNav({ role }: { role: PortalRole }) {
       </AnimatedSidebarGroup>
       {roleRank[role] >= roleRank.executive ? (
         <AnimatedSidebarGroup>
-          <AnimatedSidebarGroupLabel className="text-slate-500">
-            Operations
+          <AnimatedSidebarGroupLabel className="font-mono text-slate-500">
+            Command channel
           </AnimatedSidebarGroupLabel>
           <AnimatedSidebarGroupContent>
             <AnimatedSidebarMenu>
@@ -347,8 +351,8 @@ function AccountSummary({
   const { state } = useAnimatedSidebar()
   const collapsed = state === "collapsed"
   return (
-    <div className="flex items-center gap-2 overflow-hidden">
-      <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-500 text-[10px] font-bold text-white">
+    <div className="flex items-center gap-2.5 overflow-hidden rounded-xl border border-white/8 bg-white/[0.035] p-2">
+      <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 font-mono text-[10px] font-bold text-cyan-100">
         {getInitials(name)}
       </div>
       <div
@@ -359,7 +363,7 @@ function AccountSummary({
         aria-hidden={collapsed}
       >
         <p className="truncate text-xs font-semibold text-white">{name}</p>
-        <p className="truncate text-[10px] text-slate-400">
+        <p className="mt-0.5 truncate font-mono text-[8px] tracking-wide text-slate-400 uppercase">
           {role === "admin"
             ? "Super administrator"
             : role === "executive"
@@ -374,7 +378,7 @@ function AccountSummary({
         aria-label="Sign out"
         title="Sign out"
         className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white/8 hover:text-white focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none disabled:opacity-50",
+          "grid size-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white/8 hover:text-orange-300 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none disabled:opacity-50",
           collapsed && "hidden"
         )}
       >
@@ -440,30 +444,30 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
   return (
     <AnimatedSidebarProvider
-      className="dashboard-theme bg-[#f5f7fb] text-slate-950 dark:bg-[#07101e] dark:text-slate-100"
+      className="dashboard-theme bg-[#eef3f8] text-slate-950 selection:bg-cyan-200 selection:text-slate-950 dark:bg-[#050b14] dark:text-slate-100 dark:selection:bg-cyan-400/30 dark:selection:text-white"
       style={{
-        "--sidebar-width": "16.75rem",
+        "--sidebar-width": "17.5rem",
         "--sidebar-width-icon": "4.75rem",
-        "--sidebar-width-mobile": "18.5rem",
+        "--sidebar-width-mobile": "min(20rem,calc(100vw - 2rem))",
       }}
     >
       <AnimatedSidebar
         ariaLabel="Portal navigation"
-        panelClassName="border-slate-800 bg-[#091526] text-white"
+        panelClassName="border-[#16304b] bg-[#071321] text-white shadow-[18px_0_60px_rgba(2,8,23,.16)]"
         className="z-40"
       >
-        <AnimatedSidebarHeader className="border-b border-white/8 px-3 py-3">
+        <AnimatedSidebarHeader className="border-b border-white/8 px-3 py-3.5">
           <div className="flex items-center justify-between gap-2">
             <SidebarBrand />
-            <AnimatedSidebarClose className="text-slate-400 hover:bg-white/8 hover:text-white md:hidden">
+            <AnimatedSidebarClose className="border border-white/10 text-slate-400 hover:bg-white/8 hover:text-white md:hidden">
               <X className="size-4" />
             </AnimatedSidebarClose>
           </div>
         </AnimatedSidebarHeader>
-        <AnimatedSidebarContent className="[scrollbar-color:rgba(148,163,184,.25)_transparent] px-2 py-3">
+        <AnimatedSidebarContent className="[scrollbar-color:rgba(34,211,238,.18)_transparent] px-2 py-3">
           <SidebarNav role={role} />
         </AnimatedSidebarContent>
-        <AnimatedSidebarFooter className="border-white/8 p-3">
+        <AnimatedSidebarFooter className="border-white/8 p-2.5">
           <AccountSummary
             role={role}
             name={accountName}
@@ -474,19 +478,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
             signingOut={signingOut}
           />
         </AnimatedSidebarFooter>
-        <AnimatedSidebarRail className="hover:after:bg-blue-400/40" />
+        <AnimatedSidebarRail className="hover:after:bg-cyan-400/60" />
       </AnimatedSidebar>
-      <AnimatedSidebarInset className="bg-[#f5f7fb] dark:bg-[#07101e]">
+      <AnimatedSidebarInset className="bg-[#eef3f8] dark:bg-[#050b14]">
         <ShellTopbar onSearch={() => setSearchOpen(true)} initials={initials} />
         <div className="relative flex-1">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-48 overflow-hidden"
+            className="pointer-events-none absolute inset-0 overflow-hidden opacity-70 dark:opacity-60"
           >
-            <div className="absolute -top-36 -right-16 size-80 rounded-full border border-blue-200/50 dark:border-blue-500/10" />
-            <div className="absolute -top-24 -right-4 size-52 rounded-full border border-cyan-200/60 dark:border-cyan-500/10" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.025)_1px,transparent_1px)] [mask-image:linear-gradient(to_bottom,black,transparent_60%)] bg-[size:40px_40px] dark:bg-[linear-gradient(rgba(148,163,184,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.035)_1px,transparent_1px)]" />
+            <div className="absolute -top-72 -right-40 size-[38rem] rounded-full border border-cyan-500/10" />
+            <div className="absolute -top-52 -right-20 size-[27rem] rounded-full border border-blue-500/10" />
           </div>
-          <div className="relative mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="relative mx-auto w-full max-w-[1580px] px-3 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
             {children}
           </div>
         </div>
@@ -494,7 +499,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
           type="button"
           aria-label="Collapse sidebar"
           title="Collapse sidebar (Ctrl+B)"
-          className="fixed bottom-5 left-3 z-30 hidden size-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm outline-none hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-blue-500 md:grid dark:border-white/10 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white"
+          className="fixed bottom-5 left-3 z-30 hidden size-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm outline-none hover:border-cyan-300 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-500 md:grid dark:border-white/10 dark:bg-[#0b1828] dark:text-slate-400 dark:hover:border-cyan-400/40 dark:hover:text-white"
           onClick={() =>
             dispatchEvent(
               new KeyboardEvent("keydown", { key: "b", ctrlKey: true })

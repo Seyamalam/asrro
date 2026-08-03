@@ -40,17 +40,17 @@ export function ContactForm() {
     return (
       <div
         role="status"
-        className="grid min-h-[25rem] place-items-center rounded-2xl border border-[#57e6e6]/30 bg-[#57e6e6]/5 p-8 text-center"
+        className="grid min-h-[25rem] place-items-center rounded-xl border border-[#00a6b2]/30 bg-[#00a6b2]/5 p-8 text-center dark:border-[#65f2f1]/30 dark:bg-[#65f2f1]/5"
       >
         <div>
-          <CheckCircle2 className="mx-auto size-10 text-[#57e6e6]" />
+          <CheckCircle2 className="mx-auto size-10 text-[#007d89] dark:text-[#65f2f1]" />
           <h2 className="mt-5 text-2xl font-semibold">Message in the queue.</h2>
-          <p className="mt-3 max-w-md text-[#9fb1c5]">
+          <p className="mt-3 max-w-md text-[#4b6175] dark:text-[#9fb1c5]">
             The ASRRO team usually responds within two working days. Keep an eye
             on your inbox for the reply.
           </p>
           <button
-            className="mt-6 text-sm text-[#57e6e6] underline"
+            className="mt-6 text-sm text-[#007d89] underline dark:text-[#65f2f1]"
             onClick={() => setSent(false)}
           >
             Send another message
@@ -63,7 +63,7 @@ export function ContactForm() {
       onSubmit={(event) => {
         void handleSubmit(event)
       }}
-      className="rounded-2xl border border-white/10 bg-[#09182a] p-6 sm:p-8"
+      className="rounded-xl border border-[#2359d4]/15 bg-white p-6 shadow-[0_16px_45px_rgba(25,55,90,.08)] sm:p-8 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Name" name="name" placeholder="Your full name" />
@@ -87,19 +87,22 @@ export function ContactForm() {
             name="message"
             rows={6}
             placeholder="Include any dates, project names, or event details that will help us reply."
-            className="w-full rounded-xl border border-white/10 bg-[#06101f] px-4 py-3 outline-none placeholder:text-[#52677e] focus:border-[#57e6e6]"
+            className="w-full rounded-lg border border-[#2359d4]/15 bg-[#f4f7fb] px-4 py-3 text-[#07111f] outline-none placeholder:text-[#6b7f91] focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-white dark:placeholder:text-[#52677e] dark:focus:border-[#65f2f1]"
           />
         </label>
       </div>
       {error ? (
-        <p role="alert" className="mt-5 text-sm leading-6 text-red-300">
+        <p
+          role="alert"
+          className="mt-5 text-sm leading-6 text-red-700 dark:text-red-300"
+        >
           {error}
         </p>
       ) : null}
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#57e6e6] px-5 font-semibold text-[#03101e]"
+        className="mt-6 inline-flex min-h-11 items-center gap-2 bg-[#07111f] px-5 font-semibold text-white transition hover:bg-[#2359d4] disabled:cursor-wait disabled:opacity-60 dark:bg-[#65f2f1] dark:text-[#03101e] dark:hover:bg-[#8bf7f5]"
       >
         {submitting ? "Sending…" : "Send message"} <Send className="size-4" />
       </button>
@@ -120,7 +123,7 @@ function Field({
       <span className="mb-2 block text-sm font-medium">{label}</span>
       <input
         required
-        className="h-12 w-full rounded-full border border-white/10 bg-[#06101f] px-4 outline-none placeholder:text-[#52677e] focus:border-[#57e6e6]"
+        className="h-12 w-full border border-[#2359d4]/15 bg-[#f4f7fb] px-4 text-[#07111f] outline-none placeholder:text-[#6b7f91] focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-white dark:placeholder:text-[#52677e] dark:focus:border-[#65f2f1]"
         {...props}
       />
     </label>

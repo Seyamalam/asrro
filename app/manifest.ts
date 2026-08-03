@@ -12,10 +12,16 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#39bff8",
     icons: [
       {
-        src: "/asrro-logo.png",
-        sizes: "725x725",
+        src: "/icon.png",
+        sizes: "512x512",
         type: "image/png",
-        purpose: "maskable",
+        purpose: "any",
+      },
+      {
+        src: "/apple-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+        purpose: "any",
       },
     ],
   }

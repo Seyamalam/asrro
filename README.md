@@ -23,7 +23,9 @@ bunx convex dev
 bun dev
 ```
 
-Open `http://localhost:3000`. The dashboard is available under `/dashboard`.
+Open `http://localhost:3000`. Use **Member portal** in the header or visit
+`/login`, create an email/password account, and you will be taken directly to
+`/dashboard`. Development authentication does not send a verification code.
 
 ## Environment
 
@@ -33,7 +35,13 @@ NEXT_PUBLIC_CONVEX_URL=
 NEXT_PUBLIC_CONVEX_SITE_URL=
 ```
 
-Never commit `.env.local`. Authentication provider settings must be added in `convex/auth.config.ts` when the production identity provider is selected.
+Never commit `.env.local`. Better Auth is configured in
+`convex/betterAuth/auth.ts`, with Convex JWT discovery in
+`convex/auth.config.ts`.
+
+Set `SITE_URL` and `BETTER_AUTH_SECRET` in the Convex deployment environment.
+Approved members can link their portal identity to the existing role-aware
+member record; new accounts initially receive member-level navigation.
 
 ## Quality checks
 
@@ -45,7 +53,14 @@ bun run doctor
 bun run build
 ```
 
-Husky runs lint-staged, a full TypeScript check, and staged React Doctor diagnostics before commits. React Scan is loaded only during development and can be initialized again with `bunx react-scan init`.
+Husky runs lint-staged, a full TypeScript check, and staged React Doctor
+diagnostics before commits. Start the local React Scan workflow with
+`bun run dev:scan`.
+
+## Screenshots
+
+The complete public-site and authenticated-dashboard gallery is maintained in
+[screenshots.md](screenshots.md).
 
 ## Structure
 
@@ -64,7 +79,7 @@ See [architecture](docs/architecture.md), [data model](docs/data-model.md), [API
 
 ## Deployment
 
-1. Configure the production Convex deployment and identity provider.
+1. Configure the production Convex deployment and Better Auth environment.
 2. Run `bunx convex deploy` after confirming the target deployment.
 3. Build with `bun run build` and deploy the Next.js output to a compatible host.
 4. Set the three environment variables above and update the canonical `metadataBase` in `app/layout.tsx` if the final domain differs from `asrro.org`.

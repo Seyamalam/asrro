@@ -16,7 +16,7 @@ export default function CommitteePage() {
         title="Stewards of the mission."
         intro="Elected student leaders coordinate research, events, finance, publications, and member development across ASRRO."
         aside={
-          <p className="mt-5 font-mono text-[10px] tracking-[.18em] text-[#ffb84d] uppercase">
+          <p className="mt-5 font-mono text-[10px] tracking-[.18em] text-[#b85f00] uppercase dark:text-[#ffb84d]">
             Term closes · June 2027
           </p>
         }
@@ -26,28 +26,28 @@ export default function CommitteePage() {
           {committee.map((person, index) => (
             <article
               key={person.name}
-              className="group rounded-2xl border border-white/10 bg-[#09182a] p-6"
+              className="group rounded-2xl border border-[#2359d4]/15 bg-white/80 p-6 shadow-[0_16px_45px_rgba(35,89,212,.06)] transition hover:border-[#00a6b2]/40 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40"
             >
               <div className="flex items-start justify-between">
                 <PersonOrb initials={person.initials} className="size-20" />
-                <span className="font-mono text-[9px] text-[#71869e]">
+                <span className="font-mono text-[9px] text-[#587084] dark:text-[#71869e]">
                   EC-{String(index + 1).padStart(2, "0")}
                 </span>
               </div>
-              <p className="mt-8 font-mono text-[9px] tracking-[.17em] text-[#57e6e6] uppercase">
+              <p className="mt-8 font-mono text-[9px] tracking-[.17em] text-[#007d89] uppercase dark:text-[#65f2f1]">
                 {person.role}
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em]">
                 {person.name}
               </h2>
-              <p className="mt-4 text-sm leading-6 text-[#8fa7c0]">
+              <p className="mt-4 text-sm leading-6 text-[#486076] dark:text-[#8fa7c0]">
                 {person.department}
                 <br />
                 Session {person.session}
               </p>
               <a
                 href={`mailto:${person.name.toLowerCase().replaceAll(" ", ".")}@asrro.org`}
-                className="mt-6 inline-flex items-center gap-2 text-sm text-[#b9c8d9] hover:text-[#57e6e6]"
+                className="mt-6 inline-flex items-center gap-2 text-sm text-[#425a70] hover:text-[#007d89] dark:text-[#b9c8d9] dark:hover:text-[#65f2f1]"
               >
                 <Mail className="size-4" />
                 Contact
@@ -55,9 +55,12 @@ export default function CommitteePage() {
             </article>
           ))}
         </div>
-        <p className="mx-auto mt-10 max-w-[88rem] text-sm text-[#71869e]">
+        <p className="mx-auto mt-10 max-w-[88rem] text-sm text-[#587084] dark:text-[#71869e]">
           For formal correspondence, write to{" "}
-          <a className="text-[#57e6e6]" href="mailto:secretariat@asrro.org">
+          <a
+            className="text-[#007d89] dark:text-[#65f2f1]"
+            href="mailto:secretariat@asrro.org"
+          >
             secretariat@asrro.org
           </a>
           . Personal contacts are shared only with consent.

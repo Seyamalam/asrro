@@ -21,25 +21,25 @@ export default function NewsPage() {
         <div className="mx-auto max-w-[88rem]">
           <Link
             href={`/news/${news[0].slug}`}
-            className="group grid overflow-hidden rounded-2xl border border-white/10 bg-[#09182a] lg:grid-cols-[1.1fr_.9fr]"
+            className="group grid overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-white/85 shadow-[0_18px_50px_rgba(35,89,212,.07)] transition hover:border-[#00a6b2]/40 lg:grid-cols-[1.1fr_.9fr] dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40"
           >
             <SignalVisual
               code="LATEST—0728"
-              className="min-h-72 border-b border-white/10 lg:border-r lg:border-b-0"
+              className="min-h-72 border-b border-[#2359d4]/15 lg:border-r lg:border-b-0 dark:border-white/10"
             />
             <div className="flex flex-col justify-between p-8 sm:p-10">
               <div>
-                <p className="font-mono text-[9px] tracking-[.17em] text-[#57e6e6] uppercase">
+                <p className="font-mono text-[9px] tracking-[.17em] text-[#007d89] uppercase dark:text-[#65f2f1]">
                   Latest · {news[0].category}
                 </p>
-                <h2 className="mt-5 text-4xl leading-tight font-semibold tracking-[-.045em] group-hover:text-[#57e6e6]">
+                <h2 className="mt-5 text-4xl leading-tight font-semibold tracking-[-.045em] group-hover:text-[#007d89] dark:group-hover:text-[#65f2f1]">
                   {news[0].title}
                 </h2>
-                <p className="mt-5 leading-7 text-[#9fb1c5]">
+                <p className="mt-5 leading-7 text-[#425a70] dark:text-[#9fb1c5]">
                   {news[0].summary}
                 </p>
               </div>
-              <p className="mt-10 flex items-center justify-between text-sm text-[#8296ad]">
+              <p className="mt-10 flex items-center justify-between text-sm text-[#587084] dark:text-[#8296ad]">
                 {news[0].date} · {news[0].read}
                 <ArrowUpRight className="size-4" />
               </p>
@@ -50,16 +50,18 @@ export default function NewsPage() {
               <Link
                 key={item.slug}
                 href={`/news/${item.slug}`}
-                className="group rounded-2xl border border-white/10 bg-[#09182a] p-6 hover:border-[#57e6e6]/40"
+                className="group rounded-2xl border border-[#2359d4]/15 bg-white/85 p-6 shadow-[0_14px_40px_rgba(35,89,212,.05)] transition hover:border-[#00a6b2]/40 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40"
               >
-                <p className="font-mono text-[9px] tracking-[.16em] text-[#57e6e6] uppercase">
+                <p className="font-mono text-[9px] tracking-[.16em] text-[#007d89] uppercase dark:text-[#65f2f1]">
                   {item.category}
                 </p>
-                <h2 className="mt-12 text-2xl font-semibold tracking-[-.035em] group-hover:text-[#57e6e6]">
+                <h2 className="mt-12 text-2xl font-semibold tracking-[-.035em] group-hover:text-[#007d89] dark:group-hover:text-[#65f2f1]">
                   {item.title}
                 </h2>
-                <p className="mt-4 leading-7 text-[#9fb1c5]">{item.summary}</p>
-                <p className="mt-8 text-sm text-[#71869e]">
+                <p className="mt-4 leading-7 text-[#425a70] dark:text-[#9fb1c5]">
+                  {item.summary}
+                </p>
+                <p className="mt-8 text-sm text-[#587084] dark:text-[#71869e]">
                   {item.date} · {item.read}
                 </p>
               </Link>

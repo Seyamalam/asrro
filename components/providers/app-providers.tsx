@@ -30,7 +30,7 @@ export function AppProviders({
   )
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       {content}
     </ThemeProvider>
   )

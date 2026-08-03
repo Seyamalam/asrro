@@ -71,34 +71,34 @@ export function MembershipFlow() {
 
   if (result)
     return (
-      <div className="rounded-3xl border border-[#57e6e6]/35 bg-[#0a1c2f] p-10 text-center sm:p-16">
-        <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#57e6e6]/10 text-[#57e6e6]">
+      <div className="rounded-2xl border border-[#00a6b2]/30 bg-white p-10 text-center shadow-[0_20px_60px_rgba(25,55,90,.1)] sm:p-16 dark:border-[#65f2f1]/35 dark:bg-[#0a1c2f] dark:shadow-none">
+        <div className="mx-auto grid size-16 place-items-center bg-[#00a6b2]/10 text-[#007d89] dark:bg-[#65f2f1]/10 dark:text-[#65f2f1]">
           <Check className="size-7" />
         </div>
-        <p className="mt-6 font-mono text-[10px] tracking-[.2em] text-[#ffb84d] uppercase">
+        <p className="mt-6 font-mono text-[10px] tracking-[.2em] text-[#a95000] uppercase dark:text-[#ffb84d]">
           Application received
         </p>
         <h2 className="mt-4 text-3xl font-semibold">
           Your record is queued for review.
         </h2>
-        <p className="mx-auto mt-4 max-w-xl leading-7 text-[#9fb1c5]">
+        <p className="mx-auto mt-4 max-w-xl leading-7 text-[#4b6175] dark:text-[#9fb1c5]">
           Keep both references somewhere private. You will need them to check
           the status of this application.
         </p>
-        <dl className="mx-auto mt-6 grid max-w-lg gap-3 rounded-2xl border border-white/10 bg-[#06101f] p-5 text-left sm:grid-cols-2">
+        <dl className="mx-auto mt-6 grid max-w-lg gap-3 rounded-xl border border-[#2359d4]/15 bg-[#f4f7fb] p-5 text-left sm:grid-cols-2 dark:border-white/10 dark:bg-[#06101f]">
           <div>
-            <dt className="font-mono text-[10px] tracking-[.16em] text-[#8296ad] uppercase">
+            <dt className="font-mono text-[10px] tracking-[.16em] text-[#587084] uppercase dark:text-[#8296ad]">
               Application code
             </dt>
-            <dd className="mt-2 font-mono text-sm text-white">
+            <dd className="mt-2 font-mono text-sm text-[#07111f] dark:text-white">
               {result.applicationCode}
             </dd>
           </div>
           <div>
-            <dt className="font-mono text-[10px] tracking-[.16em] text-[#8296ad] uppercase">
+            <dt className="font-mono text-[10px] tracking-[.16em] text-[#587084] uppercase dark:text-[#8296ad]">
               Tracking token
             </dt>
-            <dd className="mt-2 font-mono text-sm break-all text-white">
+            <dd className="mt-2 font-mono text-sm break-all text-[#07111f] dark:text-white">
               {result.trackingToken}
             </dd>
           </div>
@@ -109,7 +109,7 @@ export function MembershipFlow() {
             setDraft({})
             setResult(null)
           }}
-          className="mt-7 text-sm text-[#57e6e6] underline"
+          className="mt-7 text-sm text-[#007d89] underline dark:text-[#65f2f1]"
         >
           Start over
         </button>
@@ -123,18 +123,18 @@ export function MembershipFlow() {
             <li
               key={label}
               className={cn(
-                "flex items-center gap-3 rounded-xl border p-3",
+                "flex items-center gap-3 rounded-lg border p-3",
                 index === step
-                  ? "border-[#57e6e6]/40 bg-[#57e6e6]/5"
-                  : "border-white/10"
+                  ? "border-[#00a6b2]/40 bg-[#00a6b2]/5 dark:border-[#65f2f1]/40 dark:bg-[#65f2f1]/5"
+                  : "border-[#2359d4]/15 dark:border-white/10"
               )}
             >
               <span
                 className={cn(
                   "grid size-7 shrink-0 place-items-center rounded-full font-mono text-[10px]",
                   index < step
-                    ? "bg-[#57e6e6] text-[#03101e]"
-                    : "bg-white/5 text-[#9fb1c5]"
+                    ? "bg-[#07111f] text-white dark:bg-[#65f2f1] dark:text-[#03101e]"
+                    : "bg-[#2359d4]/7 text-[#587084] dark:bg-white/5 dark:text-[#9fb1c5]"
                 )}
               >
                 {index < step ? <Check className="size-3" /> : index + 1}
@@ -143,8 +143,8 @@ export function MembershipFlow() {
             </li>
           ))}
         </ol>
-        <div className="mt-6 hidden rounded-xl border border-white/10 p-4 text-xs leading-5 text-[#8296ad] lg:block">
-          <ShieldCheck className="mb-3 size-5 text-[#57e6e6]" />
+        <div className="mt-6 hidden rounded-lg border border-[#2359d4]/15 bg-white/60 p-4 text-xs leading-5 text-[#587084] lg:block dark:border-white/10 dark:bg-transparent dark:text-[#8296ad]">
+          <ShieldCheck className="mb-3 size-5 text-[#007d89] dark:text-[#65f2f1]" />
           Your personal and payment records are visible only to authorized
           committee reviewers.
         </div>
@@ -153,9 +153,9 @@ export function MembershipFlow() {
         onSubmit={(event) => {
           void handleSubmit(event)
         }}
-        className="rounded-2xl border border-white/10 bg-[#09182a] p-6 sm:p-8"
+        className="rounded-xl border border-[#2359d4]/15 bg-white p-6 shadow-[0_16px_45px_rgba(25,55,90,.08)] sm:p-8 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none"
       >
-        <p className="font-mono text-[10px] tracking-[.2em] text-[#57e6e6] uppercase">
+        <p className="font-mono text-[10px] tracking-[.2em] text-[#007d89] uppercase dark:text-[#65f2f1]">
           Step {step + 1} of 4
         </p>
         <h2 className="mt-3 text-3xl font-semibold tracking-[-.04em]">
@@ -271,25 +271,31 @@ export function MembershipFlow() {
                 name="transaction"
                 defaultValue={draft.transaction}
               />
-              <div className="rounded-xl border border-[#ffb84d]/25 bg-[#ffb84d]/5 p-4 text-sm leading-6 text-[#d8c29f] sm:col-span-2">
-                Membership fee: <strong className="text-white">BDT 300</strong>.
-                Send payment using your phone number as the reference, then
+              <div className="rounded-lg border border-[#d97706]/25 bg-[#d97706]/5 p-4 text-sm leading-6 text-[#72400d] sm:col-span-2 dark:border-[#ffb84d]/25 dark:bg-[#ffb84d]/5 dark:text-[#d8c29f]">
+                Membership fee:{" "}
+                <strong className="text-[#07111f] dark:text-white">
+                  BDT 300
+                </strong>
+                . Send payment using your phone number as the reference, then
                 enter the transaction ID.
               </div>
             </>
           )}
         </div>
         {error ? (
-          <p role="alert" className="mt-5 text-sm leading-6 text-red-300">
+          <p
+            role="alert"
+            className="mt-5 text-sm leading-6 text-red-700 dark:text-red-300"
+          >
             {error}
           </p>
         ) : null}
-        <div className="mt-9 flex items-center justify-between border-t border-white/10 pt-6">
+        <div className="mt-9 flex items-center justify-between border-t border-[#2359d4]/15 pt-6 dark:border-white/10">
           <button
             type="button"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0 || submitting}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm text-[#9fb1c5] disabled:opacity-30"
+            className="inline-flex min-h-11 items-center gap-2 px-4 text-sm text-[#4b6175] disabled:opacity-30 dark:text-[#9fb1c5]"
           >
             <ArrowLeft className="size-4" />
             Back
@@ -297,7 +303,7 @@ export function MembershipFlow() {
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#57e6e6] px-5 font-semibold text-[#03101e]"
+            className="inline-flex min-h-11 items-center gap-2 bg-[#07111f] px-5 font-semibold text-white transition hover:bg-[#2359d4] disabled:cursor-wait disabled:opacity-60 dark:bg-[#65f2f1] dark:text-[#03101e] dark:hover:bg-[#8bf7f5]"
           >
             {submitting
               ? "Submitting…"
@@ -327,7 +333,7 @@ function Field({
       <span className="mb-2 block text-sm">{label}</span>
       <input
         required={required}
-        className="h-12 w-full rounded-full border border-white/10 bg-[#06101f] px-4 outline-none focus:border-[#57e6e6]"
+        className="h-12 w-full border border-[#2359d4]/15 bg-[#f4f7fb] px-4 text-[#07111f] outline-none focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-white dark:focus:border-[#65f2f1]"
         {...fieldProps}
       />
     </label>
@@ -351,7 +357,7 @@ function Select({
         required
         name={name}
         defaultValue={defaultValue ?? ""}
-        className="h-12 w-full rounded-full border border-white/10 bg-[#06101f] px-4 outline-none focus:border-[#57e6e6]"
+        className="h-12 w-full border border-[#2359d4]/15 bg-[#f4f7fb] px-4 text-[#07111f] outline-none focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-white dark:focus:border-[#65f2f1]"
       >
         <option value="" disabled>
           Select one

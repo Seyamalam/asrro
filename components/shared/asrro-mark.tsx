@@ -1,17 +1,29 @@
+import Image from "next/image"
+
 import { cn } from "@/lib/utils"
 
-export function AsrroMark({ className }: { className?: string }) {
+export function AsrroMark({
+  className,
+  priority = false,
+}: {
+  className?: string
+  priority?: boolean
+}) {
   return (
     <span
       className={cn(
-        "relative grid size-9 place-items-center rounded-full border border-[#57e6e6]/45",
+        "relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-[0_8px_30px_rgba(5,12,23,0.14)] dark:border-white/15",
         className
       )}
-      aria-hidden
     >
-      <span className="absolute size-2 rounded-full bg-[#57e6e6] shadow-[0_0_14px_#57e6e6]" />
-      <span className="absolute h-4 w-8 -rotate-[24deg] rounded-[50%] border border-[#3d8bff]" />
-      <span className="absolute top-[8px] right-[2px] size-1.5 rounded-full bg-[#ffb84d]" />
+      <Image
+        src="/asrro-logo.png"
+        alt=""
+        width={725}
+        height={725}
+        loading={priority ? "eager" : "lazy"}
+        className="size-full object-contain"
+      />
     </span>
   )
 }

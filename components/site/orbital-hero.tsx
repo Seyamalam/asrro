@@ -1,3 +1,5 @@
+import { AsrroMark } from "@/components/shared/asrro-mark"
+
 export function OrbitalHero() {
   const nodes = [
     [50, 11],
@@ -10,10 +12,9 @@ export function OrbitalHero() {
   ]
   return (
     <div
-      className="relative mx-auto aspect-square w-full max-w-[40rem]"
+      className="relative mx-auto aspect-square w-full max-w-[40rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,166,178,.09),transparent_45%)] dark:bg-[radial-gradient(circle_at_center,rgba(101,242,241,.08),transparent_45%)]"
       aria-label="ASRRO research constellation: space, robotics, AI, electronics, and IoT"
     >
-      <style>{`@keyframes orbit-spin{to{transform:rotate(360deg)}}@keyframes signal-pulse{50%{opacity:.32;transform:scale(.86)}}@media(prefers-reduced-motion:reduce){.orbit-motion,.signal-motion{animation:none!important}}`}</style>
       <svg
         viewBox="0 0 100 100"
         className="size-full overflow-visible"
@@ -30,7 +31,7 @@ export function OrbitalHero() {
           cy="50"
           r="47"
           fill="none"
-          stroke="#203551"
+          className="stroke-[#7890a8]/60 dark:stroke-[#203551]"
           strokeWidth=".3"
         />
         <circle
@@ -38,15 +39,15 @@ export function OrbitalHero() {
           cy="50"
           r="36"
           fill="none"
-          stroke="#203551"
+          className="stroke-[#7890a8]/60 dark:stroke-[#203551]"
           strokeWidth=".35"
           strokeDasharray="1 2"
         />
         <g
-          className="orbit-motion"
+          className="motion-safe:animate-spin motion-reduce:transform-none"
           style={{
             transformOrigin: "50px 50px",
-            animation: "orbit-spin 32s linear infinite",
+            animationDuration: "32s",
           }}
         >
           <ellipse
@@ -55,17 +56,18 @@ export function OrbitalHero() {
             rx="45"
             ry="22"
             fill="none"
-            stroke="#3d8bff"
+            stroke="#2359d4"
             strokeWidth=".7"
             transform="rotate(-24 50 50)"
           />
           <circle cx="91" cy="33" r="1.5" fill="#ffb84d" />
         </g>
         <g
-          className="orbit-motion"
+          className="motion-safe:animate-spin motion-reduce:transform-none"
           style={{
             transformOrigin: "50px 50px",
-            animation: "orbit-spin 44s linear infinite reverse",
+            animationDirection: "reverse",
+            animationDuration: "44s",
           }}
         >
           <ellipse
@@ -98,15 +100,15 @@ export function OrbitalHero() {
               cx={x}
               cy={y}
               r="2.5"
-              fill="#06101f"
+              className="fill-[#f4f7fb] dark:fill-[#06101f]"
               stroke={index % 3 === 0 ? "#ffb84d" : "#57e6e6"}
               strokeWidth=".6"
             />
             <circle
-              className="signal-motion"
+              className="motion-safe:animate-pulse"
               style={{
                 transformOrigin: `${x}px ${y}px`,
-                animation: `signal-pulse ${2 + index * 0.15}s ease-in-out infinite`,
+                animationDuration: `${2 + index * 0.15}s`,
               }}
               cx={x}
               cy={y}
@@ -116,24 +118,23 @@ export function OrbitalHero() {
           </g>
         ))}
         <circle cx="50" cy="50" r="18" fill="url(#core)" opacity=".55" />
-        <circle
-          cx="50"
-          cy="50"
-          r="7"
-          fill="#08172a"
-          stroke="#57e6e6"
-          strokeWidth=".8"
-        />
-        <path d="M47 53l3-8 3 8-3-1.5z" fill="#57e6e6" />
       </svg>
-      <div className="absolute top-[43%] left-0 font-mono text-[9px] tracking-[.18em] text-[#71869e] uppercase">
+      <div className="absolute inset-0 grid place-items-center">
+        <AsrroMark
+          priority
+          className="size-20 rounded-2xl border-[#2359d4]/20 p-2 shadow-[0_20px_70px_rgba(35,89,212,.22)] sm:size-24"
+        />
+      </div>
+      <div className="absolute top-[43%] left-0 border-l border-[#00a6b2] pl-3 font-mono text-[9px] tracking-[.18em] text-[#587084] uppercase dark:border-[#65f2f1] dark:text-[#71869e]">
         23.4607° N<br />
         91.9710° E
       </div>
-      <div className="absolute right-[2%] bottom-[5%] border-l border-[#ffb84d] pl-3 font-mono text-[9px] tracking-[.18em] text-[#a8b9ca] uppercase">
+      <div className="absolute right-[2%] bottom-[5%] border-l border-[#d97706] pl-3 font-mono text-[9px] tracking-[.18em] text-[#425a70] uppercase dark:text-[#a8b9ca]">
         7 disciplines
         <br />
-        <span className="text-[#ffb84d]">1 shared orbit</span>
+        <span className="text-[#b45f00] dark:text-[#ffb84d]">
+          1 shared orbit
+        </span>
       </div>
     </div>
   )

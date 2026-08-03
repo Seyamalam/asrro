@@ -23,21 +23,21 @@ export default function GalleryPage() {
               key={album.code}
               className={index === 0 ? "md:col-span-2" : ""}
             >
-              <div className="group overflow-hidden rounded-2xl border border-white/10 bg-[#09182a]">
+              <div className="group overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-white/85 shadow-[0_16px_45px_rgba(35,89,212,.06)] transition hover:border-[#00a6b2]/40 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40">
                 <SignalVisual
                   code={album.code}
                   className={index === 0 ? "aspect-[16/7]" : "aspect-[16/10]"}
                 />
                 <div className="flex items-end justify-between gap-5 p-5">
                   <div>
-                    <p className="font-mono text-[9px] tracking-[.16em] text-[#57e6e6] uppercase">
+                    <p className="font-mono text-[9px] tracking-[.16em] text-[#007d89] uppercase dark:text-[#65f2f1]">
                       {album.tag} · {album.year}
                     </p>
                     <h2 className="mt-2 text-xl font-semibold">
                       {album.title}
                     </h2>
                   </div>
-                  <span className="flex shrink-0 items-center gap-2 text-sm text-[#8296ad]">
+                  <span className="flex shrink-0 items-center gap-2 text-sm text-[#587084] dark:text-[#8296ad]">
                     <Images className="size-4" />
                     {album.count}
                   </span>
@@ -46,13 +46,13 @@ export default function GalleryPage() {
             </article>
           ))}
         </div>
-        <div className="mx-auto mt-8 flex max-w-[88rem] items-center gap-4 rounded-2xl border border-[#3d8bff]/30 bg-[#0b1d31] p-6">
-          <span className="grid size-12 place-items-center rounded-full bg-[#57e6e6] text-[#03101e]">
+        <div className="mx-auto mt-8 flex max-w-[88rem] items-center gap-4 rounded-2xl border border-[#2359d4]/25 bg-[#eef3ff] p-6 dark:border-[#3d8bff]/30 dark:bg-[#0b1d31]">
+          <span className="grid size-12 place-items-center rounded-full bg-[#00a6b2] text-white dark:bg-[#65f2f1] dark:text-[#03101e]">
             <Play className="size-5 fill-current" />
           </span>
           <div>
             <p className="font-semibold">ASRRO field reel · 02:18</p>
-            <p className="mt-1 text-sm text-[#8296ad]">
+            <p className="mt-1 text-sm text-[#587084] dark:text-[#8296ad]">
               A short film from the 2025 rover season.
             </p>
           </div>

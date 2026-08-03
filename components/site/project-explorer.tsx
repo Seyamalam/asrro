@@ -34,15 +34,15 @@ export function ProjectExplorer() {
   )
   return (
     <div>
-      <div className="mb-8 grid gap-4 rounded-2xl border border-white/10 bg-[#09182a] p-4 lg:grid-cols-[1fr_auto_auto] lg:items-center">
+      <div className="mb-8 grid gap-4 rounded-xl border border-[#2359d4]/15 bg-white p-4 shadow-[0_14px_40px_rgba(25,55,90,.07)] lg:grid-cols-[1fr_auto_auto] lg:items-center dark:border-white/10 dark:bg-[#09182a] dark:shadow-none">
         <label className="relative">
           <span className="sr-only">Search projects</span>
-          <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-[#71869e]" />
+          <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-[#587084] dark:text-[#71869e]" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search title or technology"
-            className="h-12 w-full rounded-full border border-white/10 bg-[#06101f] pr-4 pl-11 text-sm outline-none placeholder:text-[#60758c] focus:border-[#57e6e6]"
+            className="h-12 w-full border border-[#2359d4]/15 bg-[#f4f7fb] pr-4 pl-11 text-sm text-[#07111f] outline-none placeholder:text-[#6b7f91] focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-white dark:placeholder:text-[#60758c] dark:focus:border-[#65f2f1]"
           />
         </label>
         <FilterGroup
@@ -58,7 +58,7 @@ export function ProjectExplorer() {
           onChange={setStatus}
         />
       </div>
-      <p className="mb-5 font-mono text-[10px] tracking-[.18em] text-[#8296ad] uppercase">
+      <p className="mb-5 font-mono text-[10px] tracking-[.18em] text-[#587084] uppercase dark:text-[#8296ad]">
         {filtered.length} mission records
       </p>
       {filtered.length ? (
@@ -67,30 +67,32 @@ export function ProjectExplorer() {
             <Link
               key={project.slug}
               href={`/projects/${project.slug}`}
-              className="group overflow-hidden rounded-2xl border border-white/10 bg-[#09182a] transition hover:-translate-y-1 hover:border-[#57e6e6]/50"
+              className="group overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white shadow-[0_12px_35px_rgba(25,55,90,.06)] transition hover:-translate-y-1 hover:border-[#00a6b2]/55 motion-reduce:transform-none dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/50"
             >
               <SignalVisual
                 code={`R&D—${String(index + 1).padStart(2, "0")}`}
-                className="aspect-[16/9] border-b border-white/10"
+                className="aspect-[16/9] border-b border-[#2359d4]/15 dark:border-white/10"
                 compact
               />
               <div className="p-6">
-                <div className="flex items-center justify-between font-mono text-[9px] tracking-[.17em] text-[#8296ad] uppercase">
+                <div className="flex items-center justify-between font-mono text-[9px] tracking-[.17em] text-[#587084] uppercase dark:text-[#8296ad]">
                   <span>{project.category}</span>
-                  <span className="text-[#ffb84d]">{project.status}</span>
+                  <span className="text-[#a95000] dark:text-[#ffb84d]">
+                    {project.status}
+                  </span>
                 </div>
-                <h2 className="mt-5 flex items-start justify-between gap-4 text-2xl font-semibold tracking-[-.035em] group-hover:text-[#57e6e6]">
+                <h2 className="mt-5 flex items-start justify-between gap-4 text-2xl font-semibold tracking-[-.035em] group-hover:text-[#007d89] dark:group-hover:text-[#65f2f1]">
                   {project.title}
                   <ArrowUpRight className="mt-1 size-4 shrink-0" />
                 </h2>
-                <p className="mt-3 leading-7 text-[#9fb1c5]">
+                <p className="mt-3 leading-7 text-[#4b6175] dark:text-[#9fb1c5]">
                   {project.summary}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {project.stack.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-[9px] text-[#8fa7c0]"
+                      className="border border-[#2359d4]/15 bg-[#eef3f8] px-2.5 py-1 font-mono text-[9px] text-[#4b6175] dark:border-white/10 dark:bg-transparent dark:text-[#8fa7c0]"
                     >
                       {tag}
                     </span>
@@ -101,7 +103,7 @@ export function ProjectExplorer() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-white/15 p-12 text-center text-[#9fb1c5]">
+        <div className="rounded-xl border border-dashed border-[#2359d4]/25 p-12 text-center text-[#4b6175] dark:border-white/15 dark:text-[#9fb1c5]">
           No project records match those filters. Try another discipline or
           clear the search.
         </div>
@@ -126,7 +128,7 @@ function FilterGroup({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-12 min-w-40 rounded-full border border-white/10 bg-[#06101f] px-4 text-sm text-[#dce9f5] outline-none focus:border-[#57e6e6]"
+        className="h-12 min-w-40 border border-[#2359d4]/15 bg-[#f4f7fb] px-4 text-sm text-[#07111f] outline-none focus:border-[#00a6b2] dark:border-white/10 dark:bg-[#06101f] dark:text-[#dce9f5] dark:focus:border-[#65f2f1]"
       >
         {options.map((option) => (
           <option key={option}>{option}</option>

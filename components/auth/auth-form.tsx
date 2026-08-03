@@ -94,20 +94,20 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8">
-        <p className="mb-3 font-mono text-[10px] tracking-[0.22em] text-cyan-300 uppercase">
+        <p className="mb-3 font-mono text-[10px] tracking-[0.22em] text-cyan-700 uppercase dark:text-cyan-300">
           Member access
         </p>
-        <h1 className="font-heading text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
+        <h1 className="font-heading text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
           {mode === "sign-in" ? "Welcome back." : "Create your account."}
         </h1>
-        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
+        <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600 dark:text-slate-400">
           {mode === "sign-in"
             ? "Sign in to enter the ASRRO mission portal."
             : "Use your email and a secure password. You can continue immediately—no verification code is required."}
         </p>
       </div>
 
-      <div className="relative mb-7 grid grid-cols-2 rounded-full border border-white/10 bg-white/5 p-1">
+      <div className="relative mb-7 grid grid-cols-2 rounded-full border border-slate-200 bg-slate-200/55 p-1 dark:border-white/10 dark:bg-white/5">
         {(["sign-in", "sign-up"] as const).map((item) => (
           <button
             key={item}
@@ -115,7 +115,9 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
             onClick={() => changeMode(item)}
             className={cn(
               "relative z-10 min-h-10 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none",
-              mode === item ? "text-slate-950" : "text-slate-400"
+              mode === item
+                ? "text-slate-950"
+                : "text-slate-500 dark:text-slate-400"
             )}
           >
             {mode === item ? (
@@ -158,9 +160,11 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
                 required
                 minLength={2}
                 classNames={{
-                  label: "text-slate-300",
-                  field: "border-white/12 bg-white/[0.045]",
-                  input: "text-white placeholder:text-slate-600",
+                  label: "text-slate-700 dark:text-slate-300",
+                  field:
+                    "border-slate-300 bg-white/80 dark:border-white/12 dark:bg-white/[0.045]",
+                  input:
+                    "text-slate-950 placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-600",
                 }}
               />
             </motion.div>
@@ -178,9 +182,11 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
           leftIcon={<Mail className="size-4" />}
           required
           classNames={{
-            label: "text-slate-300",
-            field: "border-white/12 bg-white/[0.045]",
-            input: "text-white placeholder:text-slate-600",
+            label: "text-slate-700 dark:text-slate-300",
+            field:
+              "border-slate-300 bg-white/80 dark:border-white/12 dark:bg-white/[0.045]",
+            input:
+              "text-slate-950 placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-600",
           }}
         />
 
@@ -199,7 +205,7 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
               type="button"
               onClick={() => setShowPassword((visible) => !visible)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="rounded-full p-1 text-slate-500 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:outline-none"
+              className="rounded-full p-1 text-slate-500 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:outline-none dark:hover:text-white"
             >
               {showPassword ? (
                 <EyeOff className="size-4" />
@@ -211,9 +217,11 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
           required
           minLength={8}
           classNames={{
-            label: "text-slate-300",
-            field: "border-white/12 bg-white/[0.045]",
-            input: "text-white placeholder:text-slate-600",
+            label: "text-slate-700 dark:text-slate-300",
+            field:
+              "border-slate-300 bg-white/80 dark:border-white/12 dark:bg-white/[0.045]",
+            input:
+              "text-slate-950 placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-600",
           }}
         />
 
@@ -241,9 +249,11 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
                     : undefined
                 }
                 classNames={{
-                  label: "text-slate-300",
-                  field: "border-white/12 bg-white/[0.045]",
-                  input: "text-white placeholder:text-slate-600",
+                  label: "text-slate-700 dark:text-slate-300",
+                  field:
+                    "border-slate-300 bg-white/80 dark:border-white/12 dark:bg-white/[0.045]",
+                  input:
+                    "text-slate-950 placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-600",
                 }}
               />
             </motion.div>
@@ -257,7 +267,7 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
               initial={reduceMotion ? false : { opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
-              className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-sm text-red-200"
+              className="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2.5 text-sm text-red-700 dark:text-red-200"
             >
               {error}
             </motion.p>
@@ -282,10 +292,13 @@ export function AuthForm({ callbackUrl }: { callbackUrl: string }) {
         </Button>
       </form>
 
-      <p className="mt-7 text-center text-xs leading-5 text-slate-500">
+      <p className="mt-7 text-center text-xs leading-5 text-slate-500 dark:text-slate-500">
         Portal access is for ASRRO members and applicants. By continuing, you
         agree to use the system responsibly.{" "}
-        <Link href="/contact" className="text-slate-300 hover:text-cyan-300">
+        <Link
+          href="/contact"
+          className="text-slate-700 hover:text-cyan-700 dark:text-slate-300 dark:hover:text-cyan-300"
+        >
           Need help?
         </Link>
       </p>
