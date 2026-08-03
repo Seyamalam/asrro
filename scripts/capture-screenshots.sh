@@ -65,7 +65,6 @@ capture_routes() {
     local name="${entry%%|*}"
     local route="${entry#*|}"
     agent-browser --session "$session" open "${BASE_URL}${route}" >/dev/null
-    agent-browser --session "$session" wait --load domcontentloaded >/dev/null
     agent-browser --session "$session" wait 1200 >/dev/null
     agent-browser --session "$session" screenshot \
       "${OUTPUT_DIR}/${name}-light-desktop.png" >/dev/null
@@ -83,7 +82,6 @@ agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" eval \
   'localStorage.setItem("theme", "dark")' >/dev/null
 agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
-agent-browser --session "$PUBLIC_SESSION" wait --load domcontentloaded >/dev/null
 agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
 agent-browser --session "$PUBLIC_SESSION" screenshot \
   "${OUTPUT_DIR}/01-public-home-dark-desktop.png" >/dev/null
