@@ -29,19 +29,20 @@ Open `http://localhost:3000`. Use **Dashboard** in the header or visit
 
 ## Public demo accounts
 
-These shared, member-level accounts are available on the configured ASRRO
-development deployment. They are intentionally not granted executive or
-administrative permissions.
+The configured ASRRO development deployment includes a test account for every
+authenticated access level. Guests do not need an account.
 
-| Account         | Email                       | Password      |
-| --------------- | --------------------------- | ------------- |
-| Demo member     | `demo.member@asrro.org`     | `demo12345`   |
-| Demo researcher | `demo.researcher@asrro.org` | `research123` |
+| Access level      | Email                      | Password       | What it demonstrates                           |
+| ----------------- | -------------------------- | -------------- | ---------------------------------------------- |
+| Pending applicant | `demo.pending@asrro.org`   | `pending123`   | Submitted application awaiting review          |
+| General member    | `demo.member@asrro.org`    | `demo12345`    | Member profile, events, card and notices       |
+| Executive member  | `demo.executive@asrro.org` | `executive123` | Member and organizational operations           |
+| Super admin       | `demo.admin@asrro.org`     | `admin12345`   | All modules, role management and site settings |
 
 Sign in at `/login`; no email verification code is required. These credentials
-are public, so do not store personal or sensitive information in either
-account. A fresh Convex deployment has its own database, and users can create a
-new local account from the same screen.
+are intentionally public and must never be used for personal, confidential, or
+production data. A fresh Convex deployment has a separate database, so these
+accounts must be created again when setting up another deployment.
 
 ## Environment
 
