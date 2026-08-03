@@ -60,15 +60,15 @@ export function MembershipFlow() {
     try {
       const profilePhoto = profilePhotoRef.current
       const paymentProof = paymentProofRef.current
-      if (!paymentProof)
-        throw new Error("A payment proof image or PDF is required")
       const profileAssetId = profilePhoto
         ? await upload(profilePhoto, "image")
         : undefined
-      const paymentAssetId = await upload(
-        paymentProof,
-        paymentProof.type === "application/pdf" ? "pdf" : "image"
-      )
+      const paymentAssetId = paymentProof
+        ? await upload(
+            paymentProof,
+            paymentProof.type === "application/pdf" ? "pdf" : "image"
+          )
+        : undefined
       const response = await submitApplication({
         fullName: nextDraft.fullName,
         ...(nextDraft.dob ? { dateOfBirth: nextDraft.dob } : {}),
@@ -76,8 +76,10 @@ export function MembershipFlow() {
         ...(nextDraft.blood ? { bloodGroup: nextDraft.blood } : {}),
         email: nextDraft.email,
         phone: nextDraft.phone,
-        institute: "CUET",
-        universityName: "Chittagong University of Engineering & Technology",
+        institute: nextDraft.institute,
+        ...(nextDraft.universityName
+          ? { universityName: nextDraft.universityName }
+          : {}),
         department: nextDraft.department,
         semester: nextDraft.semester,
         studentId: nextDraft.studentId,
@@ -257,6 +259,20 @@ export function MembershipFlow() {
           {step === 1 && (
             <>
               <Field
+                label="Institute"
+                name="institute"
+                defaultValue={draft.institute ?? "CUET"}
+              />
+              <Field
+                label="University name (optional)"
+                name="universityName"
+                required={false}
+                defaultValue={
+                  draft.universityName ??
+                  "Chittagong University of Engineering & Technology"
+                }
+              />
+              <Field
                 label="Student ID"
                 name="studentId"
                 defaultValue={draft.studentId}
@@ -329,9 +345,10 @@ export function MembershipFlow() {
                 defaultValue={draft.transaction}
               />
               <label className="sm:col-span-2">
-                <span className="mb-2 block text-sm">Payment proof</span>
+                <span className="mb-2 block text-sm">
+                  Payment proof (optional)
+                </span>
                 <input
-                  required
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={(event) => {

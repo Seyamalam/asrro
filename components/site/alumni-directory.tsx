@@ -10,6 +10,7 @@ export function AlumniDirectory() {
   const [query, setQuery] = useState("")
   const [department, setDepartment] = useState("All")
   const [batch, setBatch] = useState("All")
+  const [graduationYear, setGraduationYear] = useState("All")
   const { results, status, loadMore } = usePaginatedQuery(
     api.alumni.listPublic,
     {},
@@ -17,21 +18,27 @@ export function AlumniDirectory() {
   )
   const departments = ["All", ...new Set(results.map((a) => a.department))]
   const batches = ["All", ...new Set(results.map((a) => a.batch))]
+  const graduationYears = [
+    "All",
+    ...new Set(results.map((a) => String(a.graduationYear))),
+  ]
   const list = useMemo(
     () =>
       results.filter(
         (a) =>
           (department === "All" || a.department === department) &&
           (batch === "All" || a.batch === batch) &&
+          (graduationYear === "All" ||
+            String(a.graduationYear) === graduationYear) &&
           `${a.name} ${a.currentWorkplace ?? ""} ${a.researchInterests ?? ""}`
             .toLowerCase()
             .includes(query.toLowerCase())
       ),
-    [results, query, department, batch]
+    [results, query, department, batch, graduationYear]
   )
   return (
     <>
-      <div className="mb-8 grid gap-3 rounded-xl border border-[#2359d4]/15 bg-white p-4 shadow-[0_14px_40px_rgba(25,55,90,.07)] md:grid-cols-[1fr_auto_auto] dark:border-white/10 dark:bg-[#09182a] dark:shadow-none">
+      <div className="mb-8 grid gap-3 rounded-xl border border-[#2359d4]/15 bg-white p-4 shadow-[0_14px_40px_rgba(25,55,90,.07)] md:grid-cols-[1fr_auto_auto_auto] dark:border-white/10 dark:bg-[#09182a] dark:shadow-none">
         <label className="relative">
           <span className="sr-only">Search alumni</span>
           <Search className="absolute top-1/2 left-4 size-4 -translate-y-1/2 text-[#587084] dark:text-[#71869e]" />
@@ -49,6 +56,12 @@ export function AlumniDirectory() {
           set={setDepartment}
         />
         <Select label="Batch" value={batch} options={batches} set={setBatch} />
+        <Select
+          label="Graduation year"
+          value={graduationYear}
+          options={graduationYears}
+          set={setGraduationYear}
+        />
       </div>
       <p className="mb-5 font-mono text-[10px] tracking-[.18em] text-[#587084] uppercase dark:text-[#8296ad]">
         {list.length} alumni in view
@@ -81,8 +94,10 @@ type AlumniRecord = {
   name: string
   department: string
   batch: string
+  session: string
   graduationYear: number
   currentWorkplace?: string
+  higherStudies?: string
   researchInterests?: string
   linkedInUrl?: string
   photoAssetId?: Id<"assets">
@@ -135,6 +150,26 @@ function AlumniCard({ person }: { person: AlumniRecord }) {
             {person.batch} / {person.graduationYear}
           </dd>
         </div>
+      </dl>
+      <dl className="mt-4 grid gap-3 text-sm">
+        <div>
+          <dt className="font-mono text-[9px] tracking-[.15em] text-[#587084] uppercase dark:text-[#71869e]">
+            Academic session
+          </dt>
+          <dd className="mt-1 text-[#425a70] dark:text-[#b9c8d9]">
+            {person.session}
+          </dd>
+        </div>
+        {person.higherStudies ? (
+          <div>
+            <dt className="font-mono text-[9px] tracking-[.15em] text-[#587084] uppercase dark:text-[#71869e]">
+              Higher studies
+            </dt>
+            <dd className="mt-1 text-[#425a70] dark:text-[#b9c8d9]">
+              {person.higherStudies}
+            </dd>
+          </div>
+        ) : null}
       </dl>
       <div className="mt-5 flex flex-wrap gap-2">
         {interests.map((i) => (

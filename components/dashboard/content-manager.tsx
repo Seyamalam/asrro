@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { useState, type FormEvent } from "react"
+import { useRef, useState, type FormEvent } from "react"
 
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
@@ -19,12 +19,14 @@ export function ContentManager() {
   const blogs = useQuery(api.blogs.listAdmin)
   const publications = useQuery(api.publications.listAdmin)
   const albums = useQuery(api.gallery.listAdmin)
+  const events = useQuery(api.events.listManagedEvents)
   const pages = useQuery(api.content.listPagesAdmin)
   const saveBlog = useMutation(api.blogs.upsert)
   const savePublication = useMutation(api.publications.upsert)
   const saveAlbum = useMutation(api.gallery.upsertAlbum)
   const savePage = useMutation(api.content.upsertPage)
   const [publicationAsset, setPublicationAsset] = useState<Id<"assets">>()
+  const galleryCover = useRef<Id<"assets"> | undefined>(undefined)
   const [message, setMessage] = useState("")
 
   const data = (event: FormEvent<HTMLFormElement>) =>
@@ -143,11 +145,15 @@ export function ContentManager() {
               slug: String(d.get("slug")),
               title: String(d.get("title")),
               description: String(d.get("summary")),
+              eventId: (String(d.get("eventId")) || undefined) as
+                Id<"events"> | undefined,
+              coverAssetId: galleryCover.current,
               occurredAt: new Date(String(d.get("date"))).getTime(),
               status: String(d.get("status")) as
                 "draft" | "published" | "archived",
             })
             event.currentTarget.reset()
+            galleryCover.current = undefined
             setMessage("Album saved.")
           }}
         >
@@ -155,6 +161,25 @@ export function ContentManager() {
           <Input name="slug" label="URL slug" />
           <Input name="summary" label="Description" />
           <Input name="date" label="Occurred date" type="date" />
+          <label className="text-xs font-medium">
+            Related event (optional)
+            <select name="eventId" className={`mt-1 ${fieldClass}`}>
+              <option value="">Independent album</option>
+              {events?.map((event) => (
+                <option key={event._id} value={event._id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <AssetUploader
+            kind="image"
+            accept="image/*"
+            label="Upload album cover"
+            onUploaded={(assetId) => {
+              galleryCover.current = assetId
+            }}
+          />
           <PublishFields />
         </CmsForm>
       </div>
@@ -236,7 +261,7 @@ function CommonFields({ includeBody = false }: { includeBody?: boolean }) {
       <Input name="summary" label="Summary" />
       {includeBody ? (
         <label className="text-xs font-medium">
-          Rich content / body
+          Rich content / body (Markdown supported)
           <textarea
             name="body"
             required

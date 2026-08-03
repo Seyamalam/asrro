@@ -1,10 +1,12 @@
 "use client"
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { usePaginatedQuery } from "convex/react"
+import { usePaginatedQuery, useQuery } from "convex/react"
 import { ArrowUpRight, Search } from "lucide-react"
 import { api } from "@/convex/_generated/api"
 import { SignalVisual } from "@/components/shared/signal-visual"
+import Image from "next/image"
+import type { Id } from "@/convex/_generated/dataModel"
 
 export function ProjectExplorer() {
   const [domain, setDomain] = useState("All")
@@ -66,10 +68,10 @@ export function ProjectExplorer() {
               href={`/projects/${project.slug}`}
               className="group overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white shadow-[0_12px_35px_rgba(25,55,90,.06)] transition hover:-translate-y-1 hover:border-[#00a6b2]/55 motion-reduce:transform-none dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/50"
             >
-              <SignalVisual
+              <ProjectCover
+                assetId={project.coverAssetId}
+                title={project.title}
                 code={`R&D—${String(index + 1).padStart(2, "0")}`}
-                className="aspect-[16/9] border-b border-[#2359d4]/15 dark:border-white/10"
-                compact
               />
               <div className="p-6">
                 <div className="flex items-center justify-between font-mono text-[9px] tracking-[.17em] text-[#587084] uppercase dark:text-[#8296ad]">
@@ -114,6 +116,34 @@ export function ProjectExplorer() {
           Load more projects
         </button>
       ) : null}
+    </div>
+  )
+}
+
+function ProjectCover({
+  assetId,
+  title,
+  code,
+}: {
+  assetId?: Id<"assets">
+  title: string
+  code: string
+}) {
+  const url = useQuery(api.assets.getPublicUrl, assetId ? { assetId } : "skip")
+  return (
+    <div className="relative aspect-[16/9] border-b border-[#2359d4]/15 dark:border-white/10">
+      {url ? (
+        <Image
+          src={url}
+          alt={title}
+          fill
+          sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+          unoptimized
+          className="object-cover"
+        />
+      ) : (
+        <SignalVisual code={code} className="absolute inset-0" compact />
+      )}
     </div>
   )
 }

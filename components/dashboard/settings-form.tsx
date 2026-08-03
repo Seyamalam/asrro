@@ -4,22 +4,157 @@ import { useMutation, useQuery } from "convex/react"
 import { Save } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import { api } from "@/convex/_generated/api"
-import { ActionButton } from "@/components/dashboard/dashboard-kit"
 import { AssetUploader } from "@/components/dashboard/asset-uploader"
+import { ActionButton } from "@/components/dashboard/dashboard-kit"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 
 const fields = [
-  ["organization.name", "Organization name"],
-  ["contact.email", "Contact email"],
-  ["contact.phone", "Contact phone"],
-  ["contact.address", "Office address"],
-  ["contact.latitude", "Latitude"],
-  ["contact.longitude", "Longitude"],
-  ["social.facebook", "Facebook URL"],
-  ["social.linkedin", "LinkedIn URL"],
-  ["social.youtube", "YouTube URL"],
-  ["social.github", "GitHub URL"],
-  ["social.instagram", "Instagram URL"],
+  {
+    key: "organization.name",
+    label: "Organization name",
+    group: "Identity",
+    public: true,
+  },
+  {
+    key: "home.about.title",
+    label: "Homepage About title",
+    group: "Homepage",
+    public: true,
+  },
+  {
+    key: "home.about.copy",
+    label: "Homepage About summary",
+    group: "Homepage",
+    public: true,
+    multiline: true,
+  },
+  {
+    key: "home.mission",
+    label: "Homepage mission",
+    group: "Homepage",
+    public: true,
+    multiline: true,
+  },
+  {
+    key: "home.vision",
+    label: "Homepage vision",
+    group: "Homepage",
+    public: true,
+    multiline: true,
+  },
+  {
+    key: "home.highlights.enabled",
+    label: "Show project highlights (true/false)",
+    group: "Homepage",
+    public: true,
+  },
+  {
+    key: "theme.primary",
+    label: "Primary color (#RRGGBB)",
+    group: "Theme",
+    public: true,
+  },
+  {
+    key: "theme.accent",
+    label: "Accent color (#RRGGBB)",
+    group: "Theme",
+    public: true,
+  },
+  {
+    key: "contact.email",
+    label: "Contact email",
+    group: "Contact",
+    public: true,
+  },
+  {
+    key: "contact.phone",
+    label: "Contact phone",
+    group: "Contact",
+    public: true,
+  },
+  {
+    key: "contact.address",
+    label: "Office address",
+    group: "Contact",
+    public: true,
+  },
+  {
+    key: "contact.latitude",
+    label: "Latitude",
+    group: "Contact",
+    public: true,
+  },
+  {
+    key: "contact.longitude",
+    label: "Longitude",
+    group: "Contact",
+    public: true,
+  },
+  {
+    key: "social.facebook",
+    label: "Facebook URL",
+    group: "Social",
+    public: true,
+  },
+  {
+    key: "social.linkedin",
+    label: "LinkedIn URL",
+    group: "Social",
+    public: true,
+  },
+  {
+    key: "social.youtube",
+    label: "YouTube URL",
+    group: "Social",
+    public: true,
+  },
+  { key: "social.github", label: "GitHub URL", group: "Social", public: true },
+  {
+    key: "social.instagram",
+    label: "Instagram URL",
+    group: "Social",
+    public: true,
+  },
+  {
+    key: "email.membership-approved.subject",
+    label: "Approval email subject",
+    group: "Email templates",
+    public: false,
+  },
+  {
+    key: "email.membership-approved.body",
+    label: "Approval email body",
+    group: "Email templates",
+    public: false,
+    multiline: true,
+  },
+  {
+    key: "email.membership-rejected.subject",
+    label: "Rejection email subject",
+    group: "Email templates",
+    public: false,
+  },
+  {
+    key: "email.membership-rejected.body",
+    label: "Rejection email body",
+    group: "Email templates",
+    public: false,
+    multiline: true,
+  },
+  {
+    key: "email.event-registration.subject",
+    label: "Registration email subject",
+    group: "Email templates",
+    public: false,
+  },
+  {
+    key: "email.event-registration.body",
+    label: "Registration email body",
+    group: "Email templates",
+    public: false,
+    multiline: true,
+  },
 ] as const
 
 export function SettingsForm() {
@@ -43,15 +178,19 @@ export function SettingsForm() {
     setState("saving")
     try {
       await Promise.all(
-        [...fields, ["branding.logoAssetId", "Public logo asset"] as const].map(
-          ([key, label]) =>
-            saveSetting({
-              key,
-              value: values[key] ?? "",
-              isPublic: true,
-              description: label,
-            })
-        )
+        fields.flatMap((field) => {
+          const value = values[field.key]?.trim() || defaultValue(field.key)
+          return value
+            ? [
+                saveSetting({
+                  key: field.key,
+                  value,
+                  isPublic: field.public,
+                  description: field.label,
+                }),
+              ]
+            : []
+        })
       )
       setState("saved")
     } catch {
@@ -60,50 +199,71 @@ export function SettingsForm() {
   }
 
   return (
-    <div className="p-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        {fields.map(([key, label]) => (
-          <label
-            key={key}
-            className={
-              key === "organization.name" || key === "contact.address"
-                ? "sm:col-span-2"
-                : ""
-            }
-          >
-            <span className="mb-2 block text-sm font-medium">{label}</span>
-            <input
-              value={values[key] ?? ""}
-              onChange={(event) =>
-                setEdits((current) => ({
-                  ...current,
-                  [key]: event.target.value,
-                }))
-              }
-              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm dark:border-white/10 dark:bg-white/5"
-            />
-          </label>
-        ))}
-        <div className="rounded-xl border border-dashed border-slate-300 p-5 sm:col-span-2 dark:border-white/15">
-          <p className="mb-3 text-sm font-semibold">Public logo / hero asset</p>
-          <AssetUploader
-            kind="image"
-            accept="image/*"
-            onUploaded={(assetId) =>
-              setEdits((current) => ({
-                ...current,
-                "branding.logoAssetId": assetId,
-              }))
-            }
-          />
-          {values["branding.logoAssetId"] ? (
-            <p className="mt-2 text-xs text-emerald-600">
-              Asset ready to save.
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5 dark:border-white/8">
+    <div className="space-y-8 p-5">
+      {[...new Set(fields.map((field) => field.group))].map((group) => (
+        <section key={group}>
+          <h2 className="mb-4 text-sm font-semibold">{group}</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {fields.map((field) => {
+              if (field.group !== group) return null
+              const multiline = "multiline" in field && field.multiline
+              return (
+                <label
+                  key={field.key}
+                  className={multiline ? "sm:col-span-2" : ""}
+                >
+                  <span className="mb-2 block text-xs font-medium">
+                    {field.label}
+                  </span>
+                  {multiline ? (
+                    <textarea
+                      value={values[field.key] ?? ""}
+                      onChange={(event) =>
+                        setEdits((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                        }))
+                      }
+                      rows={4}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm dark:border-white/10 dark:bg-white/5"
+                    />
+                  ) : (
+                    <input
+                      value={values[field.key] ?? ""}
+                      onChange={(event) =>
+                        setEdits((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                        }))
+                      }
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm dark:border-white/10 dark:bg-white/5"
+                    />
+                  )}
+                </label>
+              )
+            })}
+          </div>
+        </section>
+      ))}
+      <section className="grid gap-4 sm:grid-cols-2">
+        <AssetSetting
+          label="Public logo"
+          settingKey="branding.logoassetid"
+          value={values["branding.logoassetid"]}
+          onUploaded={(key, value) =>
+            setEdits((current) => ({ ...current, [key]: value }))
+          }
+        />
+        <AssetSetting
+          label="Homepage hero banner"
+          settingKey="home.heroassetid"
+          value={values["home.heroassetid"]}
+          onUploaded={(key, value) =>
+            setEdits((current) => ({ ...current, [key]: value }))
+          }
+        />
+      </section>
+      <div className="flex items-center justify-between border-t border-slate-100 pt-5 dark:border-white/8">
         <p
           role="status"
           className={
@@ -125,4 +285,53 @@ export function SettingsForm() {
       </div>
     </div>
   )
+}
+
+function AssetSetting({
+  label,
+  settingKey,
+  value,
+  onUploaded,
+}: {
+  label: string
+  settingKey: string
+  value?: string
+  onUploaded: (key: string, value: string) => void
+}) {
+  const saveSetting = useMutation(api.content.upsertSetting)
+  async function handleUploaded(assetId: Id<"assets">) {
+    const next = assetId
+    onUploaded(settingKey, next)
+    try {
+      await saveSetting({
+        key: settingKey,
+        value: next,
+        isPublic: true,
+        description: label,
+      })
+    } catch {
+      onUploaded(settingKey, "")
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 p-5 dark:border-white/15">
+      <p className="mb-3 text-sm font-semibold">{label}</p>
+      <AssetUploader
+        kind="image"
+        accept="image/*"
+        onUploaded={(assetId) => void handleUploaded(assetId)}
+      />
+      {value ? (
+        <p className="mt-2 text-xs text-emerald-600">Asset configured.</p>
+      ) : null}
+    </div>
+  )
+}
+
+function defaultValue(key: string) {
+  if (key === "home.highlights.enabled") return "true"
+  if (key === "theme.primary") return "#2359d4"
+  if (key === "theme.accent") return "#00a6b2"
+  return ""
 }

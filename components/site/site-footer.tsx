@@ -5,8 +5,11 @@ import {
   Video,
   MessageCircle,
   ArrowUpRight,
+  Camera,
 } from "lucide-react"
+import { fetchQuery } from "convex/nextjs"
 import { AsrroMark } from "@/components/shared/asrro-mark"
+import { api } from "@/convex/_generated/api"
 
 const links = [
   [
@@ -31,7 +34,28 @@ const links = [
   ],
 ] as const
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const [settings, branding] = await Promise.all([
+    fetchQuery(api.content.publicSettings),
+    fetchQuery(api.content.publicBranding),
+  ])
+  const value = (key: string, fallback: string) =>
+    settings.find((item) => item.key === key)?.value || fallback
+  const socials = [
+    [
+      MessageCircle,
+      "Facebook",
+      value("social.facebook", "https://facebook.com"),
+    ],
+    [
+      BriefcaseBusiness,
+      "LinkedIn",
+      value("social.linkedin", "https://linkedin.com"),
+    ],
+    [Video, "YouTube", value("social.youtube", "https://youtube.com")],
+    [Code2, "GitHub", value("social.github", "https://github.com")],
+    [Camera, "Instagram", value("social.instagram", "https://instagram.com")],
+  ] as const
   return (
     <footer className="relative border-t border-[#2359d4]/15 bg-[#eaf0f6] px-5 pt-16 pb-8 text-[#425a70] sm:px-8 lg:px-12 2xl:ml-8 dark:border-white/10 dark:bg-[#030a14] dark:text-[#b9c8d9]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00a6b2] to-transparent opacity-60 dark:via-[#65f2f1]" />
@@ -50,8 +74,9 @@ export function SiteFooter() {
               </span>
             </div>
             <p className="max-w-md text-lg leading-8">
-              Building practical capacity in space science, robotics, and
-              intelligent systems—from Chattogram to the frontier.
+              {branding.organizationName} builds practical capacity in space
+              science, robotics, and intelligent systems—from Chattogram to the
+              frontier.
             </p>
             <p className="mt-5 border-l-2 border-[#d97706] pl-4 font-mono text-[9px] tracking-[0.18em] text-[#587084] uppercase dark:text-[#71869e]">
               Chittagong University of Engineering & Technology
@@ -81,34 +106,16 @@ export function SiteFooter() {
         <div className="mt-14 flex flex-col gap-5 border-t border-[#2359d4]/15 pt-6 text-xs text-[#587084] sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:text-[#71869e]">
           <p>© 2026 Andromeda Space and Robotics Research Organization.</p>
           <div className="flex gap-2">
-            <a
-              href="https://facebook.com"
-              aria-label="Facebook"
-              className="grid size-9 place-items-center border border-[#2359d4]/15 transition hover:border-[#00a6b2] hover:text-[#007d89] dark:border-white/10 dark:hover:text-white"
-            >
-              <MessageCircle className="size-4" />
-            </a>
-            <a
-              href="https://linkedin.com"
-              aria-label="LinkedIn"
-              className="grid size-9 place-items-center border border-[#2359d4]/15 transition hover:border-[#00a6b2] hover:text-[#007d89] dark:border-white/10 dark:hover:text-white"
-            >
-              <BriefcaseBusiness className="size-4" />
-            </a>
-            <a
-              href="https://youtube.com"
-              aria-label="YouTube"
-              className="grid size-9 place-items-center border border-[#2359d4]/15 transition hover:border-[#00a6b2] hover:text-[#007d89] dark:border-white/10 dark:hover:text-white"
-            >
-              <Video className="size-4" />
-            </a>
-            <a
-              href="https://github.com"
-              aria-label="GitHub"
-              className="grid size-9 place-items-center border border-[#2359d4]/15 transition hover:border-[#00a6b2] hover:text-[#007d89] dark:border-white/10 dark:hover:text-white"
-            >
-              <Code2 className="size-4" />
-            </a>
+            {socials.map(([Icon, label, href]) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                className="grid size-9 place-items-center border border-[#2359d4]/15 transition hover:border-[#00a6b2] hover:text-[#007d89] dark:border-white/10 dark:hover:text-white"
+              >
+                <Icon className="size-4" />
+              </a>
+            ))}
           </div>
         </div>
       </div>

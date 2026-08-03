@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import { ArrowLeft, Share2 } from "lucide-react"
 import { fetchQuery } from "convex/nextjs"
 import { api } from "@/convex/_generated/api"
+import { ArticleComments } from "@/components/site/article-comments"
+import { RichText } from "@/components/shared/rich-text"
 
 const articleDateFormatter = new Intl.DateTimeFormat("en-BD", {
   day: "numeric",
@@ -70,12 +72,8 @@ export default async function ArticlePage({
         </div>
       </header>
       <div className="border-y border-[#2359d4]/15 bg-[#eaf0f6] px-5 py-20 sm:px-8 lg:px-12 dark:border-white/10 dark:bg-[#081524]">
-        <div className="mx-auto max-w-3xl space-y-7 text-lg leading-9 text-[#425a70] dark:text-[#b9c8d9]">
-          {item.body.split(/\n{2,}/).map((paragraph) => (
-            <p key={paragraph.slice(0, 80)} className="whitespace-pre-wrap">
-              {paragraph}
-            </p>
-          ))}
+        <div className="mx-auto max-w-3xl text-lg leading-9 text-[#425a70] dark:text-[#b9c8d9]">
+          <RichText value={item.body} />
           {item.tags.length ? (
             <div className="flex flex-wrap gap-2 pt-6">
               {item.tags.map((tag) => (
@@ -90,6 +88,7 @@ export default async function ArticlePage({
           ) : null}
         </div>
       </div>
+      <ArticleComments blogId={item._id} />
     </article>
   )
 }

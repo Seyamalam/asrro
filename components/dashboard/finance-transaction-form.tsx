@@ -10,6 +10,24 @@ export function FinanceTransactionForm({ onDone }: { onDone: () => void }) {
   const createTransaction = useMutation(api.finance.createTransaction)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [direction, setDirection] = useState<"income" | "expense">("income")
+
+  const categories =
+    direction === "income"
+      ? [
+          "Membership fees",
+          "Sponsor contributions",
+          "Event income",
+          "Donations",
+          "Miscellaneous income",
+        ]
+      : [
+          "Event expenses",
+          "Equipment purchases",
+          "Travel",
+          "Training",
+          "Miscellaneous expenses",
+        ]
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -47,13 +65,28 @@ export function FinanceTransactionForm({ onDone }: { onDone: () => void }) {
         Type
         <select
           name="direction"
+          value={direction}
+          onChange={(event) =>
+            setDirection(event.target.value as "income" | "expense")
+          }
           className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-slate-900"
         >
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </select>
       </label>
-      <Field label="Category" name="category" />
+      <label className="text-xs font-medium">
+        Category
+        <select
+          key={direction}
+          name="category"
+          className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-slate-900"
+        >
+          {categories.map((category) => (
+            <option key={category}>{category}</option>
+          ))}
+        </select>
+      </label>
       <Field
         label="Amount (BDT)"
         name="amount"

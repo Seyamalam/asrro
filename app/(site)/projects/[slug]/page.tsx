@@ -6,6 +6,7 @@ import { fetchQuery } from "convex/nextjs"
 import { api } from "@/convex/_generated/api"
 import { SignalVisual } from "@/components/shared/signal-visual"
 import { SiteButton } from "@/components/shared/site-button"
+import Image from "next/image"
 
 const projectDateFormatter = new Intl.DateTimeFormat("en-BD", {
   month: "short",
@@ -38,6 +39,11 @@ export default async function ProjectPage({
   const result = await fetchQuery(api.projects.getPublicBySlug, { slug })
   if (!result) notFound()
   const { project, team, publications } = result
+  const coverUrl = project.coverAssetId
+    ? await fetchQuery(api.assets.getPublicUrl, {
+        assetId: project.coverAssetId,
+      })
+    : null
   const duration = project.startedAt
     ? `${formatProjectDate(project.startedAt)} — ${project.endedAt ? formatProjectDate(project.endedAt) : "present"}`
     : "Not specified"
@@ -69,10 +75,23 @@ export default async function ProjectPage({
                 {project.summary}
               </p>
             </div>
-            <SignalVisual
-              code={project.slug.toUpperCase().slice(0, 12)}
-              className="aspect-[16/10] rounded-2xl border border-[#2359d4]/15 dark:border-white/10"
-            />
+            <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-[#2359d4]/15 dark:border-white/10">
+              {coverUrl ? (
+                <Image
+                  src={coverUrl}
+                  alt={project.title}
+                  fill
+                  sizes="(min-width: 1024px) 45vw, 100vw"
+                  unoptimized
+                  className="object-cover"
+                />
+              ) : (
+                <SignalVisual
+                  code={project.slug.toUpperCase().slice(0, 12)}
+                  className="absolute inset-0"
+                />
+              )}
+            </div>
           </div>
         </div>
       </section>

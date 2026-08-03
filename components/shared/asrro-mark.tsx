@@ -1,6 +1,10 @@
+"use client"
+
 import Image from "next/image"
+import { useQuery } from "convex/react"
 
 import { cn } from "@/lib/utils"
+import { api } from "@/convex/_generated/api"
 
 export function AsrroMark({
   className,
@@ -9,6 +13,7 @@ export function AsrroMark({
   className?: string
   priority?: boolean
 }) {
+  const branding = useQuery(api.content.publicBranding)
   return (
     <span
       className={cn(
@@ -17,11 +22,12 @@ export function AsrroMark({
       )}
     >
       <Image
-        src="/asrro-logo.png"
+        src={branding?.logoUrl ?? "/asrro-logo.png"}
         alt=""
         width={725}
         height={725}
         loading={priority ? "eager" : "lazy"}
+        unoptimized={Boolean(branding?.logoUrl)}
         className="size-full object-contain"
       />
     </span>

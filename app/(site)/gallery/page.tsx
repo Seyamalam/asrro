@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Link from "next/link"
 import { Images, Play } from "lucide-react"
 import { fetchQuery } from "convex/nextjs"
 import { PageHero } from "@/components/shared/page-hero"
@@ -27,49 +28,55 @@ export default async function GalleryPage() {
       />
       <section className="px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
         <div className="mx-auto grid max-w-[88rem] gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {gallery.map(({ album, coverUrl, imageCount, videoCount }, index) => (
-            <article
-              key={album._id}
-              className={index === 0 ? "md:col-span-2" : ""}
-            >
-              <div className="group overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-white/85 shadow-[0_16px_45px_rgba(35,89,212,.06)] transition hover:border-[#00a6b2]/40 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40">
-                <div
-                  className={`relative ${index === 0 ? "aspect-[16/7]" : "aspect-[16/10]"}`}
+          {gallery.map(
+            ({ album, coverUrl, imageCount, videoCount, event }, index) => (
+              <article
+                key={album._id}
+                className={index === 0 ? "md:col-span-2" : ""}
+              >
+                <Link
+                  href={`/gallery/${album.slug}`}
+                  className="group block overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-white/85 shadow-[0_16px_45px_rgba(35,89,212,.06)] transition hover:border-[#00a6b2]/40 dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/40"
                 >
-                  {coverUrl ? (
-                    <Image
-                      src={coverUrl}
-                      alt={album.title}
-                      fill
-                      sizes="(min-width: 768px) 50vw, 100vw"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <SignalVisual
-                      code={album.slug.toUpperCase().slice(0, 12)}
-                      className="absolute inset-0"
-                    />
-                  )}
-                </div>
-                <div className="flex items-end justify-between gap-5 p-5">
-                  <div>
-                    <p className="font-mono text-[9px] tracking-[.16em] text-[#007d89] uppercase dark:text-[#65f2f1]">
-                      Album · {galleryYearFormatter.format(album.occurredAt)}
-                    </p>
-                    <h2 className="mt-2 text-xl font-semibold">
-                      {album.title}
-                    </h2>
+                  <div
+                    className={`relative ${index === 0 ? "aspect-[16/7]" : "aspect-[16/10]"}`}
+                  >
+                    {coverUrl ? (
+                      <Image
+                        src={coverUrl}
+                        alt={album.title}
+                        fill
+                        sizes="(min-width: 768px) 50vw, 100vw"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <SignalVisual
+                        code={album.slug.toUpperCase().slice(0, 12)}
+                        className="absolute inset-0"
+                      />
+                    )}
                   </div>
-                  <span className="flex shrink-0 items-center gap-2 text-sm text-[#587084] dark:text-[#8296ad]">
-                    <Images className="size-4" />
-                    {imageCount} images
-                    {videoCount ? ` · ${videoCount} videos` : ""}
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
+                  <div className="flex items-end justify-between gap-5 p-5">
+                    <div>
+                      <p className="font-mono text-[9px] tracking-[.16em] text-[#007d89] uppercase dark:text-[#65f2f1]">
+                        Album · {galleryYearFormatter.format(album.occurredAt)}
+                        {event ? ` · ${event.name}` : " · Independent archive"}
+                      </p>
+                      <h2 className="mt-2 text-xl font-semibold">
+                        {album.title}
+                      </h2>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-2 text-sm text-[#587084] dark:text-[#8296ad]">
+                      <Images className="size-4" />
+                      {imageCount} images
+                      {videoCount ? ` · ${videoCount} videos` : ""}
+                    </span>
+                  </div>
+                </Link>
+              </article>
+            )
+          )}
         </div>
         {gallery.some((item) => item.videoUrl) ? (
           <a

@@ -38,6 +38,7 @@ export default async function ContactPage() {
   const address = value("contact.address", "Student Activity Centre, CUET")
   const latitude = value("contact.latitude", "23.4607")
   const longitude = value("contact.longitude", "91.9710")
+  const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${latitude},${longitude}`)}&z=15&output=embed`
   const channels = [
     [Mail, "Email", email, `mailto:${email}`],
     [Phone, "Phone", phone, `tel:${phone.replaceAll(" ", "")}`],
@@ -86,18 +87,17 @@ export default async function ContactPage() {
             </div>
             <div
               id="map"
-              className="relative mt-5 min-h-64 overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-[#e8f0f7] p-6 dark:border-white/10 dark:bg-[#08172a]"
+              className="relative mt-5 min-h-64 overflow-hidden rounded-2xl border border-[#2359d4]/15 bg-[#e8f0f7] dark:border-white/10 dark:bg-[#08172a]"
             >
-              <div className="absolute inset-0 [background-image:linear-gradient(#b7c9db_1px,transparent_1px),linear-gradient(90deg,#b7c9db_1px,transparent_1px)] [background-size:28px_28px] opacity-60 dark:[background-image:linear-gradient(#203551_1px,transparent_1px),linear-gradient(90deg,#203551_1px,transparent_1px)] dark:opacity-40" />
-              <div className="relative grid h-full min-h-52 place-items-center text-center">
-                <div>
-                  <MapPin className="mx-auto size-7 text-[#d97706] dark:text-[#ffb84d]" />
-                  <p className="mt-3 font-semibold">CUET Campus, Raozan</p>
-                  <p className="mt-1 font-mono text-[9px] tracking-[.16em] text-[#587084] uppercase dark:text-[#71869e]">
-                    {latitude}° N · {longitude}° E
-                  </p>
-                </div>
-              </div>
+              <iframe
+                title="ASRRO office at CUET on Google Maps"
+                src={mapUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                sandbox="allow-scripts allow-popups allow-forms"
+                className="absolute inset-0 h-full min-h-64 w-full border-0"
+                allowFullScreen
+              />
             </div>
             <div className="mt-5 flex gap-3">
               {socialChannels.map(([Icon, label, key]) => (

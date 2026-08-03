@@ -95,8 +95,19 @@ export function MembershipCard({
       </div>
       <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-4 sm:inset-x-6 sm:bottom-6">
         <div className="min-w-0">
-          <div className="mb-2 hidden size-12 place-items-center rounded-2xl border border-white/15 bg-white/8 text-base font-semibold sm:grid">
-            {initials(membership.fullName)}
+          <div className="relative mb-2 hidden size-12 place-items-center overflow-hidden rounded-2xl border border-white/15 bg-white/8 text-base font-semibold sm:grid">
+            {membership.profileImageUrl ? (
+              <Image
+                src={membership.profileImageUrl}
+                alt={`${membership.fullName} profile`}
+                fill
+                sizes="48px"
+                unoptimized
+                className="object-cover"
+              />
+            ) : (
+              initials(membership.fullName)
+            )}
           </div>
           <p className="truncate text-base font-semibold sm:text-lg">
             {membership.fullName}
