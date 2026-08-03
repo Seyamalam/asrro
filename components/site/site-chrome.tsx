@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { ViewTransition, type ReactNode } from "react"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 
@@ -22,12 +22,14 @@ export function SiteChrome({ children }: { children: ReactNode }) {
         </span>
       </div>
       <SiteHeader />
-      <main
-        id="main-content"
-        className="relative bg-[linear-gradient(to_right,rgba(35,89,212,.045)_1px,transparent_1px)] bg-[size:calc((100vw-2rem)/6)_100%] 2xl:ml-8 dark:bg-[linear-gradient(to_right,rgba(101,242,241,.025)_1px,transparent_1px)]"
-      >
-        {children}
-      </main>
+      <ViewTransition name="asrro-public-page" default="asrro-public-page">
+        <main
+          id="main-content"
+          className="relative bg-[linear-gradient(to_right,rgba(35,89,212,.045)_1px,transparent_1px)] bg-[size:calc((100vw-2rem)/6)_100%] 2xl:ml-8 dark:bg-[linear-gradient(to_right,rgba(101,242,241,.025)_1px,transparent_1px)]"
+        >
+          {children}
+        </main>
+      </ViewTransition>
       <SiteFooter />
     </div>
   )

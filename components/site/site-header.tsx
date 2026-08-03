@@ -59,7 +59,10 @@ export function SiteHeader() {
   )
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#2359d4]/15 bg-[#f4f7fb]/92 text-[#07111f] backdrop-blur-2xl dark:border-white/10 dark:bg-[#06101f]/92 dark:text-[#eef8ff]">
+    <header
+      style={{ viewTransitionName: "asrro-public-header" }}
+      className="sticky top-0 z-50 border-b border-[#2359d4]/15 bg-[#f4f7fb]/92 text-[#07111f] backdrop-blur-2xl dark:border-white/10 dark:bg-[#06101f]/92 dark:text-[#eef8ff]"
+    >
       <div className="hidden h-6 items-center justify-between border-b border-[#2359d4]/10 px-8 font-mono text-[8px] tracking-[.2em] text-[#587084] uppercase sm:flex lg:px-12 dark:border-white/7 dark:text-[#71869e]">
         <span className="flex items-center gap-2">
           <span className="size-1.5 bg-[#00a6b2] shadow-[0_0_10px_rgba(0,166,178,.6)] dark:bg-[#65f2f1]" />
