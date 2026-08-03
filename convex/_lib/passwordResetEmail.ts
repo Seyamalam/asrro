@@ -29,7 +29,7 @@ export function passwordResetEmail(input: {
   const safeLogoUrl = escapeHtml(logoUrl)
 
   return {
-    template: "password_reset",
+    template: "password_reset" as const,
     subject: "Reset your ASRRO portal password",
     textBody: `Hello ${name},\n\nWe received a request to reset your ASRRO portal password. This secure link expires in 60 minutes:\n\n${resetUrl}\n\nIf you did not request this, you can ignore this email. Your password will remain unchanged.\n\nASRRO · CUET, Bangladesh`,
     htmlBody: `<!doctype html>

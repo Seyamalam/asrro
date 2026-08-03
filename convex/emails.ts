@@ -7,6 +7,7 @@ import { internal } from "./_generated/api"
 import { internalMutation, mutation, query } from "./_generated/server"
 import { requirePermission } from "./_lib/auth"
 import { announcementEmail, enqueueEmail } from "./_lib/email"
+import { emailDesignPreviews } from "./_lib/emailPreviews"
 import { cleanText, normalizeEmail, optionalText } from "./_lib/validation"
 import { emailOutboxFields } from "./model"
 
@@ -160,4 +161,38 @@ export const queueOneForTesting = internalMutation({
       ...args,
       recipient: normalizeEmail(args.recipient),
     }),
+})
+
+export const queueDesignReviewBatch = internalMutation({
+  args: {
+    recipients: v.array(v.string()),
+    confirmation: v.literal("SEND_DESIGN_REVIEW_EMAILS"),
+  },
+  returns: v.object({ queued: v.number(), templates: v.array(v.string()) }),
+  handler: async (ctx, args) => {
+    const recipients = [...new Set(args.recipients.map(normalizeEmail))]
+    if (recipients.length === 0 || recipients.length > 5) {
+      throw new ConvexError("Select between 1 and 5 design-review recipients")
+    }
+    const previews = emailDesignPreviews("https://asrro.vercel.app")
+    const outboxIds = await Promise.all(
+      recipients.flatMap((recipient) =>
+        previews.map(async (email) => {
+          const outboxId = await enqueueEmail(ctx, {
+            recipient,
+            recipientName: "ASRRO Design Reviewer",
+            ...email,
+          })
+          await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
+            outboxId,
+          })
+          return outboxId
+        })
+      )
+    )
+    return {
+      queued: outboxIds.length,
+      templates: previews.map((email) => email.template),
+    }
+  },
 })
