@@ -10,20 +10,39 @@ import {
   Camera,
 } from "lucide-react"
 import Link from "next/link"
+import { fetchQuery } from "convex/nextjs"
 
 import { ContactForm } from "@/components/site/contact-form"
 import { PageHero } from "@/components/shared/page-hero"
+import { api } from "@/convex/_generated/api"
+
+const socialChannels = [
+  [MessageCircle, "Facebook", "social.facebook"],
+  [BriefcaseBusiness, "LinkedIn", "social.linkedin"],
+  [Video, "YouTube", "social.youtube"],
+  [Code2, "GitHub", "social.github"],
+  [Camera, "Instagram", "social.instagram"],
+] as const
+
 export const metadata: Metadata = {
   title: "Contact",
   description:
     "Contact ASRRO at CUET for research, events, partnerships, and membership.",
 }
-const channels = [
-  [Mail, "Email", "hello@asrro.org", "mailto:hello@asrro.org"],
-  [Phone, "Phone", "+880 1712 345 678", "tel:+8801712345678"],
-  [MapPin, "Office", "Student Activity Centre, CUET", "#map"],
-] as const
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await fetchQuery(api.content.publicSettings)
+  const value = (key: string, fallback: string) =>
+    settings.find((item) => item.key === key)?.value || fallback
+  const email = value("contact.email", "hello@asrro.org")
+  const phone = value("contact.phone", "+880 1700 000 000")
+  const address = value("contact.address", "Student Activity Centre, CUET")
+  const latitude = value("contact.latitude", "23.4607")
+  const longitude = value("contact.longitude", "91.9710")
+  const channels = [
+    [Mail, "Email", email, `mailto:${email}`],
+    [Phone, "Phone", phone, `tel:${phone.replaceAll(" ", "")}`],
+    [MapPin, "Office", address, "#map"],
+  ] as const
   return (
     <>
       <PageHero
@@ -75,23 +94,17 @@ export default function ContactPage() {
                   <MapPin className="mx-auto size-7 text-[#d97706] dark:text-[#ffb84d]" />
                   <p className="mt-3 font-semibold">CUET Campus, Raozan</p>
                   <p className="mt-1 font-mono text-[9px] tracking-[.16em] text-[#587084] uppercase dark:text-[#71869e]">
-                    23.4607° N · 91.9710° E
+                    {latitude}° N · {longitude}° E
                   </p>
                 </div>
               </div>
             </div>
             <div className="mt-5 flex gap-3">
-              {[
-                [MessageCircle, "Facebook"],
-                [BriefcaseBusiness, "LinkedIn"],
-                [Video, "YouTube"],
-                [Code2, "GitHub"],
-                [Camera, "Instagram"],
-              ].map(([Icon, label]) => (
+              {socialChannels.map(([Icon, label, key]) => (
                 <a
-                  href={`https://${String(label).toLowerCase()}.com`}
-                  aria-label={String(label)}
-                  key={String(label)}
+                  href={value(key, "#")}
+                  aria-label={label}
+                  key={label}
                   className="grid size-10 place-items-center rounded-full border border-[#2359d4]/15 text-[#587084] transition hover:border-[#00a6b2]/40 hover:text-[#007d89] dark:border-white/10 dark:text-[#8296ad] dark:hover:text-[#65f2f1]"
                 >
                   <Icon className="size-4" />

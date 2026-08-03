@@ -1,7 +1,9 @@
 "use client"
 import { useMutation } from "convex/react"
+import type { Id } from "@/convex/_generated/dataModel"
 import { ArrowLeft, ArrowRight, Check, ShieldCheck } from "lucide-react"
-import { useState, type FormEvent } from "react"
+import Link from "next/link"
+import { useRef, useState, type FormEvent } from "react"
 import { api } from "@/convex/_generated/api"
 import { cn } from "@/lib/utils"
 
@@ -15,7 +17,27 @@ export function MembershipFlow() {
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const profilePhotoRef = useRef<File | null>(null)
+  const paymentProofRef = useRef<File | null>(null)
   const submitApplication = useMutation(api.membership.submitApplication)
+  const generateUploadUrl = useMutation(api.assets.generateApplicationUploadUrl)
+  const registerUpload = useMutation(api.assets.registerApplicationUpload)
+
+  async function upload(file: File, kind: "image" | "pdf") {
+    const uploadUrl = await generateUploadUrl({})
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: { "Content-Type": file.type },
+      body: file,
+    })
+    if (!response.ok) throw new Error(`Could not upload ${file.name}`)
+    const { storageId } = (await response.json()) as { storageId: string }
+    return await registerUpload({
+      storageId: storageId as Id<"_storage">,
+      kind,
+      fileName: file.name,
+    })
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -36,6 +58,17 @@ export function MembershipFlow() {
 
     setSubmitting(true)
     try {
+      const profilePhoto = profilePhotoRef.current
+      const paymentProof = paymentProofRef.current
+      if (!paymentProof)
+        throw new Error("A payment proof image or PDF is required")
+      const profileAssetId = profilePhoto
+        ? await upload(profilePhoto, "image")
+        : undefined
+      const paymentAssetId = await upload(
+        paymentProof,
+        paymentProof.type === "application/pdf" ? "pdf" : "image"
+      )
       const response = await submitApplication({
         fullName: nextDraft.fullName,
         ...(nextDraft.dob ? { dateOfBirth: nextDraft.dob } : {}),
@@ -53,6 +86,8 @@ export function MembershipFlow() {
         emergencyContact: nextDraft.emergency,
         paymentMethod: paymentMethod(nextDraft.payment),
         transactionId: nextDraft.transaction,
+        profileAssetId,
+        paymentAssetId,
       })
       setResult({
         applicationCode: response.applicationCode,
@@ -103,11 +138,20 @@ export function MembershipFlow() {
             </dd>
           </div>
         </dl>
+        <Link
+          href="/membership/status"
+          className="mt-5 inline-flex text-sm font-semibold text-[#007d89] underline dark:text-[#65f2f1]"
+        >
+          Open application tracker
+        </Link>
         <button
+          type="button"
           onClick={() => {
             setStep(0)
             setDraft({})
             setResult(null)
+            profilePhotoRef.current = null
+            paymentProofRef.current = null
           }}
           className="mt-7 text-sm text-[#007d89] underline dark:text-[#65f2f1]"
         >
@@ -189,6 +233,19 @@ export function MembershipFlow() {
                 defaultValue={draft.gender}
                 options={["Female", "Male", "Non-binary", "Prefer not to say"]}
               />
+              <label className="sm:col-span-2">
+                <span className="mb-2 block text-sm">
+                  Profile photo (optional)
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => {
+                    profilePhotoRef.current = event.target.files?.[0] ?? null
+                  }}
+                  className="w-full border border-[#2359d4]/15 bg-[#f4f7fb] p-3 text-sm dark:border-white/10 dark:bg-[#06101f]"
+                />
+              </label>
               <Select
                 label="Blood group"
                 name="blood"
@@ -271,6 +328,18 @@ export function MembershipFlow() {
                 name="transaction"
                 defaultValue={draft.transaction}
               />
+              <label className="sm:col-span-2">
+                <span className="mb-2 block text-sm">Payment proof</span>
+                <input
+                  required
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(event) => {
+                    paymentProofRef.current = event.target.files?.[0] ?? null
+                  }}
+                  className="w-full border border-[#2359d4]/15 bg-[#f4f7fb] p-3 text-sm dark:border-white/10 dark:bg-[#06101f]"
+                />
+              </label>
               <div className="rounded-lg border border-[#d97706]/25 bg-[#d97706]/5 p-4 text-sm leading-6 text-[#72400d] sm:col-span-2 dark:border-[#ffb84d]/25 dark:bg-[#ffb84d]/5 dark:text-[#d8c29f]">
                 Membership fee:{" "}
                 <strong className="text-[#07111f] dark:text-white">

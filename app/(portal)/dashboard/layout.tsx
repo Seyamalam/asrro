@@ -3,7 +3,8 @@ import { redirect } from "next/navigation"
 import type { ReactNode } from "react"
 
 import { PortalShell } from "@/components/dashboard/portal-shell"
-import { isAuthenticated } from "@/lib/auth-server"
+import { api } from "@/convex/_generated/api"
+import { fetchAuthQuery, isAuthenticated } from "@/lib/auth-server"
 
 export const metadata: Metadata = {
   title: {
@@ -22,5 +23,10 @@ export default async function DashboardLayout({
     redirect("/login?next=/dashboard")
   }
 
-  return <PortalShell>{children}</PortalShell>
+  const member = await fetchAuthQuery(api.members.me, {})
+  if (!member || member.status !== "active") {
+    redirect("/applicant-status")
+  }
+
+  return <PortalShell initialMember={member}>{children}</PortalShell>
 }

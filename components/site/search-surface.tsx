@@ -1,22 +1,57 @@
 "use client"
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { useQuery } from "convex/react"
 import { Search, ArrowUpRight } from "lucide-react"
-import { searchIndex } from "@/content/public-data"
+import { api } from "@/convex/_generated/api"
 export function SearchSurface() {
   const [query, setQuery] = useState("")
   const [type, setType] = useState("All")
+  const data = useQuery(
+    api.search.publicSearch,
+    query.trim().length >= 2
+      ? { search: query.trim(), limitPerType: 12 }
+      : "skip"
+  )
+  const searchIndex = useMemo(
+    () => [
+      ...(data?.projects ?? []).map((item) => ({
+        type: "Project",
+        title: item.title,
+        href: `/projects/${item.slug}`,
+      })),
+      ...(data?.alumni ?? []).map((item) => ({
+        type: "Alumni",
+        title: item.name,
+        href: "/alumni",
+      })),
+      ...(data?.blogs ?? []).map((item) => ({
+        type: "News",
+        title: item.title,
+        href: `/news/${item.slug}`,
+      })),
+      ...(data?.committee ?? []).map((item) => ({
+        type: "Committee",
+        title: item.name,
+        href: "/committee",
+      })),
+      ...(data?.publications ?? []).map((item) => ({
+        type: "Publication",
+        title: item.title,
+        href: "/publications",
+      })),
+      ...(data?.events ?? []).map((item) => ({
+        type: "Event",
+        title: item.name,
+        href: `/events/${item.slug}`,
+      })),
+    ],
+    [data]
+  )
   const types = ["All", ...new Set(searchIndex.map((i) => i.type))]
   const list = useMemo(
-    () =>
-      searchIndex.filter(
-        (item) =>
-          (type === "All" || item.type === type) &&
-          `${item.title} ${item.type} ${item.keywords.join(" ")}`
-            .toLowerCase()
-            .includes(query.toLowerCase())
-      ),
-    [query, type]
+    () => searchIndex.filter((item) => type === "All" || item.type === type),
+    [searchIndex, type]
   )
   return (
     <>
@@ -52,7 +87,7 @@ export function SearchSurface() {
         {list.length} indexed records
       </p>
       <div className="divide-y divide-[#2359d4]/15 border-y border-[#2359d4]/15 dark:divide-white/10 dark:border-white/10">
-        {list.slice(0, 24).map((item, index) => (
+        {list.map((item, index) => (
           <Link
             key={`${item.type}-${item.title}`}
             href={item.href}
@@ -71,7 +106,11 @@ export function SearchSurface() {
           </Link>
         ))}
       </div>
-      {list.length ? null : (
+      {query.trim().length < 2 ? (
+        <div className="rounded-xl border border-dashed border-[#2359d4]/25 p-12 text-center text-[#4b6175] dark:border-white/15 dark:text-[#9fb1c5]">
+          Enter at least two characters to search the public archive.
+        </div>
+      ) : list.length ? null : (
         <div className="rounded-xl border border-dashed border-[#2359d4]/25 p-12 text-center text-[#4b6175] dark:border-white/15 dark:text-[#9fb1c5]">
           No indexed records match that search. Try a broader term or select
           “All”.

@@ -20,7 +20,6 @@ import {
 } from "@/components/motion/command-palette"
 import { AsrroMark } from "@/components/shared/asrro-mark"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
-import { searchIndex } from "@/content/public-data"
 import { cn } from "@/lib/utils"
 
 const nav = [
@@ -39,6 +38,19 @@ const icons = {
   Committee: Users,
   Publication: FileText,
 }
+const publicCommands = [
+  { type: "Project", title: "Browse projects", href: "/projects" },
+  { type: "Event", title: "Browse events", href: "/events" },
+  { type: "News", title: "Read news and field notes", href: "/news" },
+  { type: "Alumni", title: "Find alumni", href: "/alumni" },
+  { type: "Committee", title: "Meet the committee", href: "/committee" },
+  {
+    type: "Publication",
+    title: "Browse publications",
+    href: "/publications",
+  },
+  { type: "Publication", title: "Search the public archive", href: "/search" },
+] as const
 
 export function SiteHeader() {
   const pathname = usePathname()
@@ -47,12 +59,12 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false)
   const commands = useMemo<CommandItem[]>(
     () =>
-      searchIndex.map((item, index) => ({
+      publicCommands.map((item, index) => ({
         id: `${item.type}-${index}`,
         label: item.title,
         group: item.type,
-        keywords: item.keywords,
-        icon: icons[item.type as keyof typeof icons],
+        keywords: [item.type, item.title],
+        icon: icons[item.type],
         onSelect: () => router.push(item.href),
       })),
     [router]

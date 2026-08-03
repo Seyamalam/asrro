@@ -2,21 +2,32 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, Code2, FileText, Trophy } from "lucide-react"
-import { projects } from "@/content/public-data"
+import { fetchQuery } from "convex/nextjs"
+import { api } from "@/convex/_generated/api"
 import { SignalVisual } from "@/components/shared/signal-visual"
 import { SiteButton } from "@/components/shared/site-button"
 
-export function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }))
+const projectDateFormatter = new Intl.DateTimeFormat("en-BD", {
+  month: "short",
+  year: "numeric",
+  timeZone: "Asia/Dhaka",
+})
+
+function formatProjectDate(value?: number) {
+  return value ? projectDateFormatter.format(value) : "Not specified"
 }
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const project = projects.find((p) => p.slug === slug)
-  return { title: project?.title ?? "Project", description: project?.summary }
+  const result = await fetchQuery(api.projects.getPublicBySlug, { slug })
+  return {
+    title: result?.project.title ?? "Project",
+    description: result?.project.summary,
+  }
 }
 export default async function ProjectPage({
   params,
@@ -24,8 +35,12 @@ export default async function ProjectPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const project = projects.find((p) => p.slug === slug)
-  if (!project) notFound()
+  const result = await fetchQuery(api.projects.getPublicBySlug, { slug })
+  if (!result) notFound()
+  const { project, team, publications } = result
+  const duration = project.startedAt
+    ? `${formatProjectDate(project.startedAt)} — ${project.endedAt ? formatProjectDate(project.endedAt) : "present"}`
+    : "Not specified"
   return (
     <>
       <section className="px-5 pt-10 pb-12 sm:px-8 lg:px-12">
@@ -44,7 +59,7 @@ export default async function ProjectPage({
                   {project.category}
                 </span>
                 <span className="rounded-full border border-[#d97706]/30 px-3 py-1 font-mono text-[9px] tracking-[.16em] text-[#b85f00] uppercase dark:border-[#ffb84d]/25 dark:text-[#ffb84d]">
-                  {project.status}
+                  {project.projectState}
                 </span>
               </div>
               <h1 className="text-5xl leading-[.95] font-semibold tracking-[-.055em] sm:text-7xl">
@@ -64,10 +79,10 @@ export default async function ProjectPage({
       <section className="border-y border-[#2359d4]/15 bg-[#eaf0f6] px-5 py-12 sm:px-8 lg:px-12 dark:border-white/10 dark:bg-[#081524]">
         <dl className="mx-auto grid max-w-[88rem] grid-cols-2 gap-8 lg:grid-cols-4">
           {[
-            ["Duration", project.duration],
-            ["Team size", `${project.team.length} researchers`],
-            ["Discipline", project.category],
-            ["Record year", project.year],
+            ["Duration", duration],
+            ["Team size", `${team.length} researchers`],
+            ["Domain", project.domain],
+            ["Updated", formatProjectDate(project.updatedAt)],
           ].map(([term, value]) => (
             <div key={term}>
               <dt className="font-mono text-[9px] tracking-[.17em] text-[#587084] uppercase dark:text-[#71869e]">
@@ -90,14 +105,12 @@ export default async function ProjectPage({
               What the team proved.
             </h2>
             <p className="mt-5 text-xl leading-9 text-[#425a70] dark:text-[#b9c8d9]">
-              {project.outcome}
+              {project.description}
             </p>
             <h3 className="mt-12 text-xl font-semibold">Technical approach</h3>
             <p className="mt-4 leading-8 text-[#425a70] dark:text-[#9fb1c5]">
-              The team follows a staged research cycle: define measurable field
-              constraints, prototype the riskiest subsystem first, integrate
-              only after component tests pass, and publish a test log after each
-              milestone.
+              {project.awards ??
+                "The project record does not list an award or formal outcome yet."}
             </p>
           </div>
           <aside className="rounded-2xl border border-[#2359d4]/15 bg-white/85 p-6 shadow-[0_14px_40px_rgba(35,89,212,.05)] dark:border-white/10 dark:bg-[#09182a] dark:shadow-none">
@@ -105,7 +118,7 @@ export default async function ProjectPage({
               System stack
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {project.stack.map((item) => (
+              {project.technologyStack.map((item) => (
                 <span
                   key={item}
                   className="rounded-full border border-[#2359d4]/20 bg-[#eef3ff] px-3 py-1.5 text-sm text-[#284056] dark:border-[#3d8bff]/30 dark:bg-transparent dark:text-inherit"
@@ -118,28 +131,35 @@ export default async function ProjectPage({
               Research team
             </p>
             <ul className="mt-4 divide-y divide-[#2359d4]/15 dark:divide-white/10">
-              {project.team.map((name) => (
+              {team.map((person) => (
                 <li
-                  key={name}
+                  key={person._id}
                   className="py-3 text-[#425a70] dark:text-[#b9c8d9]"
                 >
-                  {name}
+                  {person.name} · {person.role}
                 </li>
               ))}
             </ul>
             <div className="mt-7 grid gap-3">
-              <SiteButton href="#" variant="ghost">
-                <Code2 className="size-4" />
-                Repository
-              </SiteButton>
-              <SiteButton href="/publications" variant="ghost">
+              {project.githubUrl ? (
+                <SiteButton href={project.githubUrl} variant="ghost">
+                  <Code2 className="size-4" />
+                  Repository
+                </SiteButton>
+              ) : null}
+              <SiteButton
+                href={publications[0]?.externalUrl ?? "/publications"}
+                variant="ghost"
+              >
                 <FileText className="size-4" />
-                Related publications
+                {publications.length
+                  ? `${publications.length} related publication${publications.length === 1 ? "" : "s"}`
+                  : "Publications archive"}
               </SiteButton>
-              {project.status === "Competition" ? (
+              {project.category === "competition" || project.awards ? (
                 <p className="flex items-center gap-2 text-sm text-[#b85f00] dark:text-[#ffb84d]">
                   <Trophy className="size-4" />
-                  Active competition entry
+                  {project.awards ?? "Competition project"}
                 </p>
               ) : null}
             </div>

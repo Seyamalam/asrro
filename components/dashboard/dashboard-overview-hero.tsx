@@ -7,9 +7,11 @@ import {
   Signal,
 } from "lucide-react"
 
-import { events } from "@/data/dashboard-data"
-
-const nextEvent = events.find((event) => event.status === "Upcoming")
+const dashboardEventDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  timeZone: "Asia/Dhaka",
+})
 
 type HeroMember = {
   fullName: string
@@ -22,13 +24,13 @@ export function DashboardOverviewHero({
   accountEmail,
   isLoading,
   member,
+  nextEvent,
 }: {
   accountEmail?: string
   isLoading: boolean
   member: HeroMember | null
+  nextEvent?: { _id: string; name: string; startsAt: number }
 }) {
-  if (!nextEvent) return null
-
   return (
     <section className="relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white text-slate-950 shadow-[0_22px_70px_rgba(15,23,42,.08)] dark:border-cyan-400/15 dark:bg-[#071321] dark:text-white dark:shadow-[0_24px_90px_rgba(0,0,0,.24)]">
       <div
@@ -122,7 +124,9 @@ export function DashboardOverviewHero({
                 Next operation
               </p>
               <p className="mt-1 text-sm font-semibold">
-                {nextEvent.date.split(" ", 3).slice(0, 2).join(" ")}
+                {nextEvent
+                  ? dashboardEventDateFormatter.format(nextEvent.startsAt)
+                  : "Stand by"}
               </p>
             </div>
           </div>
@@ -135,7 +139,7 @@ export function DashboardOverviewHero({
               Window code
             </p>
             <p className="mt-1 font-mono text-[10px] font-semibold text-blue-700 dark:text-cyan-300">
-              {nextEvent.id} / OPEN
+              {nextEvent ? `${nextEvent._id.slice(-8)} / OPEN` : "NO WINDOW"}
             </p>
           </div>
         </div>

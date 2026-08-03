@@ -1,10 +1,15 @@
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 export function PersonOrb({
   initials,
+  src,
+  alt,
   className,
 }: {
   initials: string
+  src?: string | null
+  alt?: string
   className?: string
 }) {
   return (
@@ -14,8 +19,21 @@ export function PersonOrb({
         className
       )}
     >
-      <span className="absolute h-[150%] w-[60%] rotate-[32deg] border-x border-[#57e6e6]/20" />
-      <span className="relative">{initials}</span>
+      {src ? (
+        <Image
+          src={src}
+          alt={alt ?? ""}
+          fill
+          sizes="96px"
+          className="object-cover"
+          unoptimized
+        />
+      ) : (
+        <>
+          <span className="absolute h-[150%] w-[60%] rotate-[32deg] border-x border-[#57e6e6]/20" />
+          <span className="relative">{initials}</span>
+        </>
+      )}
     </div>
   )
 }
