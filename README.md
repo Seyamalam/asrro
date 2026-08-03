@@ -109,7 +109,7 @@ bun run build
 The complete public-site and authenticated-dashboard gallery is maintained in
 [screenshots.md](screenshots.md).
 
-See [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), [user guide](docs/user-guide.md), and the [verification record](docs/verification.md).
+See the [complete SRS checklist](checklist.md), [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), [user guide](docs/user-guide.md), and the [verification record](docs/verification.md).
 
 ## Deployment
 
