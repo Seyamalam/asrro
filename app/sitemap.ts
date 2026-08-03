@@ -11,7 +11,7 @@ const routes = [
   "/publications",
   "/news",
   "/contact",
-  "/membership/apply",
+  "/membership",
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {

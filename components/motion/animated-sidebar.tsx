@@ -520,13 +520,13 @@ export const AnimatedSidebar = forwardRef<HTMLElement, AnimatedSidebarProps>(
         data-collapsible={collapsible}
         data-variant={variant}
         data-side={side}
-        animate={{ width }}
+        layout="size"
         transition={
           context.reduce ? { duration: 0 } : SIDEBAR_MORPH_TRANSITION
         }
-        style={style}
+        style={{ ...style, width }}
         className={cn(
-          "group/sidebar relative hidden h-auto shrink-0 md:block will-change-[width]",
+          "group/sidebar relative hidden h-auto shrink-0 md:block will-change-transform",
           "peer",
           side === "right" && "order-last",
           className,

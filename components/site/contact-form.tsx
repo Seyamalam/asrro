@@ -1,9 +1,41 @@
 "use client"
-import { useState } from "react"
+import { useMutation } from "convex/react"
 import { CheckCircle2, Send } from "lucide-react"
+import { useState, type FormEvent } from "react"
+import { api } from "@/convex/_generated/api"
 
 export function ContactForm() {
   const [sent, setSent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const submitMessage = useMutation(api.contact.submit)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const data = new FormData(form)
+    setSubmitting(true)
+    setError(null)
+    try {
+      await submitMessage({
+        name: String(data.get("name")),
+        email: String(data.get("email")),
+        subject: String(data.get("subject")),
+        message: String(data.get("message")),
+      })
+      form.reset()
+      setSent(true)
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The message could not be sent. Please try again."
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   if (sent)
     return (
       <div
@@ -14,8 +46,8 @@ export function ContactForm() {
           <CheckCircle2 className="mx-auto size-10 text-[#57e6e6]" />
           <h2 className="mt-5 text-2xl font-semibold">Message in the queue.</h2>
           <p className="mt-3 max-w-md text-[#9fb1c5]">
-            The ASRRO team usually responds within two working days. A copy has
-            been prepared for your email.
+            The ASRRO team usually responds within two working days. Keep an eye
+            on your inbox for the reply.
           </p>
           <button
             className="mt-6 text-sm text-[#57e6e6] underline"
@@ -28,9 +60,8 @@ export function ContactForm() {
     )
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        setSent(true)
+      onSubmit={(event) => {
+        void handleSubmit(event)
       }}
       className="rounded-2xl border border-white/10 bg-[#09182a] p-6 sm:p-8"
     >
@@ -60,11 +91,17 @@ export function ContactForm() {
           />
         </label>
       </div>
+      {error ? (
+        <p role="alert" className="mt-5 text-sm leading-6 text-red-300">
+          {error}
+        </p>
+      ) : null}
       <button
         type="submit"
+        disabled={submitting}
         className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#57e6e6] px-5 font-semibold text-[#03101e]"
       >
-        Send message <Send className="size-4" />
+        {submitting ? "Sending…" : "Send message"} <Send className="size-4" />
       </button>
     </form>
   )

@@ -15,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/asrro-logo.png",
         sizes: "725x725",
         type: "image/png",
-        purpose: "any maskable",
+        purpose: "maskable",
       },
     ],
   }

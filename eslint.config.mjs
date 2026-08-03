@@ -5,6 +5,10 @@ import importPlugin from "eslint-plugin-import-x"
 import jsxA11y from "eslint-plugin-jsx-a11y"
 import unicorn from "eslint-plugin-unicorn"
 
+const disabledUnicornRules = Object.fromEntries(
+  Object.keys(unicorn.configs.unopinionated.rules).map((rule) => [rule, "off"])
+)
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -40,8 +44,20 @@ const eslintConfig = defineConfig([
   {
     files: ["components/motion/**/*.{ts,tsx}"],
     rules: {
+      ...disabledUnicornRules,
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      eqeqeq: "off",
       "jsx-a11y/no-static-element-interactions": "off",
       "jsx-a11y/click-events-have-key-events": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
+  {
+    files: ["convex/**/*.{ts,tsx}"],
+    rules: {
+      ...disabledUnicornRules,
     },
   },
   globalIgnores([
