@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { useState, type FormEvent } from "react"
+import { useRef, useState, type FormEvent } from "react"
 
 import { AssetUploader } from "@/components/dashboard/asset-uploader"
 import { ActionButton, Panel } from "@/components/dashboard/dashboard-kit"
@@ -11,12 +11,13 @@ import type { Id } from "@/convex/_generated/dataModel"
 export function GalleryManager() {
   const albums = useQuery(api.gallery.listAdmin)
   const addItem = useMutation(api.gallery.upsertItem)
-  const [assetId, setAssetId] = useState<Id<"assets">>()
+  const assetIdRef = useRef<Id<"assets"> | undefined>(undefined)
   const [kind, setKind] = useState<"image" | "video">("image")
   const [message, setMessage] = useState("")
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const assetId = assetIdRef.current
     if (!assetId) {
       setMessage("Upload an image or video first.")
       return
@@ -33,7 +34,7 @@ export function GalleryManager() {
         isPublic: data.get("isPublic") === "on",
       })
       form.reset()
-      setAssetId(undefined)
+      assetIdRef.current = undefined
       setMessage("Gallery media saved.")
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Save failed")
@@ -99,7 +100,9 @@ export function GalleryManager() {
             kind={kind}
             accept={kind === "image" ? "image/*" : "video/*"}
             label={`Upload ${kind}`}
-            onUploaded={setAssetId}
+            onUploaded={(assetId) => {
+              assetIdRef.current = assetId
+            }}
           />
         </div>
         <label className="flex items-end pb-2 text-xs">

@@ -40,15 +40,22 @@ export const deliver = internalAction({
           html: email.htmlBody,
         }),
       })
-      const body = (await response.json().catch(() => null)) as {
-        id?: string
-        message?: string
-      } | null
       if (!response.ok) {
+        const errorBody = await response.text().catch(() => "")
+        let providerMessage = ""
+        try {
+          providerMessage =
+            (JSON.parse(errorBody) as { message?: string }).message ?? ""
+        } catch {
+          providerMessage = errorBody
+        }
         throw new ConvexError(
-          body?.message ?? `Email provider returned HTTP ${response.status}`
+          providerMessage || `Email provider returned HTTP ${response.status}`
         )
       }
+      const body = (await response.json().catch(() => null)) as {
+        id?: string
+      } | null
       await ctx.runMutation(internal.emails.completeDelivery, {
         outboxId: email._id,
         success: true,

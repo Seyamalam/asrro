@@ -193,10 +193,12 @@ export const resetPassword = action({
     if (args.newPassword.length < 8 || args.newPassword.length > 128) {
       throw new ConvexError("Password must be between 8 and 128 characters")
     }
-    const target = await ctx.runQuery(internal.adminAccounts.memberAuthTarget, {
-      memberId: args.memberId,
-    })
-    const { auth, headers } = await authComponent.getAuth(createAuth, ctx)
+    const [target, { auth, headers }] = await Promise.all([
+      ctx.runQuery(internal.adminAccounts.memberAuthTarget, {
+        memberId: args.memberId,
+      }),
+      authComponent.getAuth(createAuth, ctx),
+    ])
     let authUserId = target.authUserId
     if (!authUserId) {
       const result = await auth.api.listUsers({

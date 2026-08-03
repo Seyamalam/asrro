@@ -5,15 +5,15 @@ import { Mail, Search } from "lucide-react"
 import { useMemo, useState } from "react"
 
 import { ActionButton } from "@/components/dashboard/dashboard-kit"
+import { RoleMemberTable } from "@/components/dashboard/role-member-table"
+import { Input } from "@/components/motion/input"
+import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import {
   type AdminMember,
   type ExecutivePosition,
   positionOptions,
-  RoleMemberTable,
-} from "@/components/dashboard/role-member-table"
-import { Input } from "@/components/motion/input"
-import { api } from "@/convex/_generated/api"
-import type { Id } from "@/convex/_generated/dataModel"
+} from "@/lib/role-management"
 
 const statusOptions = [
   "active",

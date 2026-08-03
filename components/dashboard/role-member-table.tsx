@@ -1,33 +1,8 @@
-import type { FunctionReturnType } from "convex/server"
 import { Pencil, Shield, Trash2 } from "lucide-react"
 
 import { ActionButton, StatusPill } from "@/components/dashboard/dashboard-kit"
-import type { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-
-export const positionOptions = [
-  "president",
-  "vice_president",
-  "general_secretary",
-  "joint_general_secretary",
-  "organizing_secretary",
-  "financial_secretary",
-  "public_relations_secretary",
-  "research_publication_secretary",
-  "technical_secretary",
-  "office_secretary",
-  "education_secretary",
-  "publication_secretary",
-  "it_secretary",
-  "event_coordinator",
-  "membership_coordinator",
-  "executive_member",
-] as const
-
-export type ExecutivePosition = (typeof positionOptions)[number]
-export type AdminMember = FunctionReturnType<
-  typeof api.members.searchAdmin
->[number]
+import { type AdminMember, positionOptions } from "@/lib/role-management"
 
 export function RoleMemberTable({
   members,

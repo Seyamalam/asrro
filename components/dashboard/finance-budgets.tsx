@@ -51,7 +51,12 @@ export function FinanceBudgets() {
             aria-label="Fiscal year"
             type="number"
             value={fiscalYear}
-            onChange={(event) => setFiscalYear(Number(event.target.value))}
+            onChange={(event) => {
+              const nextFiscalYear = event.currentTarget.valueAsNumber
+              if (Number.isFinite(nextFiscalYear)) {
+                setFiscalYear(nextFiscalYear)
+              }
+            }}
             className="h-9 w-24 rounded-lg border border-slate-200 px-2 text-xs dark:border-white/10 dark:bg-slate-900"
           />
           <ActionButton onClick={() => setEditing((value) => !value)}>

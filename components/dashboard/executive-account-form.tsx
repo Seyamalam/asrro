@@ -101,30 +101,33 @@ export function ExecutiveAccountForm() {
           className={inputClass}
         />
       ))}
-      <select name="executivePosition" required className={inputClass}>
-        {[
-          "president",
-          "vice_president",
-          "general_secretary",
-          "joint_general_secretary",
-          "organizing_secretary",
-          "financial_secretary",
-          "public_relations_secretary",
-          "research_publication_secretary",
-          "technical_secretary",
-          "office_secretary",
-          "education_secretary",
-          "publication_secretary",
-          "it_secretary",
-          "event_coordinator",
-          "membership_coordinator",
-          "executive_member",
-        ].map((position) => (
-          <option key={position} value={position}>
-            {position.replaceAll("_", " ")}
-          </option>
-        ))}
-      </select>
+      <label className="grid gap-1 text-xs font-medium">
+        Executive position
+        <select name="executivePosition" required className={inputClass}>
+          {[
+            "president",
+            "vice_president",
+            "general_secretary",
+            "joint_general_secretary",
+            "organizing_secretary",
+            "financial_secretary",
+            "public_relations_secretary",
+            "research_publication_secretary",
+            "technical_secretary",
+            "office_secretary",
+            "education_secretary",
+            "publication_secretary",
+            "it_secretary",
+            "event_coordinator",
+            "membership_coordinator",
+            "executive_member",
+          ].map((position) => (
+            <option key={position} value={position}>
+              {position.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+      </label>
       <fieldset className="grid gap-2 rounded-lg border border-slate-200 p-3 sm:col-span-2 sm:grid-cols-2 lg:grid-cols-3 dark:border-white/10">
         <legend className="px-1 text-xs font-semibold">
           Granular permissions

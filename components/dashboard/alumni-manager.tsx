@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation, useQuery } from "convex/react"
-import { useState, type FormEvent } from "react"
+import { useRef, useState, type FormEvent } from "react"
 
 import { AssetUploader } from "@/components/dashboard/asset-uploader"
 import {
@@ -18,7 +18,7 @@ const inputClass =
 export function AlumniManager() {
   const alumni = useQuery(api.alumni.listAdmin)
   const saveAlumnus = useMutation(api.alumni.upsert)
-  const [photoAssetId, setPhotoAssetId] = useState<Id<"assets">>()
+  const photoAssetIdRef = useRef<Id<"assets"> | undefined>(undefined)
   const [message, setMessage] = useState("")
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -38,12 +38,12 @@ export function AlumniManager() {
         higherStudies: optional(data, "higherStudies"),
         linkedInUrl: optional(data, "linkedInUrl"),
         researchInterests: optional(data, "researchInterests"),
-        photoAssetId,
+        photoAssetId: photoAssetIdRef.current,
         status: String(data.get("status")) as
           "draft" | "published" | "archived",
       })
       form.reset()
-      setPhotoAssetId(undefined)
+      photoAssetIdRef.current = undefined
       setMessage("Alumni profile saved.")
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Save failed")
@@ -83,16 +83,21 @@ export function AlumniManager() {
             label="Research interests"
             required={false}
           />
-          <select name="status" className={inputClass}>
-            {["draft", "published", "archived"].map((status) => (
-              <option key={status}>{status}</option>
-            ))}
-          </select>
+          <label className="text-xs font-medium">
+            Status
+            <select name="status" className={inputClass}>
+              {["draft", "published", "archived"].map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </label>
           <AssetUploader
             kind="image"
             accept="image/*"
             label="Upload alumni photo"
-            onUploaded={setPhotoAssetId}
+            onUploaded={(assetId) => {
+              photoAssetIdRef.current = assetId
+            }}
           />
           <ActionButton type="submit" className="sm:col-span-2">
             Save alumni profile

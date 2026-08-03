@@ -75,27 +75,29 @@ export const bulkEmailMembers = mutation({
     }
     const subject = cleanText(args.subject, "Subject", 180)
     const message = cleanText(args.message, "Message", 10_000)
-    let queued = 0
-    for (const memberId of uniqueIds) {
-      const member = await ctx.db.get("members", memberId)
-      if (!member) continue
-      const content = announcementEmail({
-        name: member.fullName,
-        subject,
-        message,
+    const members = await Promise.all(
+      uniqueIds.map((memberId) => ctx.db.get("members", memberId))
+    )
+    const recipients = members.filter((member) => member !== null)
+    await Promise.all(
+      recipients.map(async (member) => {
+        const content = announcementEmail({
+          name: member.fullName,
+          subject,
+          message,
+        })
+        const outboxId = await enqueueEmail(ctx, {
+          recipient: member.email,
+          recipientName: member.fullName,
+          memberId: member._id,
+          ...content,
+        })
+        await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
+          outboxId,
+        })
       })
-      const outboxId = await enqueueEmail(ctx, {
-        recipient: member.email,
-        recipientName: member.fullName,
-        memberId,
-        ...content,
-      })
-      await ctx.scheduler.runAfter(0, internal.emailActions.deliver, {
-        outboxId,
-      })
-      queued += 1
-    }
-    return { queued }
+    )
+    return { queued: recipients.length }
   },
 })
 

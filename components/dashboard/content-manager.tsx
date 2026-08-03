@@ -188,7 +188,7 @@ export function ContentManager() {
       </p>
       <Panel
         title="CMS inventory"
-        description="Published and draft records from Convex"
+        description="Published and draft website records"
       >
         <div className="grid gap-px bg-slate-100 sm:grid-cols-2 xl:grid-cols-4 dark:bg-white/8">
           <Inventory label="News" records={blogs} />

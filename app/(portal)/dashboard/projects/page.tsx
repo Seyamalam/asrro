@@ -9,7 +9,7 @@ export default async function ProjectsPage() {
       <PageHeader
         eyebrow="Research portfolio"
         title="Projects"
-        description="Create and publish complete project records backed by Convex."
+        description="Create and publish complete project records."
       />
       <ProjectManager />
     </div>

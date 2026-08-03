@@ -15,11 +15,11 @@ export function EventEligibilityUpload({ required }: { required: boolean }) {
   const [message, setMessage] = useState("")
 
   return (
-    <label className="grid gap-2 text-sm sm:col-span-2">
+    <div className="grid gap-2 text-sm sm:col-span-2">
       <span className="font-medium">
         Eligibility evidence {required ? "(required)" : "(optional)"}
       </span>
-      <span className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-[#2359d4]/25 px-4 dark:border-white/20">
+      <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-[#2359d4]/25 px-4 dark:border-white/20">
         {assetId ? (
           <FileCheck2 className="size-4 text-emerald-600" />
         ) : (
@@ -72,7 +72,7 @@ export function EventEligibilityUpload({ required }: { required: boolean }) {
             })()
           }}
         />
-      </span>
+      </label>
       <input
         type="hidden"
         name="eligibilityEvidenceAssetId"
@@ -81,6 +81,6 @@ export function EventEligibilityUpload({ required }: { required: boolean }) {
       {message ? (
         <span className="text-xs text-[#587084]">{message}</span>
       ) : null}
-    </label>
+    </div>
   )
 }
