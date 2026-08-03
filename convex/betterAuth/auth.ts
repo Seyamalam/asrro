@@ -14,10 +14,20 @@ export const authComponent = createClient<DataModel, typeof schema>(
   }
 )
 
+function getTrustedOrigins() {
+  return [
+    process.env.SITE_URL,
+    ...(process.env.TRUSTED_ORIGINS?.split(",") ?? []),
+  ]
+    .map((origin) => origin?.trim())
+    .filter((origin): origin is string => Boolean(origin))
+}
+
 export function createAuthOptions(ctx: GenericCtx<DataModel>) {
   return {
     appName: "ASRRO Portal",
     baseURL: process.env.SITE_URL,
+    trustedOrigins: getTrustedOrigins(),
     secret: process.env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
     emailAndPassword: {

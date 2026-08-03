@@ -56,8 +56,12 @@ Never commit `.env.local`. Better Auth is configured in
 `convex/auth.config.ts`.
 
 Set `SITE_URL` and `BETTER_AUTH_SECRET` in the Convex deployment environment.
-Approved members can link their portal identity to the existing role-aware
-member record; new accounts initially receive member-level navigation.
+`SITE_URL` must be the canonical frontend origin, such as
+`https://asrro.vercel.app`. If the same Convex deployment also serves local or
+preview frontends, set `TRUSTED_ORIGINS` to a comma-separated allowlist such as
+`http://localhost:3000`. Approved members can link their portal identity to the
+existing role-aware member record; new accounts initially receive member-level
+navigation.
 
 ## Quality checks
 
