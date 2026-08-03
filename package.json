@@ -5,11 +5,24 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:scan": "concurrently --kill-others --names app,scan \"next dev\" \"react-scan init --yes --skip-install\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "doctor": "react-doctor . --no-telemetry --blocking error",
+    "doctor:staged": "react-doctor . --staged --no-telemetry --blocking error --max-duration 90",
+    "check": "bun run lint && bun run typecheck && bun run format:check && bun run doctor",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": "prettier --write"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -33,10 +46,18 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-unicorn": "^72.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
+    "react-doctor": "^0.9.3",
+    "react-scan": "^0.5.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
