@@ -10,15 +10,22 @@
 
 import type * as _lib_auth from "../_lib/auth.js";
 import type * as _lib_counters from "../_lib/counters.js";
+import type * as _lib_email from "../_lib/email.js";
+import type * as _lib_uuid from "../_lib/uuid.js";
 import type * as _lib_validation from "../_lib/validation.js";
+import type * as adminAccounts from "../adminAccounts.js";
 import type * as alumni from "../alumni.js";
 import type * as assets from "../assets.js";
 import type * as blogs from "../blogs.js";
 import type * as committee from "../committee.js";
 import type * as contact from "../contact.js";
 import type * as content from "../content.js";
+import type * as crons from "../crons.js";
+import type * as emailActions from "../emailActions.js";
+import type * as emails from "../emails.js";
 import type * as events from "../events.js";
 import type * as finance from "../finance.js";
+import type * as financeBudgets from "../financeBudgets.js";
 import type * as gallery from "../gallery.js";
 import type * as http from "../http.js";
 import type * as members from "../members.js";
@@ -40,15 +47,22 @@ import type {
 declare const fullApi: ApiFromModules<{
   "_lib/auth": typeof _lib_auth;
   "_lib/counters": typeof _lib_counters;
+  "_lib/email": typeof _lib_email;
+  "_lib/uuid": typeof _lib_uuid;
   "_lib/validation": typeof _lib_validation;
+  adminAccounts: typeof adminAccounts;
   alumni: typeof alumni;
   assets: typeof assets;
   blogs: typeof blogs;
   committee: typeof committee;
   contact: typeof contact;
   content: typeof content;
+  crons: typeof crons;
+  emailActions: typeof emailActions;
+  emails: typeof emails;
   events: typeof events;
   finance: typeof finance;
+  financeBudgets: typeof financeBudgets;
   gallery: typeof gallery;
   http: typeof http;
   members: typeof members;

@@ -1,6 +1,11 @@
 # ASRRO website screenshots
 
-This gallery was captured from the integrated local application at a 1440 × 1000 desktop viewport. Mobile captures render at 390 × 842. Every current public, authentication, applicant, member, executive, finance, and administration route is represented.
+This gallery was captured from the integrated local application at 1440 × 1000
+desktop, 768 × 1024 tablet, and 390 × 844 mobile viewports. Every current
+public, authentication, applicant, member, executive, finance, file-management,
+and administration route is represented at all three sizes. The tables below
+link the desktop set; matching files use the `-tablet.png` and `-mobile.png`
+suffixes.
 
 ## Theme and responsive variants
 
@@ -22,29 +27,30 @@ This gallery was captured from the integrated local application at a 1440 × 100
 
 ## Public routes
 
-| Route                                         | Screenshot                                                                                     |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `/`                                           | ![Home](screenshots/pages/public-home-light-desktop.png)                                       |
-| `/about`                                      | ![About](screenshots/pages/public-about-light-desktop.png)                                     |
-| `/alumni`                                     | ![Alumni](screenshots/pages/public-alumni-light-desktop.png)                                   |
-| `/committee`                                  | ![Committee](screenshots/pages/public-committee-light-desktop.png)                             |
-| `/contact`                                    | ![Contact](screenshots/pages/public-contact-light-desktop.png)                                 |
-| `/gallery`                                    | ![Gallery](screenshots/pages/public-gallery-light-desktop.png)                                 |
-| `/membership`                                 | ![Membership application](screenshots/pages/public-membership-light-desktop.png)               |
-| `/membership/status`                          | ![Public application tracking](screenshots/pages/public-membership-status-light-desktop.png)   |
-| `/membership/verify/AR-901`                   | ![Membership verification](screenshots/pages/public-membership-verification-light-desktop.png) |
-| `/publications`                               | ![Publications](screenshots/pages/public-publications-light-desktop.png)                       |
-| `/search`                                     | ![Global search](screenshots/pages/public-search-light-desktop.png)                            |
-| `/projects`                                   | ![Projects](screenshots/pages/public-projects-light-desktop.png)                               |
-| `/projects/riverwatch-rover`                  | ![RiverWatch Rover](screenshots/pages/project-riverwatch-rover-light-desktop.png)              |
-| `/events`                                     | ![Events](screenshots/pages/public-events-light-desktop.png)                                   |
-| `/events/robotics-foundations-workshop-2026`  | ![Robotics workshop](screenshots/pages/event-robotics-foundations-light-desktop.png)           |
-| `/events/chattogram-space-tech-bootcamp-2026` | ![Space-tech bootcamp](screenshots/pages/event-space-tech-bootcamp-light-desktop.png)          |
-| `/events/bangladesh-rover-challenge-2026`     | ![Rover challenge](screenshots/pages/event-bangladesh-rover-challenge-light-desktop.png)       |
-| `/news`                                       | ![News](screenshots/pages/public-news-light-desktop.png)                                       |
-| `/news/riverwatch-field-notes`                | ![RiverWatch field notes](screenshots/pages/news-riverwatch-field-notes-light-desktop.png)     |
-| `/login`                                      | ![Login](screenshots/pages/auth-login-light-desktop.png)                                       |
-| Unknown route                                 | ![Not found](screenshots/pages/not-found-light-desktop.png)                                    |
+| Route                                         | Screenshot                                                                                      |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `/`                                           | ![Home](screenshots/pages/public-home-light-desktop.png)                                        |
+| `/about`                                      | ![About](screenshots/pages/public-about-light-desktop.png)                                      |
+| `/alumni`                                     | ![Alumni](screenshots/pages/public-alumni-light-desktop.png)                                    |
+| `/committee`                                  | ![Committee](screenshots/pages/public-committee-light-desktop.png)                              |
+| `/contact`                                    | ![Contact](screenshots/pages/public-contact-light-desktop.png)                                  |
+| `/gallery`                                    | ![Gallery](screenshots/pages/public-gallery-light-desktop.png)                                  |
+| `/gallery/riverwatch-field-tests`             | ![RiverWatch gallery album](screenshots/pages/gallery-riverwatch-field-tests-light-desktop.png) |
+| `/membership`                                 | ![Membership application](screenshots/pages/public-membership-light-desktop.png)                |
+| `/membership/status`                          | ![Public application tracking](screenshots/pages/public-membership-status-light-desktop.png)    |
+| `/membership/verify/AR-901`                   | ![Membership verification](screenshots/pages/public-membership-verification-light-desktop.png)  |
+| `/publications`                               | ![Publications](screenshots/pages/public-publications-light-desktop.png)                        |
+| `/search`                                     | ![Global search](screenshots/pages/public-search-light-desktop.png)                             |
+| `/projects`                                   | ![Projects](screenshots/pages/public-projects-light-desktop.png)                                |
+| `/projects/riverwatch-rover`                  | ![RiverWatch Rover](screenshots/pages/project-riverwatch-rover-light-desktop.png)               |
+| `/events`                                     | ![Events](screenshots/pages/public-events-light-desktop.png)                                    |
+| `/events/robotics-foundations-workshop-2026`  | ![Robotics workshop](screenshots/pages/event-robotics-foundations-light-desktop.png)            |
+| `/events/chattogram-space-tech-bootcamp-2026` | ![Space-tech bootcamp](screenshots/pages/event-space-tech-bootcamp-light-desktop.png)           |
+| `/events/bangladesh-rover-challenge-2026`     | ![Rover challenge](screenshots/pages/event-bangladesh-rover-challenge-light-desktop.png)        |
+| `/news`                                       | ![News](screenshots/pages/public-news-light-desktop.png)                                        |
+| `/news/riverwatch-field-notes`                | ![RiverWatch field notes](screenshots/pages/news-riverwatch-field-notes-light-desktop.png)      |
+| `/login`                                      | ![Login](screenshots/pages/auth-login-light-desktop.png)                                        |
+| Unknown route                                 | ![Not found](screenshots/pages/not-found-light-desktop.png)                                     |
 
 ## Applicant and dashboard routes
 
@@ -64,6 +70,7 @@ This gallery was captured from the integrated local application at a 1440 × 100
 | `/dashboard/content`          | Executive            | ![Content management](screenshots/pages/dashboard-content-light-desktop.png)             |
 | `/dashboard/reports`          | Executive            | ![Reports](screenshots/pages/dashboard-reports-light-desktop.png)                        |
 | `/dashboard/settings`         | Super administrator  | ![Settings](screenshots/pages/dashboard-settings-light-desktop.png)                      |
+| `/dashboard/files`            | Authorized executive | ![File manager](screenshots/pages/dashboard-files-light-desktop.png)                     |
 
 ## Reproduce the gallery
 

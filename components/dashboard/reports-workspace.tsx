@@ -10,6 +10,7 @@ import {
   Panel,
 } from "@/components/dashboard/dashboard-kit"
 import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import {
   exportCsv,
   exportExcel,
@@ -17,7 +18,13 @@ import {
   type ExportRow,
 } from "@/lib/export-data"
 
-type ReportKey = "members" | "pending" | "committee" | "projects"
+type ReportKey =
+  | "members"
+  | "pending"
+  | "committee"
+  | "projects"
+  | "event_registrations"
+  | "attendance"
 
 const reports: Array<{ key: ReportKey; title: string; description: string }> = [
   {
@@ -39,6 +46,16 @@ const reports: Array<{ key: ReportKey; title: string; description: string }> = [
     key: "projects",
     title: "Project inventory",
     description: "Published project portfolio and delivery state",
+  },
+  {
+    key: "event_registrations",
+    title: "Event registrations",
+    description: "Complete participant and payment records by event",
+  },
+  {
+    key: "attendance",
+    title: "Event attendance",
+    description: "Present and absent participant records by event",
   },
 ]
 
@@ -76,6 +93,12 @@ export function ReportsWorkspace() {
         {selected === "pending" ? <PendingReport /> : null}
         {selected === "committee" ? <CommitteeReport /> : null}
         {selected === "projects" ? <ProjectsReport /> : null}
+        {selected === "event_registrations" ? (
+          <EventRegistrationReport attendanceOnly={false} />
+        ) : null}
+        {selected === "attendance" ? (
+          <EventRegistrationReport attendanceOnly />
+        ) : null}
       </div>
     </div>
   )
@@ -199,6 +222,97 @@ function CommitteeReport() {
   )
 }
 
+function EventRegistrationReport({
+  attendanceOnly,
+}: {
+  attendanceOnly: boolean
+}) {
+  const eventsQuery = usePaginatedQuery(
+    api.events.paginateManagedEvents,
+    {},
+    { initialNumItems: 100 }
+  )
+  const [selectedId, setSelectedId] = useState<Id<"events"> | null>(null)
+  const effectiveId = selectedId ?? eventsQuery.results[0]?._id ?? null
+  const selectedEvent = eventsQuery.results.find(
+    (event) => event._id === effectiveId
+  )
+  const registrationsQuery = usePaginatedQuery(
+    api.events.paginateManagedRegistrations,
+    effectiveId ? { eventId: effectiveId } : "skip",
+    { initialNumItems: 100 }
+  )
+  const rows = useMemo<ExportRow[]>(
+    () =>
+      registrationsQuery.results.reduce<ExportRow[]>((result, registration) => {
+        if (
+          attendanceOnly &&
+          registration.status !== "attended" &&
+          registration.status !== "absent"
+        ) {
+          return result
+        }
+
+        result.push({
+          Event: selectedEvent?.name ?? "",
+          "Registration code": registration.registrationCode,
+          Participant: registration.participantName,
+          Email: registration.participantEmail,
+          Phone: registration.participantPhone,
+          Institution: registration.institution ?? "",
+          Division: registration.institutionDivision ?? "",
+          "Student ID": registration.studentId ?? "",
+          Status: registration.status,
+          "Amount paid": registration.amountPaid,
+          "Transaction ID": registration.transactionId ?? "",
+          Registered: new Date(registration.registeredAt).toISOString(),
+        })
+        return result
+      }, []),
+    [attendanceOnly, registrationsQuery.results, selectedEvent?.name]
+  )
+
+  return (
+    <div className="space-y-4">
+      <Panel
+        title="Choose event"
+        description="Reports are paginated to remain responsive for high-volume events."
+      >
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+          <select
+            aria-label="Event to report on"
+            value={effectiveId ?? ""}
+            onChange={(event) =>
+              setSelectedId(event.target.value as Id<"events">)
+            }
+            className="min-h-10 flex-1 rounded-lg border border-slate-200 bg-transparent px-3 text-sm dark:border-white/10"
+          >
+            {eventsQuery.results.map((event) => (
+              <option key={event._id} value={event._id}>
+                {event.name} · {event.status}
+              </option>
+            ))}
+          </select>
+          {eventsQuery.status === "CanLoadMore" ? (
+            <ActionButton
+              variant="secondary"
+              onClick={() => eventsQuery.loadMore(100)}
+            >
+              Load more events
+            </ActionButton>
+          ) : null}
+        </div>
+      </Panel>
+      <ReportOutput
+        title={`${selectedEvent?.name ?? "Event"} ${attendanceOnly ? "attendance" : "registrations"}`}
+        rows={rows}
+        status={registrationsQuery.status}
+        loadMore={() => registrationsQuery.loadMore(100)}
+      />
+    </div>
+  )
+}
+
 function ReportOutput({
   title,
   rows,
@@ -223,14 +337,17 @@ function ReportOutput({
           <div className="flex flex-wrap gap-2">
             <Export
               label="CSV"
+              disabled={status !== "Exhausted"}
               onClick={() => exportCsv(rows, `${stem}.csv`)}
             />
             <Export
               label="Excel"
+              disabled={status !== "Exhausted"}
               onClick={() => exportExcel(rows, `${stem}.xls`)}
             />
             <Export
               label="PDF"
+              disabled={status !== "Exhausted"}
               onClick={() => void exportPdf(rows, `${stem}.pdf`, title)}
             />
           </div>
@@ -282,9 +399,17 @@ function ReportOutput({
   )
 }
 
-function Export({ label, onClick }: { label: string; onClick: () => void }) {
+function Export({
+  label,
+  onClick,
+  disabled,
+}: {
+  label: string
+  onClick: () => void
+  disabled?: boolean
+}) {
   return (
-    <ActionButton variant="secondary" onClick={onClick}>
+    <ActionButton variant="secondary" onClick={onClick} disabled={disabled}>
       <Download className="size-3" />
       {label}
     </ActionButton>

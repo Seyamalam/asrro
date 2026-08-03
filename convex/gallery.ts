@@ -24,6 +24,7 @@ const albumCard = v.object({
   imageCount: v.number(),
   videoCount: v.number(),
   videoUrl: v.union(v.string(), v.null()),
+  event: v.union(v.object({ slug: v.string(), name: v.string() }), v.null()),
 })
 
 export const listPublicAlbums = query({
@@ -43,7 +44,15 @@ export const getPublicAlbum = query({
     v.object({
       album: albumDoc,
       items: v.array(
-        v.object({ item: itemDoc, url: v.union(v.string(), v.null()) })
+        v.object({
+          item: itemDoc,
+          url: v.union(v.string(), v.null()),
+          kind: v.union(v.literal("image"), v.literal("video")),
+        })
+      ),
+      event: v.union(
+        v.object({ slug: v.string(), name: v.string() }),
+        v.null()
       ),
     }),
     v.null()
@@ -70,10 +79,19 @@ export const getPublicAlbum = query({
             asset?.visibility === "public"
               ? await ctx.storage.getUrl(asset.storageId)
               : null,
+          kind:
+            asset?.kind === "video" ? ("video" as const) : ("image" as const),
         }
       })
     )
-    return { album, items }
+    const event = album.eventId
+      ? await ctx.db.get("events", album.eventId)
+      : null
+    return {
+      album,
+      items,
+      event: event ? { slug: event.slug, name: event.name } : null,
+    }
   },
 })
 
@@ -102,6 +120,9 @@ export const listPublicCards = query({
           ? await ctx.db.get("assets", album.coverAssetId)
           : assets.find((asset) => asset?.kind === "image")
         const video = assets.find((asset) => asset?.kind === "video")
+        const event = album.eventId
+          ? await ctx.db.get("events", album.eventId)
+          : null
         return {
           album,
           coverUrl:
@@ -114,6 +135,7 @@ export const listPublicCards = query({
             video?.visibility === "public"
               ? await ctx.storage.getUrl(video.storageId)
               : null,
+          event: event ? { slug: event.slug, name: event.name } : null,
         }
       })
     )

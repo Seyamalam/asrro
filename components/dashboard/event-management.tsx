@@ -1,6 +1,6 @@
 "use client"
 
-import { useMutation, useQuery } from "convex/react"
+import { useMutation, usePaginatedQuery } from "convex/react"
 import {
   CalendarPlus,
   CheckCircle2,
@@ -24,6 +24,7 @@ import {
   Panel,
   StatusPill,
 } from "@/components/dashboard/dashboard-kit"
+import { AssetUploader } from "@/components/dashboard/asset-uploader"
 import {
   Tabs,
   TabsContent,
@@ -40,7 +41,12 @@ import {
 } from "@/lib/event-documents"
 
 export function EventManagement() {
-  const events = useQuery(api.events.listManagedEvents)
+  const eventQuery = usePaginatedQuery(
+    api.events.paginateManagedEvents,
+    {},
+    { initialNumItems: 50 }
+  )
+  const events = eventQuery.results
   const [selectedId, setSelectedId] = useState<Id<"events"> | null>(null)
   const [editing, setEditing] = useState<Doc<"events"> | null | undefined>(
     undefined
@@ -49,30 +55,32 @@ export function EventManagement() {
   const effectiveSelectedId = selectedId ?? events?.[0]?._id ?? null
   const selected =
     events?.find((event) => event._id === effectiveSelectedId) ?? null
-  const registrations = useQuery(
-    api.events.listManagedRegistrations,
-    effectiveSelectedId ? { eventId: effectiveSelectedId } : "skip"
+  const registrationQuery = usePaginatedQuery(
+    api.events.paginateManagedRegistrations,
+    effectiveSelectedId ? { eventId: effectiveSelectedId } : "skip",
+    { initialNumItems: 100 }
   )
+  const registrations = registrationQuery.results
   const upsert = useMutation(api.events.upsert)
   const archive = useMutation(api.events.archive)
+  const remove = useMutation(api.events.remove)
   const clone = useMutation(api.events.clone)
   const review = useMutation(api.events.reviewRegistration)
   const attendance = useMutation(api.events.markAttendance)
+  const issueCertificate = useMutation(api.events.issueCertificate)
 
   const live = events?.filter((event) => event.status === "published") ?? []
-  const totalRegistrations =
-    events?.reduce(
-      (total, event) => total + event.activeRegistrationCount,
-      0
-    ) ?? 0
-  const capacity =
-    events?.reduce((total, event) => total + event.capacity, 0) ?? 0
-  const attended =
-    registrations?.filter((item) => item.status === "attended").length ?? 0
-  const decidedAttendance =
-    registrations?.filter(
-      (item) => item.status === "attended" || item.status === "absent"
-    ).length ?? 0
+  const totalRegistrations = events.reduce(
+    (total, event) => total + event.activeRegistrationCount,
+    0
+  )
+  const capacity = events.reduce((total, event) => total + event.capacity, 0)
+  const attended = registrations.filter(
+    (item) => item.status === "attended"
+  ).length
+  const decidedAttendance = registrations.filter(
+    (item) => item.status === "attended" || item.status === "absent"
+  ).length
 
   async function onSave(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault()
@@ -103,6 +111,15 @@ export function EventManagement() {
         contactName: text("contactName"),
         contactEmail: text("contactEmail") || undefined,
         contactPhone: text("contactPhone") || undefined,
+        bannerAssetId: (text("bannerAssetId") as Id<"assets">) || undefined,
+        eligibilityEvidenceRequired:
+          form.get("eligibilityEvidenceRequired") === "on",
+        allowedInstitutionEmailDomains: text("allowedInstitutionEmailDomains")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        reminderHoursBefore: Number(text("reminderHoursBefore") || "24"),
+        certificatesEnabled: form.get("certificatesEnabled") === "on",
       })
       setSelectedId(eventId)
       setEditing(undefined)
@@ -114,22 +131,20 @@ export function EventManagement() {
     }
   }
 
-  const exportRows: ParticipantExportRow[] = (registrations ?? []).map(
-    (item) => ({
-      registrationCode: item.registrationCode,
-      participantName: item.participantName,
-      participantEmail: item.participantEmail,
-      participantPhone: item.participantPhone,
-      memberUuid: item.memberUuid,
-      institution: item.institution,
-      institutionDivision: item.institutionDivision,
-      studentId: item.studentId,
-      status: item.status,
-      amountPaid: item.amountPaid,
-      transactionId: item.transactionId,
-      registeredAt: item.registeredAt,
-    })
-  )
+  const exportRows: ParticipantExportRow[] = registrations.map((item) => ({
+    registrationCode: item.registrationCode,
+    participantName: item.participantName,
+    participantEmail: item.participantEmail,
+    participantPhone: item.participantPhone,
+    memberUuid: item.memberUuid,
+    institution: item.institution,
+    institutionDivision: item.institutionDivision,
+    studentId: item.studentId,
+    status: item.status,
+    amountPaid: item.amountPaid,
+    transactionId: item.transactionId,
+    registeredAt: item.registeredAt,
+  }))
 
   return (
     <div className="space-y-6">
@@ -185,6 +200,7 @@ export function EventManagement() {
       </div>
       {editing !== undefined && (
         <EventEditor
+          key={editing?._id ?? "new"}
           event={editing}
           onSave={onSave}
           onClose={() => setEditing(undefined)}
@@ -198,7 +214,7 @@ export function EventManagement() {
         </TabsList>
         <TabsContent value="events">
           <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-            {events?.map((event) => (
+            {events.map((event) => (
               <article
                 key={event._id}
                 className={`rounded-2xl border bg-white p-5 dark:bg-slate-950/60 ${event._id === effectiveSelectedId ? "border-blue-500" : "border-slate-200 dark:border-white/10"}`}
@@ -225,18 +241,21 @@ export function EventManagement() {
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   <button
+                    type="button"
                     onClick={() => setSelectedId(event._id)}
                     className="text-xs font-semibold text-blue-600"
                   >
                     Manage
                   </button>
                   <button
+                    type="button"
                     onClick={() => setEditing(event)}
                     className="text-xs font-semibold text-blue-600"
                   >
                     Edit
                   </button>
                   <button
+                    type="button"
                     onClick={() =>
                       void (async () => {
                         const id = await clone({ eventId: event._id })
@@ -250,6 +269,7 @@ export function EventManagement() {
                   </button>
                   {event.status !== "archived" && (
                     <button
+                      type="button"
                       onClick={() =>
                         void (async () => {
                           await archive({ eventId: event._id })
@@ -261,10 +281,37 @@ export function EventManagement() {
                       Archive
                     </button>
                   )}
+                  {(["draft", "cancelled", "archived"] as const).includes(
+                    event.status as "draft" | "cancelled" | "archived"
+                  ) ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void (async () => {
+                          await remove({ eventId: event._id })
+                          setSelectedId(null)
+                          setMessage("Event deleted.")
+                        })()
+                      }
+                      className="text-xs font-semibold text-red-700"
+                    >
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </article>
             ))}
           </div>
+          {eventQuery.status === "CanLoadMore" ? (
+            <div className="mt-4 text-center">
+              <ActionButton
+                variant="secondary"
+                onClick={() => eventQuery.loadMore(50)}
+              >
+                Load more events
+              </ActionButton>
+            </div>
+          ) : null}
         </TabsContent>
         <TabsContent value="registrations">
           <Panel
@@ -277,18 +324,21 @@ export function EventManagement() {
                 <div className="flex flex-wrap gap-2">
                   <ExportButton
                     label="CSV"
+                    disabled={registrationQuery.status !== "Exhausted"}
                     onClick={() =>
                       downloadParticipantsCsv(selected.name, exportRows)
                     }
                   />
                   <ExportButton
                     label="XLSX"
+                    disabled={registrationQuery.status !== "Exhausted"}
                     onClick={() =>
                       downloadParticipantsXlsx(selected.name, exportRows)
                     }
                   />
                   <ExportButton
                     label="PDF"
+                    disabled={registrationQuery.status !== "Exhausted"}
                     onClick={() =>
                       downloadParticipantsPdf(selected.name, exportRows)
                     }
@@ -298,7 +348,7 @@ export function EventManagement() {
             }
           >
             <RegistrationTable
-              items={registrations ?? []}
+              items={registrations}
               onReview={async (id, status, amountPaid) => {
                 try {
                   await review({ registrationId: id, status, amountPaid })
@@ -310,6 +360,16 @@ export function EventManagement() {
                 }
               }}
             />
+            {registrationQuery.status === "CanLoadMore" ? (
+              <div className="border-t border-slate-100 p-4 text-center dark:border-white/8">
+                <ActionButton
+                  variant="secondary"
+                  onClick={() => registrationQuery.loadMore(100)}
+                >
+                  Load next 100 participants before exporting
+                </ActionButton>
+              </div>
+            ) : null}
           </Panel>
         </TabsContent>
         <TabsContent value="attendance">
@@ -317,11 +377,8 @@ export function EventManagement() {
             title={selected ? `${selected.name} attendance` : "Select an event"}
           >
             <div className="divide-y divide-slate-100 dark:divide-white/8">
-              {registrations
-                ?.filter((item) =>
-                  ["confirmed", "attended", "absent"].includes(item.status)
-                )
-                .map((item) => (
+              {registrations.map((item) =>
+                ["confirmed", "attended", "absent"].includes(item.status) ? (
                   <div
                     key={item._id}
                     className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
@@ -346,6 +403,7 @@ export function EventManagement() {
                       {item.status}
                     </StatusPill>
                     <button
+                      type="button"
                       onClick={() =>
                         void attendance({
                           registrationId: item._id,
@@ -357,6 +415,7 @@ export function EventManagement() {
                       Present
                     </button>
                     <button
+                      type="button"
                       onClick={() =>
                         void attendance({
                           registrationId: item._id,
@@ -367,8 +426,28 @@ export function EventManagement() {
                     >
                       Absent
                     </button>
+                    {selected?.certificatesEnabled &&
+                    item.status === "attended" ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void (async () => {
+                            const code = await issueCertificate({
+                              registrationId: item._id,
+                            })
+                            setMessage(`Certificate ${code} issued.`)
+                          })()
+                        }
+                        className="text-xs font-semibold text-violet-600"
+                      >
+                        {item.certificateCode
+                          ? "Certificate issued"
+                          : "Issue certificate"}
+                      </button>
+                    ) : null}
                   </div>
-                ))}
+                ) : null
+              )}
             </div>
           </Panel>
         </TabsContent>
@@ -380,13 +459,17 @@ export function EventManagement() {
 function ExportButton({
   label,
   onClick,
+  disabled,
 }: {
   label: string
   onClick: () => void | Promise<void>
+  disabled?: boolean
 }) {
   return (
     <button
+      type="button"
       onClick={() => void onClick()}
+      disabled={disabled}
       className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold dark:border-white/10"
     >
       <Download className="size-3" />
@@ -400,6 +483,7 @@ type ManagedRegistration = Doc<"eventRegistrations"> & {
   participantEmail: string
   participantPhone: string
   memberUuid?: string
+  eligibilityEvidenceUrl?: string | null
 }
 function RegistrationTable({
   items,
@@ -424,6 +508,21 @@ function RegistrationTable({
             <p className="mt-1 text-xs text-slate-500">
               {item.participantEmail} · {item.institution ?? "Member profile"}
             </p>
+            {item.institutionEmail ? (
+              <p className="mt-1 text-xs text-slate-500">
+                Institution email: {item.institutionEmail}
+              </p>
+            ) : null}
+            {item.eligibilityEvidenceUrl ? (
+              <a
+                href={item.eligibilityEvidenceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-xs font-semibold text-blue-600"
+              >
+                Review eligibility evidence
+              </a>
+            ) : null}
           </div>
           <div className="text-xs text-slate-500">
             <p>{item.registrationCode}</p>
@@ -446,6 +545,7 @@ function RegistrationTable({
             {item.status === "pending" && (
               <>
                 <button
+                  type="button"
                   onClick={() =>
                     void onReview(
                       item._id,
@@ -458,6 +558,7 @@ function RegistrationTable({
                   Accept
                 </button>
                 <button
+                  type="button"
                   onClick={() => void onReview(item._id, "rejected")}
                   className="text-xs font-semibold text-red-600"
                 >
@@ -486,6 +587,9 @@ function EventEditor({
   onSave: (event: FormEvent<HTMLFormElement>) => Promise<void>
   onClose: () => void
 }) {
+  const [bannerAssetId, setBannerAssetId] = useState<Id<"assets"> | undefined>(
+    event?.bannerAssetId
+  )
   const local = (value?: number) =>
     value
       ? new Date(value - new Date(value).getTimezoneOffset() * 60_000)
@@ -606,6 +710,54 @@ function EventEditor({
           label="Contact phone"
           defaultValue={event?.contactPhone}
         />
+        <div className="grid gap-2 text-xs font-medium">
+          <span>Event banner</span>
+          <input
+            type="hidden"
+            name="bannerAssetId"
+            value={bannerAssetId ?? ""}
+          />
+          <AssetUploader
+            kind="image"
+            accept="image/*"
+            label={bannerAssetId ? "Replace banner" : "Upload banner"}
+            onUploaded={setBannerAssetId}
+          />
+          <span className="text-[10px] text-slate-500">
+            {bannerAssetId ? "Banner attached" : "No banner attached"}
+          </span>
+        </div>
+        <EditorInput
+          name="allowedInstitutionEmailDomains"
+          label="Allowed institution email domains"
+          placeholder="cuet.ac.bd, student.cuet.ac.bd"
+          defaultValue={event?.allowedInstitutionEmailDomains?.join(", ")}
+        />
+        <EditorInput
+          name="reminderHoursBefore"
+          label="Reminder lead time (hours)"
+          type="number"
+          min="1"
+          max="168"
+          defaultValue={event?.reminderHoursBefore ?? 24}
+          required
+        />
+        <label className="flex min-h-10 items-center gap-2 text-xs font-medium">
+          <input
+            type="checkbox"
+            name="eligibilityEvidenceRequired"
+            defaultChecked={event?.eligibilityEvidenceRequired}
+          />
+          Require eligibility evidence from guests
+        </label>
+        <label className="flex min-h-10 items-center gap-2 text-xs font-medium">
+          <input
+            type="checkbox"
+            name="certificatesEnabled"
+            defaultChecked={event?.certificatesEnabled}
+          />
+          Enable attendance certificates
+        </label>
         <EditorArea
           name="summary"
           label="Summary"

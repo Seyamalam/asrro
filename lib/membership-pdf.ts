@@ -18,6 +18,18 @@ async function loadLogo() {
   })
 }
 
+async function loadImage(url: string) {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error("Image could not be loaded")
+  const blob = await response.blob()
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.addEventListener("load", () => resolve(String(reader.result)))
+    reader.addEventListener("error", () => reject(reader.error))
+    reader.readAsDataURL(blob)
+  })
+}
+
 export async function downloadMembershipCardPdf(
   member: Membership,
   verificationUrl: string
@@ -42,6 +54,22 @@ export async function downloadMembershipCardPdf(
     document.addImage(await loadLogo(), "PNG", 5, 5, 10, 10)
   } catch {
     /* card remains valid without decorative logo */
+  }
+  if (member.profileImageUrl) {
+    try {
+      document.addImage(
+        await loadImage(member.profileImageUrl),
+        "JPEG",
+        5,
+        17,
+        10,
+        10,
+        undefined,
+        "FAST"
+      )
+    } catch {
+      /* profile photo is optional */
+    }
   }
   document.setTextColor(255, 255, 255)
   document.setFont("helvetica", "bold")

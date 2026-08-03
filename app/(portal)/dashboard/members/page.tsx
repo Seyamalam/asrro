@@ -1,10 +1,11 @@
 import { PageHeader, Panel } from "@/components/dashboard/dashboard-kit"
 import { MembersTable } from "@/components/dashboard/members-table"
 import { RoleManager } from "@/components/dashboard/role-manager"
-import { requirePortalRole } from "@/lib/admin-auth"
+import { ExecutiveAccountForm } from "@/components/dashboard/executive-account-form"
+import { requirePortalPermission } from "@/lib/admin-auth"
 
 export default async function MembersPage() {
-  await requirePortalRole("super_admin")
+  const member = await requirePortalPermission("membership_manage")
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,6 +19,11 @@ export default async function MembersPage() {
       <Panel title="Active members">
         <RoleManager />
       </Panel>
+      {member.systemRole === "super_admin" ? (
+        <Panel title="Create executive account">
+          <ExecutiveAccountForm />
+        </Panel>
+      ) : null}
     </div>
   )
 }

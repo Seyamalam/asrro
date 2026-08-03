@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FileBarChart,
+  FileUp,
   FolderKanban,
   Gauge,
   LogOut,
@@ -57,12 +58,14 @@ import { cn } from "@/lib/utils"
 
 type MemberSelf = Exclude<FunctionReturnType<typeof api.members.me>, null>
 type PortalRole = "member" | "executive" | "admin"
+type PortalPermission = MemberSelf["permissions"][number]
 
 type NavItem = {
   label: string
   href: string
   icon: LucideIcon
   minimumRole: PortalRole
+  permission?: PortalPermission
   badge?: string
   keywords?: string[]
 }
@@ -111,6 +114,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/members",
     icon: UsersRound,
     minimumRole: "executive",
+    permission: "membership_manage",
     keywords: ["approval", "applications", "bulk"],
   },
   {
@@ -118,6 +122,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/event-management",
     icon: ClipboardCheck,
     minimumRole: "executive",
+    permission: "events_manage",
     keywords: ["registration", "attendance", "manage"],
   },
   {
@@ -125,6 +130,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/committee",
     icon: ShieldCheck,
     minimumRole: "executive",
+    permission: "committee_manage",
     keywords: ["executive", "positions", "session"],
   },
   {
@@ -132,6 +138,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/finance",
     icon: ChartNoAxesCombined,
     minimumRole: "executive",
+    permission: "finance_manage",
     keywords: ["income", "expense", "budget"],
   },
   {
@@ -139,6 +146,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/projects",
     icon: FolderKanban,
     minimumRole: "executive",
+    permission: "projects_manage",
     keywords: ["portfolio", "inventory"],
   },
   {
@@ -146,6 +154,7 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/content",
     icon: BookOpenText,
     minimumRole: "executive",
+    permission: "content_manage",
     keywords: ["blog", "gallery", "publications"],
   },
   {
@@ -153,7 +162,16 @@ const executiveNav: NavItem[] = [
     href: "/dashboard/reports",
     icon: FileBarChart,
     minimumRole: "executive",
+    permission: "reports_view",
     keywords: ["export", "pdf", "csv", "excel"],
+  },
+  {
+    label: "Files",
+    href: "/dashboard/files",
+    icon: FileUp,
+    minimumRole: "executive",
+    permission: "files_manage",
+    keywords: ["upload", "video", "document", "assets"],
   },
   {
     label: "Settings",
@@ -274,11 +292,21 @@ function SidebarBrand() {
   )
 }
 
-function SidebarNav({ role }: { role: PortalRole }) {
+function SidebarNav({
+  role,
+  permissions,
+}: {
+  role: PortalRole
+  permissions: PortalPermission[]
+}) {
   const pathname = usePathname()
+  const permissionSet = new Set(permissions)
   const renderItems = (items: NavItem[]) =>
     items.map((item) =>
-      roleRank[role] >= roleRank[item.minimumRole] ? (
+      roleRank[role] >= roleRank[item.minimumRole] &&
+      (role === "admin" ||
+        !item.permission ||
+        permissionSet.has(item.permission)) ? (
         <AnimatedSidebarMenuItem key={item.href}>
           <AnimatedSidebarMenuButton
             href={item.href}
@@ -406,6 +434,10 @@ function minimumRoleForPath(pathname: string): PortalRole {
   return "member"
 }
 
+function permissionForPath(pathname: string) {
+  return executiveNav.find((item) => pathname.startsWith(item.href))?.permission
+}
+
 export function PortalShell({
   children,
   initialMember,
@@ -432,12 +464,20 @@ export function PortalShell({
   const accountEmail =
     displayMember.email || session.data?.user.email || "Member"
   const initials = getInitials(accountName)
+  const permissionSet = useMemo(
+    () => new Set(displayMember.permissions),
+    [displayMember.permissions]
+  )
   const visibleNav = useMemo(
     () =>
       [...memberNav, ...executiveNav].filter(
-        (item) => roleRank[role] >= roleRank[item.minimumRole]
+        (item) =>
+          roleRank[role] >= roleRank[item.minimumRole] &&
+          (role === "admin" ||
+            !item.permission ||
+            permissionSet.has(item.permission))
       ),
-    [role]
+    [permissionSet, role]
   )
   const commandItems = useMemo<CommandItem[]>(
     () =>
@@ -454,7 +494,10 @@ export function PortalShell({
   )
   const permitted =
     member?.status === "active" &&
-    roleRank[role] >= roleRank[minimumRoleForPath(pathname)]
+    roleRank[role] >= roleRank[minimumRoleForPath(pathname)] &&
+    (role === "admin" ||
+      !permissionForPath(pathname) ||
+      permissionSet.has(permissionForPath(pathname)!))
 
   const signOut = async () => {
     setSigningOut(true)
@@ -486,7 +529,7 @@ export function PortalShell({
           </div>
         </AnimatedSidebarHeader>
         <AnimatedSidebarContent className="[scrollbar-color:rgba(34,211,238,.18)_transparent] px-2 py-3">
-          <SidebarNav role={role} />
+          <SidebarNav role={role} permissions={displayMember.permissions} />
         </AnimatedSidebarContent>
         <AnimatedSidebarFooter className="border-white/8 p-2.5">
           <AccountSummary

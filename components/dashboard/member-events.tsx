@@ -24,7 +24,10 @@ import {
 } from "@/components/motion/tabs"
 import { api } from "@/convex/_generated/api"
 import type { Doc } from "@/convex/_generated/dataModel"
-import { downloadParticipationConfirmationPdf } from "@/lib/event-documents"
+import {
+  downloadParticipationCertificatePdf,
+  downloadParticipationConfirmationPdf,
+} from "@/lib/event-documents"
 
 export function MemberEvents() {
   const [now] = useState(() => Date.now())
@@ -168,10 +171,10 @@ export function MemberEvents() {
               {attended.map((registration) => (
                 <div
                   key={registration.registrationId}
-                  className="flex items-center gap-4 p-5"
+                  className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center"
                 >
                   <CheckCircle2 className="size-5 text-emerald-600" />
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-sm font-semibold">
                       {registration.event.name}
                     </h2>
@@ -182,6 +185,27 @@ export function MemberEvents() {
                       ).toLocaleDateString()}
                     </p>
                   </div>
+                  {registration.certificateCode &&
+                  registration.certificateIssuedAt ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void downloadParticipationCertificatePdf({
+                          registrationCode: registration.registrationCode,
+                          status: registration.status,
+                          participantName: member?.fullName ?? "ASRRO member",
+                          eventName: registration.event.name,
+                          startsAt: registration.event.startsAt,
+                          venue: registration.event.venue,
+                          certificateCode: registration.certificateCode!,
+                          issuedAt: registration.certificateIssuedAt!,
+                        })
+                      }
+                      className="inline-flex items-center gap-2 text-xs font-semibold text-violet-600"
+                    >
+                      <Download className="size-3.5" /> Certificate
+                    </button>
+                  ) : null}
                 </div>
               ))}
               {data && attended.length === 0 && (

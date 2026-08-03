@@ -134,6 +134,138 @@ describe("membership lifecycle", () => {
       status: "active",
     })
   })
+
+  it("allocates unique mapped UUIDs under concurrent approvals and sets validity", async () => {
+    const t = convexTest(schema, modules)
+    const adminIdentity = {
+      subject: "uuid-admin",
+      issuer: "https://test.invalid",
+      tokenIdentifier: "https://test.invalid|uuid-admin",
+      email: "uuid-admin@example.com",
+      name: "UUID Admin",
+    }
+    const admin = t.withIdentity(adminIdentity)
+    await admin.mutation(api.membership.initializeFirstAdmin, {
+      phone: "+8801700000099",
+      institute: "CUET",
+      department: "CSE",
+      studentId: "2104099",
+      hscBatch: "21",
+    })
+    const first = await t.mutation(api.membership.submitApplication, {
+      ...APPLICATION,
+      email: "uuid-one@example.com",
+      transactionId: "TXN-UUID-001",
+    })
+    const second = await t.mutation(api.membership.submitApplication, {
+      ...APPLICATION,
+      fullName: "Second Applicant",
+      email: "uuid-two@example.com",
+      studentId: "2104002",
+      transactionId: "TXN-UUID-002",
+    })
+
+    const approvals = await Promise.all([
+      admin.mutation(api.membership.reviewApplication, {
+        applicationId: first.applicationId,
+        decision: "approve",
+      }),
+      admin.mutation(api.membership.reviewApplication, {
+        applicationId: second.applicationId,
+        decision: "approve",
+      }),
+    ])
+
+    expect(new Set(approvals.map((approval) => approval.uuid)).size).toBe(2)
+    expect(approvals.map((approval) => approval.uuid).sort()).toEqual([
+      "AR-002",
+      "AR-003",
+    ])
+    const records = await t.run(
+      async (ctx) =>
+        await Promise.all(
+          approvals.map((approval) => ctx.db.get("members", approval.memberId!))
+        )
+    )
+    for (const record of records) {
+      expect(record?.membershipValidUntil).toBeGreaterThan(
+        record?.joinedAt ?? 0
+      )
+    }
+    const outbox = await t.run(
+      async (ctx) => await ctx.db.query("emailOutbox").collect()
+    )
+    expect(outbox).toHaveLength(2)
+    expect(
+      outbox.every((email) => email.template === "membership_approved")
+    ).toBe(true)
+  })
+
+  it("enforces granular membership permissions for executives", async () => {
+    const t = convexTest(schema, modules)
+    const now = 1_800_000_000_000
+    await t.run(async (ctx) => {
+      await ctx.db.insert("members", {
+        identityToken: "https://test.invalid|allowed-executive",
+        uuid: "TEST-EXEC-1",
+        fullName: "Allowed Executive",
+        email: "allowed@example.com",
+        emailNormalized: "allowed@example.com",
+        phone: "1",
+        department: "CSE",
+        hscBatch: "21",
+        studentId: "1",
+        institute: "CUET",
+        status: "active",
+        systemRole: "executive",
+        executivePosition: "membership_coordinator",
+        permissions: ["membership_manage"],
+        joinedAt: now,
+        updatedAt: now,
+      })
+      await ctx.db.insert("members", {
+        identityToken: "https://test.invalid|denied-executive",
+        uuid: "TEST-EXEC-2",
+        fullName: "Denied Executive",
+        email: "denied@example.com",
+        emailNormalized: "denied@example.com",
+        phone: "2",
+        department: "EEE",
+        hscBatch: "21",
+        studentId: "2",
+        institute: "CUET",
+        status: "active",
+        systemRole: "executive",
+        executivePosition: "executive_member",
+        permissions: [],
+        joinedAt: now,
+        updatedAt: now,
+      })
+    })
+    const paginationOpts = { cursor: null, numItems: 10 }
+    const allowed = t.withIdentity({
+      subject: "allowed-executive",
+      issuer: "https://test.invalid",
+      tokenIdentifier: "https://test.invalid|allowed-executive",
+    })
+    const denied = t.withIdentity({
+      subject: "denied-executive",
+      issuer: "https://test.invalid",
+      tokenIdentifier: "https://test.invalid|denied-executive",
+    })
+    await expect(
+      allowed.query(api.membership.listApplications, {
+        status: "pending",
+        paginationOpts,
+      })
+    ).resolves.toMatchObject({ page: [] })
+    await expect(
+      denied.query(api.membership.listApplications, {
+        status: "pending",
+        paginationOpts,
+      })
+    ).rejects.toThrow("membership_manage")
+  })
 })
 
 describe("event registration rules", () => {
@@ -173,6 +305,7 @@ describe("event registration rules", () => {
         capacity: 20,
         activeRegistrationCount: 0,
         eligibility: "Current CUET students",
+        eligibilityEvidenceRequired: false,
         registrationFee: 100,
         currency: "BDT",
         contactName: "Event Owner",
@@ -201,6 +334,7 @@ describe("event registration rules", () => {
       email: "student@example.com",
       phone: "+8801700000003",
       institution: "CUET",
+      institutionEmail: "student@cuet.ac.bd",
       studentId: "2104002",
       eligibilityConfirmed: true,
       transactionId: "EVENT-TXN-001",
@@ -214,6 +348,7 @@ describe("event registration rules", () => {
         email: "second@example.com",
         phone: "+8801700000004",
         institution: "CUET",
+        institutionEmail: "second@cuet.ac.bd",
         studentId: "2104003",
         eligibilityConfirmed: true,
         transactionId: "EVENT-TXN-001",

@@ -3,6 +3,7 @@ import {
   paginationResultValidator,
 } from "convex/server"
 import { ConvexError, v } from "convex/values"
+import { internal } from "./_generated/api"
 import {
   internalMutation,
   mutation,
@@ -66,12 +67,16 @@ const eventInput = v.object({
   capacity: v.number(),
   rules: v.optional(v.string()),
   eligibility: v.string(),
+  eligibilityEvidenceRequired: v.optional(v.boolean()),
+  allowedInstitutionEmailDomains: v.optional(v.array(v.string())),
   registrationFee: v.number(),
   currency: v.string(),
   contactName: v.string(),
   contactEmail: v.optional(v.string()),
   contactPhone: v.optional(v.string()),
   bannerAssetId: v.optional(v.id("assets")),
+  reminderHoursBefore: v.optional(v.number()),
+  certificatesEnabled: v.optional(v.boolean()),
 })
 
 function publicRegistrationStatus(registration: Doc<"eventRegistrations">) {
@@ -80,6 +85,8 @@ function publicRegistrationStatus(registration: Doc<"eventRegistrations">) {
     registrationCode: registration.registrationCode,
     status: registration.status,
     registeredAt: registration.registeredAt,
+    certificateCode: registration.certificateCode,
+    certificateIssuedAt: registration.certificateIssuedAt,
   }
 }
 
@@ -95,6 +102,8 @@ const registrationReceipt = v.object({
     v.literal("absent")
   ),
   registeredAt: v.number(),
+  certificateCode: v.optional(v.string()),
+  certificateIssuedAt: v.optional(v.number()),
 })
 
 const eventPhase = v.union(
@@ -119,7 +128,24 @@ const managedRegistration = v.object({
   participantEmail: v.string(),
   participantPhone: v.string(),
   memberUuid: v.optional(v.string()),
+  eligibilityEvidenceUrl: v.optional(v.string()),
 })
+
+async function scheduleEventEmail(
+  ctx: MutationCtx,
+  input: {
+    recipient: string
+    recipientName?: string
+    template: string
+    subject: string
+    textBody: string
+    memberId?: Id<"members">
+    eventId: Id<"events">
+    registrationId: Id<"eventRegistrations">
+  }
+) {
+  await ctx.scheduler.runAfter(0, internal.emails.enqueue, input)
+}
 
 function phaseFor(event: Doc<"events">, now: number) {
   if (event.endsAt < now || event.status === "completed") return "past" as const
@@ -141,7 +167,10 @@ function enforceEligibility(
     confirmed: boolean
     institution: string
     institutionDivision?: string
+    institutionEmail?: string
     studentId?: string
+    evidenceAssetId?: Id<"assets">
+    trustedMember: boolean
   }
 ) {
   if (!details.confirmed) {
@@ -156,6 +185,15 @@ function enforceEligibility(
     if (!details.studentId?.trim()) {
       throw new ConvexError("A CUET student ID is required")
     }
+    if (!details.trustedMember) {
+      const email = details.institutionEmail?.trim().toLowerCase()
+      const domains = event.allowedInstitutionEmailDomains?.length
+        ? event.allowedInstitutionEmailDomains
+        : ["cuet.ac.bd"]
+      if (!email || !domains.some((domain) => email.endsWith(`@${domain}`))) {
+        throw new ConvexError("A verified CUET institutional email is required")
+      }
+    }
   }
   if (
     event.scope === "divisional" &&
@@ -164,6 +202,22 @@ function enforceEligibility(
     throw new ConvexError(
       "Divisional events are limited to universities in Chattogram Division"
     )
+  }
+  const evidenceRequired =
+    event.eligibilityEvidenceRequired ?? event.scope !== "national"
+  if (evidenceRequired && !details.trustedMember && !details.evidenceAssetId) {
+    throw new ConvexError("Eligibility evidence is required")
+  }
+}
+
+async function validateEligibilityEvidence(
+  ctx: MutationCtx,
+  evidenceAssetId?: Id<"assets">
+) {
+  if (!evidenceAssetId) return
+  const asset = await ctx.db.get("assets", evidenceAssetId)
+  if (!asset || (asset.kind !== "image" && asset.kind !== "pdf")) {
+    throw new ConvexError("Eligibility evidence must be an image or PDF")
   }
 }
 
@@ -208,19 +262,28 @@ async function insertRegistration(
     guestPhone?: string
     institution?: string
     institutionDivision?: string
+    institutionEmail?: string
     studentId?: string
     eligibilityConfirmed?: boolean
+    eligibilityEvidenceAssetId?: Id<"assets">
+    eligibilityEvidenceNote?: string
     transactionId?: string
+    requiresReview?: boolean
   }
 ) {
   await ensureRegistrationOpen(event)
   const cancellationToken = randomSecret()
   const now = Date.now()
   const registrationCode = `REG-${event._id.slice(-6).toUpperCase()}-${now.toString(36).toUpperCase()}-${cancellationToken.slice(0, 4).toUpperCase()}`
-  const status = event.registrationFee === 0 ? "confirmed" : "pending"
+  const status =
+    event.registrationFee === 0 && !details.requiresReview
+      ? "confirmed"
+      : "pending"
+  const registrationDetails = { ...details }
+  delete registrationDetails.requiresReview
   const registrationId = await ctx.db.insert("eventRegistrations", {
     eventId: event._id,
-    ...details,
+    ...registrationDetails,
     registrationCode,
     cancellationTokenHash: await hashSecret(cancellationToken),
     status,
@@ -302,6 +365,29 @@ export const listDirectory = query({
   },
 })
 
+export const listDirectoryPage = query({
+  args: {
+    status: v.union(v.literal("published"), v.literal("completed")),
+    now: v.number(),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: paginationResultValidator(directoryEvent),
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query("events")
+      .withIndex("by_status_and_startsAt", (q) => q.eq("status", args.status))
+      .order("desc")
+      .paginate(args.paginationOpts)
+    return {
+      ...result,
+      page: result.page.map((event) => ({
+        ...event,
+        phase: phaseFor(event, args.now),
+      })),
+    }
+  },
+})
+
 export const getPublicBySlug = query({
   args: { slug: v.string() },
   returns: v.union(eventDoc, v.null()),
@@ -324,8 +410,11 @@ export const registerGuest = mutation({
     phone: v.string(),
     institution: v.string(),
     institutionDivision: v.optional(v.string()),
+    institutionEmail: v.optional(v.string()),
     studentId: v.optional(v.string()),
     eligibilityConfirmed: v.boolean(),
+    eligibilityEvidenceAssetId: v.optional(v.id("assets")),
+    eligibilityEvidenceNote: v.optional(v.string()),
     transactionId: v.optional(v.string()),
   },
   returns: registrationReceipt.extend({ cancellationToken: v.string() }),
@@ -341,11 +430,23 @@ export const registerGuest = mutation({
       80
     )
     const studentId = optionalText(args.studentId, "Student ID", 80)
+    const institutionEmail = args.institutionEmail
+      ? normalizeEmail(args.institutionEmail)
+      : undefined
+    const eligibilityEvidenceNote = optionalText(
+      args.eligibilityEvidenceNote,
+      "Eligibility evidence note",
+      500
+    )
+    await validateEligibilityEvidence(ctx, args.eligibilityEvidenceAssetId)
     enforceEligibility(event, {
       confirmed: args.eligibilityConfirmed,
       institution,
       institutionDivision,
+      institutionEmail,
       studentId,
+      evidenceAssetId: args.eligibilityEvidenceAssetId,
+      trustedMember: false,
     })
     const transactionId = optionalText(
       args.transactionId,
@@ -369,17 +470,33 @@ export const registerGuest = mutation({
       )
     )
       throw new ConvexError("This email is already registered for the event")
-    return await insertRegistration(ctx, event, {
+    const result = await insertRegistration(ctx, event, {
       guestName: cleanText(args.name, "Name", 120),
       guestEmail: guestEmailNormalized,
       guestEmailNormalized,
       guestPhone: cleanText(args.phone, "Phone", 30),
       institution,
       institutionDivision,
+      institutionEmail,
       studentId,
       eligibilityConfirmed: true,
+      eligibilityEvidenceAssetId: args.eligibilityEvidenceAssetId,
+      eligibilityEvidenceNote,
       transactionId,
+      requiresReview:
+        event.registrationFee > 0 ||
+        (event.eligibilityEvidenceRequired ?? event.scope !== "national"),
     })
+    await scheduleEventEmail(ctx, {
+      recipient: guestEmailNormalized,
+      recipientName: cleanText(args.name, "Name", 120),
+      template: "event_registration_received",
+      subject: `Registration received for ${event.name}`,
+      textBody: `Your registration ${result.registrationCode} for ${event.name} is ${result.status}. Keep your cancellation token secure.`,
+      eventId: event._id,
+      registrationId: result.registrationId,
+    })
+    return result
   },
 })
 
@@ -406,11 +523,15 @@ export const registerMember = mutation({
       "Institution division",
       80
     )
+    const effectiveInstitutionDivision = isCuetInstitution(member.institute)
+      ? "Chattogram"
+      : institutionDivision
     enforceEligibility(event, {
       confirmed: args.eligibilityConfirmed,
       institution: member.institute,
-      institutionDivision,
+      institutionDivision: effectiveInstitutionDivision,
       studentId: member.studentId,
+      trustedMember: true,
     })
     const transactionId = optionalText(
       args.transactionId,
@@ -435,7 +556,7 @@ export const registerMember = mutation({
       memberId: member._id,
       identityToken: member.identityToken,
       institution: member.institute,
-      institutionDivision,
+      institutionDivision: effectiveInstitutionDivision,
       studentId: member.studentId,
       eligibilityConfirmed: true,
       transactionId,
@@ -448,6 +569,16 @@ export const registerMember = mutation({
       link: `/events/${event.slug}`,
       read: false,
       createdAt: Date.now(),
+    })
+    await scheduleEventEmail(ctx, {
+      recipient: member.email,
+      recipientName: member.fullName,
+      template: "event_registration_received",
+      subject: `Registration received for ${event.name}`,
+      textBody: `Your registration ${result.registrationCode} for ${event.name} is ${result.status}.`,
+      memberId: member._id,
+      eventId: event._id,
+      registrationId: result.registrationId,
     })
     return publicRegistrationStatus({
       ...(await ctx.db.get("eventRegistrations", result.registrationId))!,
@@ -636,6 +767,18 @@ export const listManagedEvents = query({
   },
 })
 
+export const paginateManagedEvents = query({
+  args: { paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(eventDoc),
+  handler: async (ctx, args) => {
+    await requireExecutive(ctx)
+    return await ctx.db
+      .query("events")
+      .order("desc")
+      .paginate(args.paginationOpts)
+  },
+})
+
 export const listManagedRegistrations = query({
   args: {
     eventId: v.id("events"),
@@ -680,9 +823,87 @@ export const listManagedRegistrations = query({
           participantEmail: member?.email ?? registration.guestEmail ?? "",
           participantPhone: member?.phone ?? registration.guestPhone ?? "",
           memberUuid: member?.uuid,
+          eligibilityEvidenceUrl: registration.eligibilityEvidenceAssetId
+            ? (((
+                await ctx.db.get(
+                  "assets",
+                  registration.eligibilityEvidenceAssetId
+                )
+              )?.storageId
+                ? await ctx.storage.getUrl(
+                    (await ctx.db.get(
+                      "assets",
+                      registration.eligibilityEvidenceAssetId
+                    ))!.storageId
+                  )
+                : null) ?? undefined)
+            : undefined,
         }
       })
     )
+  },
+})
+
+export const paginateManagedRegistrations = query({
+  args: {
+    eventId: v.id("events"),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("confirmed"),
+        v.literal("rejected"),
+        v.literal("cancelled"),
+        v.literal("attended"),
+        v.literal("absent")
+      )
+    ),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: paginationResultValidator(managedRegistration),
+  handler: async (ctx, args) => {
+    await requireExecutive(ctx)
+    const result = args.status
+      ? await ctx.db
+          .query("eventRegistrations")
+          .withIndex("by_eventId_and_status_and_registeredAt", (q) =>
+            q.eq("eventId", args.eventId).eq("status", args.status!)
+          )
+          .order("desc")
+          .paginate(args.paginationOpts)
+      : await ctx.db
+          .query("eventRegistrations")
+          .withIndex("by_eventId_and_registeredAt", (q) =>
+            q.eq("eventId", args.eventId)
+          )
+          .order("desc")
+          .paginate(args.paginationOpts)
+    return {
+      ...result,
+      page: await Promise.all(
+        result.page.map(async (registration) => {
+          const [member, evidenceAsset] = await Promise.all([
+            registration.memberId
+              ? ctx.db.get("members", registration.memberId)
+              : null,
+            registration.eligibilityEvidenceAssetId
+              ? ctx.db.get("assets", registration.eligibilityEvidenceAssetId)
+              : null,
+          ])
+          return {
+            ...registration,
+            participantName:
+              member?.fullName ?? registration.guestName ?? "Guest",
+            participantEmail: member?.email ?? registration.guestEmail ?? "",
+            participantPhone: member?.phone ?? registration.guestPhone ?? "",
+            memberUuid: member?.uuid,
+            eligibilityEvidenceUrl: evidenceAsset
+              ? ((await ctx.storage.getUrl(evidenceAsset.storageId)) ??
+                undefined)
+              : undefined,
+          }
+        })
+      ),
+    }
   },
 })
 
@@ -698,6 +919,19 @@ export const upsert = mutation({
       )
     assertFiniteNonNegative(args.capacity, "Capacity")
     assertFiniteNonNegative(args.registrationFee, "Registration fee")
+    if (
+      args.reminderHoursBefore !== undefined &&
+      (args.reminderHoursBefore < 1 || args.reminderHoursBefore > 168)
+    ) {
+      throw new ConvexError(
+        "Reminder lead time must be between 1 and 168 hours"
+      )
+    }
+    if ((args.allowedInstitutionEmailDomains?.length ?? 0) > 20) {
+      throw new ConvexError(
+        "At most 20 institutional email domains are allowed"
+      )
+    }
     const slug = cleanText(args.slug, "Slug", 100).toLowerCase()
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
       throw new ConvexError("Invalid event slug")
@@ -734,6 +968,18 @@ export const upsert = mutation({
       activeRegistrationCount: existing?.activeRegistrationCount ?? 0,
       rules: optionalText(args.rules, "Rules", 20_000),
       eligibility: cleanText(args.eligibility, "Eligibility", 5_000),
+      eligibilityEvidenceRequired: args.eligibilityEvidenceRequired,
+      allowedInstitutionEmailDomains: args.allowedInstitutionEmailDomains?.map(
+        (domain) => {
+          const cleaned = cleanText(domain, "Institution email domain", 120)
+            .toLowerCase()
+            .replace(/^@/, "")
+          if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(cleaned)) {
+            throw new ConvexError("Invalid institutional email domain")
+          }
+          return cleaned
+        }
+      ),
       registrationFee: args.registrationFee,
       currency: cleanText(args.currency, "Currency", 10).toUpperCase(),
       contactName: cleanText(args.contactName, "Contact name", 120),
@@ -742,6 +988,8 @@ export const upsert = mutation({
         : undefined,
       contactPhone: optionalText(args.contactPhone, "Contact phone", 30),
       bannerAssetId: args.bannerAssetId,
+      reminderHoursBefore: args.reminderHoursBefore,
+      certificatesEnabled: args.certificatesEnabled,
       publishedAt:
         args.status === "published"
           ? (existing?.publishedAt ?? now)
@@ -799,6 +1047,56 @@ export const archive = mutation({
   },
 })
 
+export const remove = mutation({
+  args: { eventId: v.id("events") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requireExecutive(ctx)
+    const event = await ctx.db.get("events", args.eventId)
+    if (!event) throw new ConvexError("Event not found")
+    if (!["draft", "cancelled", "archived"].includes(event.status)) {
+      throw new ConvexError(
+        "Publish-state events must be archived before deletion"
+      )
+    }
+    const [registration, gallery, finance] = await Promise.all([
+      ctx.db
+        .query("eventRegistrations")
+        .withIndex("by_eventId_and_registeredAt", (q) =>
+          q.eq("eventId", event._id)
+        )
+        .first(),
+      ctx.db
+        .query("galleryAlbums")
+        .withIndex("by_eventId_and_occurredAt", (q) =>
+          q.eq("eventId", event._id)
+        )
+        .first(),
+      ctx.db
+        .query("financeTransactions")
+        .withIndex("by_eventId_and_occurredAt", (q) =>
+          q.eq("eventId", event._id)
+        )
+        .first(),
+    ])
+    if (registration || gallery || finance) {
+      throw new ConvexError(
+        "This event has linked records and must remain archived for audit history"
+      )
+    }
+    await ctx.db.delete("events", event._id)
+    await writeAudit(
+      ctx,
+      actor,
+      "event.delete",
+      "event",
+      event._id,
+      `Deleted ${event.name}`
+    )
+    return null
+  },
+})
+
 export const clone = mutation({
   args: { eventId: v.id("events") },
   returns: v.id("events"),
@@ -826,12 +1124,16 @@ export const clone = mutation({
       activeRegistrationCount: 0,
       rules: source.rules,
       eligibility: source.eligibility,
+      eligibilityEvidenceRequired: source.eligibilityEvidenceRequired,
+      allowedInstitutionEmailDomains: source.allowedInstitutionEmailDomains,
       registrationFee: source.registrationFee,
       currency: source.currency,
       contactName: source.contactName,
       contactEmail: source.contactEmail,
       contactPhone: source.contactPhone,
       bannerAssetId: source.bannerAssetId,
+      reminderHoursBefore: source.reminderHoursBefore,
+      certificatesEnabled: source.certificatesEnabled,
       createdBy: actor._id,
       updatedAt: now,
     })
@@ -909,6 +1211,10 @@ export const reviewRegistration = mutation({
           : registration.amountPaid),
       reviewedAt: Date.now(),
       reviewedBy: actor._id,
+      eligibilityVerifiedAt:
+        args.status === "confirmed" ? Date.now() : undefined,
+      eligibilityVerifiedBy:
+        args.status === "confirmed" ? actor._id : undefined,
     })
     if (wasActive !== willBeActive) {
       await ctx.db.patch("events", event._id, {
@@ -927,6 +1233,33 @@ export const reviewRegistration = mutation({
       registration._id,
       `Set ${registration.registrationCode} to ${args.status}`
     )
+    if (registration.memberId) {
+      await ctx.db.insert("notifications", {
+        memberId: registration.memberId,
+        kind: "event_registration_review",
+        title: `Event registration ${args.status}`,
+        body: `Your registration for ${event.name} was ${args.status}.`,
+        link: `/dashboard/events`,
+        read: false,
+        createdAt: Date.now(),
+      })
+    }
+    const reviewedMember = registration.memberId
+      ? await ctx.db.get("members", registration.memberId)
+      : null
+    const reviewRecipient = reviewedMember?.email ?? registration.guestEmail
+    if (reviewRecipient) {
+      await scheduleEventEmail(ctx, {
+        recipient: reviewRecipient,
+        recipientName: reviewedMember?.fullName ?? registration.guestName,
+        template: `event_registration_${args.status}`,
+        subject: `Your ${event.name} registration was ${args.status}`,
+        textBody: `Registration ${registration.registrationCode} for ${event.name} was ${args.status}.`,
+        memberId: reviewedMember?._id,
+        eventId: event._id,
+        registrationId: registration._id,
+      })
+    }
     return null
   },
 })
@@ -955,6 +1288,158 @@ export const markAttendance = mutation({
       reviewedBy: actor._id,
     })
     return null
+  },
+})
+
+export const issueCertificate = mutation({
+  args: { registrationId: v.id("eventRegistrations") },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    const actor = await requireExecutive(ctx)
+    const registration = await ctx.db.get(
+      "eventRegistrations",
+      args.registrationId
+    )
+    if (!registration) throw new ConvexError("Registration not found")
+    const event = await ctx.db.get("events", registration.eventId)
+    if (!event) throw new ConvexError("Event not found")
+    if (!event.certificatesEnabled) {
+      throw new ConvexError("Certificates are not enabled for this event")
+    }
+    if (registration.status !== "attended") {
+      throw new ConvexError(
+        "Only attended participants can receive certificates"
+      )
+    }
+    if (registration.certificateCode) return registration.certificateCode
+    const certificateCode = `CERT-${registration.registrationCode.replace(/^REG-/, "")}`
+    const now = Date.now()
+    await ctx.db.patch("eventRegistrations", registration._id, {
+      certificateCode,
+      certificateIssuedAt: now,
+      certificateIssuedBy: actor._id,
+    })
+    if (registration.memberId) {
+      await ctx.db.insert("notifications", {
+        memberId: registration.memberId,
+        kind: "event_certificate",
+        title: "Participation certificate ready",
+        body: `Your certificate for ${event.name} is ready to download.`,
+        link: "/dashboard/events",
+        read: false,
+        createdAt: now,
+      })
+    }
+    const certificateMember = registration.memberId
+      ? await ctx.db.get("members", registration.memberId)
+      : null
+    const certificateRecipient =
+      certificateMember?.email ?? registration.guestEmail
+    if (certificateRecipient) {
+      await scheduleEventEmail(ctx, {
+        recipient: certificateRecipient,
+        recipientName: certificateMember?.fullName ?? registration.guestName,
+        template: "event_certificate_ready",
+        subject: `Your certificate for ${event.name} is ready`,
+        textBody: `Certificate ${certificateCode} for ${event.name} is ready in your registration record.`,
+        memberId: certificateMember?._id,
+        eventId: event._id,
+        registrationId: registration._id,
+      })
+    }
+    await writeAudit(
+      ctx,
+      actor,
+      "registration.certificate",
+      "eventRegistration",
+      registration._id,
+      `Issued ${certificateCode}`
+    )
+    return certificateCode
+  },
+})
+
+export const dispatchDueReminders = internalMutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    const now = Date.now()
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_status_and_startsAt", (q) =>
+        q
+          .eq("status", "published")
+          .gte("startsAt", now)
+          .lte("startsAt", now + 7 * 24 * 60 * 60 * 1000)
+      )
+      .take(50)
+    const dueEvents = events.filter((event) => {
+      const leadTime = (event.reminderHoursBefore ?? 24) * 60 * 60 * 1000
+      return event.startsAt - now <= leadTime
+    })
+    const registrationBatches = await Promise.all(
+      dueEvents.map(async (event) => ({
+        event,
+        registrations: await ctx.db
+          .query("eventRegistrations")
+          .withIndex(
+            "by_eventId_and_status_and_reminderSentAt_and_registeredAt",
+            (q) =>
+              q
+                .eq("eventId", event._id)
+                .eq("status", "confirmed")
+                .eq("reminderSentAt", undefined)
+          )
+          .take(50),
+      }))
+    )
+    const reminders = registrationBatches
+      .flatMap(({ event, registrations }) =>
+        registrations.map((registration) => ({ event, registration }))
+      )
+      .slice(0, 50)
+    await Promise.all(
+      reminders.map(async ({ event, registration }) => {
+        const reminderMember = registration.memberId
+          ? await ctx.db.get("members", registration.memberId)
+          : null
+        const deliveries: Promise<unknown>[] = []
+        if (registration.memberId) {
+          deliveries.push(
+            ctx.db.insert("notifications", {
+              memberId: registration.memberId,
+              kind: "event_reminder",
+              title: `${event.name} starts soon`,
+              body: `${event.name} starts ${new Date(event.startsAt).toISOString()} at ${event.venue}.`,
+              link: `/events/${event.slug}`,
+              read: false,
+              createdAt: now,
+            })
+          )
+        }
+        const reminderRecipient =
+          reminderMember?.email ?? registration.guestEmail
+        if (reminderRecipient) {
+          deliveries.push(
+            scheduleEventEmail(ctx, {
+              recipient: reminderRecipient,
+              recipientName: reminderMember?.fullName ?? registration.guestName,
+              template: "event_reminder",
+              subject: `${event.name} starts soon`,
+              textBody: `${event.name} starts at ${new Date(event.startsAt).toISOString()} at ${event.venue}. Registration: ${registration.registrationCode}.`,
+              memberId: reminderMember?._id,
+              eventId: event._id,
+              registrationId: registration._id,
+            })
+          )
+        }
+        await Promise.all(deliveries)
+        await ctx.db.patch("eventRegistrations", registration._id, {
+          reminderSentAt: now,
+        })
+      })
+    )
+    return reminders.length
   },
 })
 

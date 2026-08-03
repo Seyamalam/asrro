@@ -7,6 +7,11 @@ export type ParticipationConfirmation = {
   venue: string
 }
 
+export type ParticipationCertificate = ParticipationConfirmation & {
+  certificateCode: string
+  issuedAt: number
+}
+
 export type ParticipantExportRow = {
   registrationCode: string
   participantName: string
@@ -55,7 +60,7 @@ function downloadBlob(blob: Blob, fileName: string) {
   URL.revokeObjectURL(url)
 }
 
-export async function downloadParticipationConfirmationPdf(
+export async function buildParticipationConfirmationPdf(
   confirmation: ParticipationConfirmation
 ) {
   const { jsPDF } = await import("jspdf")
@@ -104,18 +109,25 @@ export async function downloadParticipationConfirmationPdf(
     27,
     217
   )
-  pdf.save(`asrro-${safeFileName(confirmation.registrationCode)}.pdf`)
+  return pdf.output("arraybuffer")
 }
 
-export function downloadParticipantsCsv(
-  eventName: string,
-  rows: ParticipantExportRow[]
+export async function downloadParticipationConfirmationPdf(
+  confirmation: ParticipationConfirmation
 ) {
+  const bytes = await buildParticipationConfirmationPdf(confirmation)
+  downloadBlob(
+    new Blob([bytes], { type: "application/pdf" }),
+    `asrro-${safeFileName(confirmation.registrationCode)}.pdf`
+  )
+}
+
+export function buildParticipantsCsv(rows: ParticipantExportRow[]) {
   const records = exportRecords(rows)
   const headers = Object.keys(records[0] ?? exportRecords([emptyRow])[0])
   const escapeCell = (value: unknown) =>
     `"${String(value).replaceAll('"', '""')}"`
-  const csv = [
+  return [
     headers.map(escapeCell).join(","),
     ...records.map((record) =>
       headers
@@ -123,6 +135,13 @@ export function downloadParticipantsCsv(
         .join(",")
     ),
   ].join("\n")
+}
+
+export function downloadParticipantsCsv(
+  eventName: string,
+  rows: ParticipantExportRow[]
+) {
+  const csv = buildParticipantsCsv(rows)
   downloadBlob(
     new Blob(["\u{FEFF}", csv], { type: "text/csv;charset=utf-8" }),
     `${safeFileName(eventName)}-participants.csv`
@@ -133,14 +152,27 @@ export async function downloadParticipantsXlsx(
   eventName: string,
   rows: ParticipantExportRow[]
 ) {
+  const bytes = await buildParticipantsXlsx(rows)
+  downloadBlob(
+    new Blob([bytes], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    `${safeFileName(eventName)}-participants.xlsx`
+  )
+}
+
+export async function buildParticipantsXlsx(rows: ParticipantExportRow[]) {
   const xlsx = await import("xlsx")
   const worksheet = xlsx.utils.json_to_sheet(exportRecords(rows))
   const workbook = xlsx.utils.book_new()
   xlsx.utils.book_append_sheet(workbook, worksheet, "Participants")
-  xlsx.writeFile(workbook, `${safeFileName(eventName)}-participants.xlsx`)
+  return xlsx.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  }) as ArrayBuffer
 }
 
-export async function downloadParticipantsPdf(
+export async function buildParticipantsPdf(
   eventName: string,
   rows: ParticipantExportRow[]
 ) {
@@ -210,7 +242,85 @@ export async function downloadParticipantsPdf(
     pdf.line(12, y + 2, 285, y + 2)
     y += 7
   }
-  pdf.save(`${safeFileName(eventName)}-participants.pdf`)
+  return pdf.output("arraybuffer")
+}
+
+export async function downloadParticipantsPdf(
+  eventName: string,
+  rows: ParticipantExportRow[]
+) {
+  const bytes = await buildParticipantsPdf(eventName, rows)
+  downloadBlob(
+    new Blob([bytes], { type: "application/pdf" }),
+    `${safeFileName(eventName)}-participants.pdf`
+  )
+}
+
+export async function buildParticipationCertificatePdf(
+  certificate: ParticipationCertificate
+) {
+  const { jsPDF } = await import("jspdf")
+  const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
+  pdf.setProperties({
+    title: `Participation certificate ${certificate.certificateCode}`,
+    author: "ASRRO",
+  })
+  pdf.setFillColor(8, 24, 45)
+  pdf.rect(0, 0, 297, 210, "F")
+  pdf.setDrawColor(87, 230, 230)
+  pdf.setLineWidth(1.2)
+  pdf.rect(12, 12, 273, 186)
+  pdf.setTextColor(87, 230, 230)
+  pdf.setFont("helvetica", "bold")
+  pdf.setFontSize(28)
+  pdf.text("ASRRO", 148.5, 42, { align: "center" })
+  pdf.setFontSize(11)
+  pdf.text("CERTIFICATE OF PARTICIPATION", 148.5, 58, { align: "center" })
+  pdf.setTextColor(255, 255, 255)
+  pdf.setFont("helvetica", "normal")
+  pdf.setFontSize(12)
+  pdf.text("This certificate is presented to", 148.5, 82, { align: "center" })
+  pdf.setFont("helvetica", "bold")
+  pdf.setFontSize(25)
+  pdf.text(certificate.participantName, 148.5, 103, {
+    align: "center",
+    maxWidth: 230,
+  })
+  pdf.setFont("helvetica", "normal")
+  pdf.setFontSize(12)
+  pdf.text("for recorded participation in", 148.5, 121, { align: "center" })
+  pdf.setFont("helvetica", "bold")
+  pdf.setFontSize(18)
+  pdf.text(certificate.eventName, 148.5, 140, {
+    align: "center",
+    maxWidth: 230,
+  })
+  pdf.setFont("helvetica", "normal")
+  pdf.setFontSize(9)
+  pdf.setTextColor(185, 200, 217)
+  pdf.text(
+    `${new Date(certificate.startsAt).toLocaleDateString()} · ${certificate.venue}`,
+    148.5,
+    158,
+    { align: "center" }
+  )
+  pdf.text(
+    `Certificate ${certificate.certificateCode} · Issued ${new Date(certificate.issuedAt).toLocaleDateString()}`,
+    148.5,
+    180,
+    { align: "center" }
+  )
+  return pdf.output("arraybuffer")
+}
+
+export async function downloadParticipationCertificatePdf(
+  certificate: ParticipationCertificate
+) {
+  const bytes = await buildParticipationCertificatePdf(certificate)
+  downloadBlob(
+    new Blob([bytes], { type: "application/pdf" }),
+    `asrro-certificate-${safeFileName(certificate.certificateCode)}.pdf`
+  )
 }
 
 const emptyRow: ParticipantExportRow = {

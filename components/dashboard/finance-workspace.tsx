@@ -10,6 +10,8 @@ import {
   Panel,
 } from "@/components/dashboard/dashboard-kit"
 import { FinanceLedger } from "@/components/dashboard/finance-ledger"
+import { FinanceSummary } from "@/components/dashboard/finance-summary"
+import { FinanceBudgets } from "@/components/dashboard/finance-budgets"
 import { FinanceTransactionForm } from "@/components/dashboard/finance-transaction-form"
 import { api } from "@/convex/_generated/api"
 
@@ -23,7 +25,7 @@ export function FinanceWorkspace() {
     return (
       <p className="p-8 text-sm text-slate-500">Checking finance access…</p>
     )
-  if (!access.allowed) {
+  if (!access.allowed || access.level === "none") {
     return (
       <Panel className="grid min-h-72 place-items-center p-8 text-center">
         <div>
@@ -47,13 +49,15 @@ export function FinanceWorkspace() {
         title="Financial operations"
         description="Posted income, expenditure and audit-ready reporting for authorized officers."
         actions={
-          <ActionButton onClick={() => setEditing((value) => !value)}>
-            <Plus className="size-3.5" />
-            Add transaction
-          </ActionButton>
+          access.level === "manage" ? (
+            <ActionButton onClick={() => setEditing((value) => !value)}>
+              <Plus className="size-3.5" />
+              Add transaction
+            </ActionButton>
+          ) : undefined
         }
       />
-      {editing ? (
+      {editing && access.level === "manage" ? (
         <Panel title="New transaction">
           <FinanceTransactionForm onDone={() => setEditing(false)} />
         </Panel>
@@ -63,7 +67,23 @@ export function FinanceWorkspace() {
         <DateField label="To" value={toDate} onChange={setToDate} />
         <p className="self-end pb-3 text-xs text-slate-500">{access.reason}</p>
       </div>
-      <FinanceLedger from={from} to={to} />
+      <FinanceSummary from={from} to={to} />
+      {access.level === "manage" ? (
+        <>
+          <FinanceBudgets />
+          <FinanceLedger from={from} to={to} />
+        </>
+      ) : (
+        <Panel
+          title="Summary-only access"
+          description="Detailed transactions, references, receipts, and entry controls are hidden for this permission level."
+        >
+          <p className="p-5 text-sm text-slate-500">
+            Ask a super administrator to grant detailed finance management if
+            your committee responsibilities require ledger access.
+          </p>
+        </Panel>
+      )}
     </div>
   )
 }

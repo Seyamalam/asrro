@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Eye, Flag } from "lucide-react"
+import Image from "next/image"
 import { fetchQuery } from "convex/nextjs"
 import { AnimatedNumber } from "@/components/motion/animated-number"
 import { TextReveal } from "@/components/motion/text-reveal"
@@ -17,7 +18,7 @@ const homeNewsDateFormatter = new Intl.DateTimeFormat("en-BD", {
   timeZone: "Asia/Dhaka",
 })
 export async function HomePage() {
-  const [projectResult, newsResult, statistics] = await Promise.all([
+  const [projectResult, newsResult, statistics, branding] = await Promise.all([
     fetchQuery(api.projects.listPublic, {
       featured: true,
       paginationOpts: { numItems: 3, cursor: null },
@@ -26,13 +27,24 @@ export async function HomePage() {
       paginationOpts: { numItems: 4, cursor: null },
     }),
     fetchQuery(api.content.publicStatistics),
+    fetchQuery(api.content.publicBranding),
   ])
   const projects = projectResult.page
+  const projectCovers = await Promise.all(
+    projects.map(async (project) =>
+      project.coverAssetId
+        ? await fetchQuery(api.assets.getPublicUrl, {
+            assetId: project.coverAssetId,
+          })
+        : null
+    )
+  )
   const news = newsResult.page
   const stats = [
     ["Active members", statistics.members, "+"],
     ["Built projects", statistics.projects, ""],
     ["National events", statistics.events, ""],
+    ["Alumni network", statistics.alumni, ""],
     ["Research papers", statistics.publications, ""],
   ] as const
   return (
@@ -67,11 +79,24 @@ export async function HomePage() {
               </SiteButton>
             </div>
           </div>
-          <OrbitalHero />
+          {branding.heroUrl ? (
+            <div className="relative aspect-square overflow-hidden rounded-full border border-[#2359d4]/20 dark:border-white/10">
+              <Image
+                src={branding.heroUrl}
+                alt="ASRRO current highlight"
+                fill
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                unoptimized
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <OrbitalHero />
+          )}
         </div>
       </section>
       <section className="border-b border-[#2359d4]/15 bg-white/45 px-5 sm:px-8 lg:px-12 dark:border-white/10 dark:bg-white/[.015]">
-        <div className="mx-auto grid max-w-[88rem] grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-[88rem] grid-cols-2 lg:grid-cols-5">
           {stats.map(([label, value, suffix]) => (
             <div
               key={label}
@@ -89,50 +114,97 @@ export async function HomePage() {
         </div>
       </section>
       <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-        <div className="mx-auto max-w-[88rem]">
-          <SectionHeading
-            eyebrow="Selected systems / 2024—26"
-            title="Ideas become instruments here."
-            copy="Our teams work across disciplines, moving from research question to prototype, test data, and public documentation."
-            action={
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-[#007d89] hover:text-[#2359d4] dark:text-[#65f2f1]"
-              >
-                All projects <ArrowRight className="size-4" />
-              </Link>
-            }
-          />
-          <div className="grid gap-4 lg:grid-cols-3">
-            {projects.slice(0, 3).map((project, index) => (
-              <Link
-                key={project.slug}
-                href={`/projects/${project.slug}`}
-                className="group overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white shadow-[0_16px_45px_rgba(25,55,90,.08)] transition hover:-translate-y-1 hover:border-[#00a6b2]/55 motion-reduce:transform-none dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/45"
-              >
-                <SignalVisual
-                  code={`P-${String(index + 1).padStart(2, "0")}`}
-                  className="aspect-[16/10] border-b border-[#2359d4]/15 dark:border-white/10"
-                />
-                <div className="p-6">
-                  <div className="mb-4 flex items-center justify-between font-mono text-[9px] tracking-[.16em] text-[#587084] uppercase dark:text-[#8296ad]">
-                    <span>{project.category}</span>
-                    <span className="text-[#b45f00] dark:text-[#ffb84d]">
-                      {project.projectState}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-semibold tracking-[-.035em] text-[#07111f] group-hover:text-[#007d89] dark:text-white dark:group-hover:text-[#65f2f1]">
-                    {project.title}
-                  </h3>
-                  <p className="mt-3 leading-7 text-[#4b6175] dark:text-[#9fb1c5]">
-                    {project.summary}
-                  </p>
-                </div>
-              </Link>
-            ))}
+        <div className="mx-auto grid max-w-[88rem] gap-5 lg:grid-cols-[1.15fr_.85fr_.85fr]">
+          <div className="rounded-2xl border border-[#2359d4]/15 bg-white p-8 dark:border-white/10 dark:bg-[#09182a]">
+            <p className="font-mono text-[10px] tracking-[.2em] text-[#007d89] uppercase dark:text-[#65f2f1]">
+              About ASRRO
+            </p>
+            <h2 className="mt-5 text-4xl font-semibold tracking-[-.05em]">
+              {branding.aboutTitle}
+            </h2>
+            <p className="mt-5 leading-8 text-[#425a70] dark:text-[#9fb1c5]">
+              {branding.aboutCopy}
+            </p>
+            <SiteButton href="/about" variant="ghost" className="mt-7">
+              Read our story
+            </SiteButton>
           </div>
+          <article className="rounded-2xl border border-[#2359d4]/15 bg-[#eef3ff] p-7 dark:border-[#3d8bff]/25 dark:bg-[#0b1d31]">
+            <Flag className="size-6 text-[#007d89] dark:text-[#65f2f1]" />
+            <p className="mt-12 font-mono text-[9px] tracking-[.18em] text-[#587084] uppercase dark:text-[#8296ad]">
+              Mission
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold">{branding.mission}</h3>
+          </article>
+          <article className="rounded-2xl border border-[#d97706]/20 bg-[#fff8eb] p-7 dark:border-[#ffb84d]/20 dark:bg-[#1d180e]">
+            <Eye className="size-6 text-[#b85f00] dark:text-[#ffb84d]" />
+            <p className="mt-12 font-mono text-[9px] tracking-[.18em] text-[#725017] uppercase dark:text-[#c8aa75]">
+              Vision
+            </p>
+            <h3 className="mt-3 text-2xl font-semibold">{branding.vision}</h3>
+          </article>
         </div>
       </section>
+      {branding.highlightsEnabled ? (
+        <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
+          <div className="mx-auto max-w-[88rem]">
+            <SectionHeading
+              eyebrow="Selected systems / 2024—26"
+              title="Ideas become instruments here."
+              copy="Our teams work across disciplines, moving from research question to prototype, test data, and public documentation."
+              action={
+                <Link
+                  href="/projects"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#007d89] hover:text-[#2359d4] dark:text-[#65f2f1]"
+                >
+                  All projects <ArrowRight className="size-4" />
+                </Link>
+              }
+            />
+            <div className="grid gap-4 lg:grid-cols-3">
+              {projects.slice(0, 3).map((project, index) => (
+                <Link
+                  key={project.slug}
+                  href={`/projects/${project.slug}`}
+                  className="group overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white shadow-[0_16px_45px_rgba(25,55,90,.08)] transition hover:-translate-y-1 hover:border-[#00a6b2]/55 motion-reduce:transform-none dark:border-white/10 dark:bg-[#09182a] dark:shadow-none dark:hover:border-[#65f2f1]/45"
+                >
+                  <div className="relative aspect-[16/10] border-b border-[#2359d4]/15 dark:border-white/10">
+                    {projectCovers[index] ? (
+                      <Image
+                        src={projectCovers[index]}
+                        alt={project.title}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, 100vw"
+                        unoptimized
+                        className="object-cover"
+                      />
+                    ) : (
+                      <SignalVisual
+                        code={`P-${String(index + 1).padStart(2, "0")}`}
+                        className="absolute inset-0"
+                      />
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="mb-4 flex items-center justify-between font-mono text-[9px] tracking-[.16em] text-[#587084] uppercase dark:text-[#8296ad]">
+                      <span>{project.category}</span>
+                      <span className="text-[#b45f00] dark:text-[#ffb84d]">
+                        {project.projectState}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-semibold tracking-[-.035em] text-[#07111f] group-hover:text-[#007d89] dark:text-white dark:group-hover:text-[#65f2f1]">
+                      {project.title}
+                    </h3>
+                    <p className="mt-3 leading-7 text-[#4b6175] dark:text-[#9fb1c5]">
+                      {project.summary}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
       <section className="border-y border-[#2359d4]/15 bg-[#eaf0f6] px-5 py-20 sm:px-8 lg:px-12 lg:py-24 dark:border-white/10 dark:bg-[#081524]">
         <div className="mx-auto grid max-w-[88rem] gap-12 lg:grid-cols-[.75fr_1.25fr]">
           <SectionHeading

@@ -15,9 +15,13 @@ import {
 import Link from "next/link"
 import { useState, type FormEvent, type InputHTMLAttributes } from "react"
 
+import { EventEligibilityUpload } from "@/components/site/event-eligibility-upload"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import { downloadParticipationConfirmationPdf } from "@/lib/event-documents"
+import {
+  downloadParticipationCertificatePdf,
+  downloadParticipationConfirmationPdf,
+} from "@/lib/event-documents"
 
 type Receipt = {
   registrationId: Id<"eventRegistrations">
@@ -32,6 +36,10 @@ type Receipt = {
 export function EventDetail({ slug }: { slug: string }) {
   const event = useQuery(api.events.getPublicBySlug, { slug })
   const member = useQuery(api.members.me)
+  const bannerUrl = useQuery(
+    api.assets.getPublicUrl,
+    event?.bannerAssetId ? { assetId: event.bannerAssetId } : "skip"
+  )
   const registerGuest = useMutation(api.events.registerGuest)
   const registerMember = useMutation(api.events.registerMember)
   const cancelGuest = useMutation(api.events.cancelGuest)
@@ -90,8 +98,16 @@ export function EventDetail({ slug }: { slug: string }) {
         institution: String(form.get("institution") ?? ""),
         institutionDivision:
           String(form.get("institutionDivision") ?? "") || undefined,
+        institutionEmail:
+          String(form.get("institutionEmail") ?? "") || undefined,
         studentId: String(form.get("studentId") ?? "") || undefined,
         eligibilityConfirmed: form.get("eligibilityConfirmed") === "on",
+        eligibilityEvidenceAssetId:
+          (String(
+            form.get("eligibilityEvidenceAssetId") ?? ""
+          ) as Id<"assets">) || undefined,
+        eligibilityEvidenceNote:
+          String(form.get("eligibilityEvidenceNote") ?? "") || undefined,
         transactionId: String(form.get("transactionId") ?? "") || undefined,
       })
       const participantName = String(form.get("name") ?? "")
@@ -222,6 +238,17 @@ export function EventDetail({ slug }: { slug: string }) {
         </div>
       </section>
 
+      {bannerUrl ? (
+        <div className="px-5 pb-14 sm:px-8 lg:px-12">
+          <div
+            role="img"
+            aria-label={`${event.name} event banner`}
+            className="mx-auto aspect-[21/8] max-w-[88rem] rounded-2xl bg-cover bg-center shadow-[0_20px_70px_rgba(7,17,31,.18)]"
+            style={{ backgroundImage: `url(${bannerUrl})` }}
+          />
+        </div>
+      ) : null}
+
       <section className="border-y border-[#2359d4]/15 bg-[#eaf0f6] px-5 py-10 sm:px-8 lg:px-12 dark:border-white/10 dark:bg-[#081524]">
         <dl className="mx-auto grid max-w-[88rem] gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -326,6 +353,7 @@ export function EventDetail({ slug }: { slug: string }) {
                   onSubmit={onMemberSubmit}
                   scope={event.scope}
                   paid={event.registrationFee > 0}
+                  evidenceRequired={false}
                   busy={busy}
                   member
                 />
@@ -339,6 +367,7 @@ export function EventDetail({ slug }: { slug: string }) {
                     onSubmit={onMemberSubmit}
                     scope={event.scope}
                     paid={event.registrationFee > 0}
+                    evidenceRequired={false}
                     busy={busy}
                     member
                   />
@@ -348,6 +377,10 @@ export function EventDetail({ slug }: { slug: string }) {
                   onSubmit={onGuestSubmit}
                   scope={event.scope}
                   paid={event.registrationFee > 0}
+                  evidenceRequired={
+                    event.eligibilityEvidenceRequired ??
+                    event.scope !== "national"
+                  }
                   busy={busy}
                 />
               ) : (
@@ -415,22 +448,47 @@ export function EventDetail({ slug }: { slug: string }) {
               </p>
             )}
             {lookedUp && (
-              <ReceiptCard
-                receipt={{ ...lookedUp, participantName: lookedUp.event.name }}
-                token={lookupToken}
-                onDownload={() =>
-                  downloadParticipationConfirmationPdf({
-                    registrationCode: lookedUp.registrationCode,
-                    status: lookedUp.status,
-                    participantName: "Registered participant",
-                    eventName: lookedUp.event.name,
-                    startsAt: lookedUp.event.startsAt,
-                    venue: lookedUp.event.venue,
-                  })
-                }
-                onCancel={cancelGuestRegistration}
-                busy={busy}
-              />
+              <>
+                <ReceiptCard
+                  receipt={{
+                    ...lookedUp,
+                    participantName: lookedUp.event.name,
+                  }}
+                  token={lookupToken}
+                  onDownload={() =>
+                    downloadParticipationConfirmationPdf({
+                      registrationCode: lookedUp.registrationCode,
+                      status: lookedUp.status,
+                      participantName: "Registered participant",
+                      eventName: lookedUp.event.name,
+                      startsAt: lookedUp.event.startsAt,
+                      venue: lookedUp.event.venue,
+                    })
+                  }
+                  onCancel={cancelGuestRegistration}
+                  busy={busy}
+                />
+                {lookedUp.certificateCode && lookedUp.certificateIssuedAt ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void downloadParticipationCertificatePdf({
+                        registrationCode: lookedUp.registrationCode,
+                        status: lookedUp.status,
+                        participantName: "Registered participant",
+                        eventName: lookedUp.event.name,
+                        startsAt: lookedUp.event.startsAt,
+                        venue: lookedUp.event.venue,
+                        certificateCode: lookedUp.certificateCode!,
+                        issuedAt: lookedUp.certificateIssuedAt!,
+                      })
+                    }
+                    className="mt-3 inline-flex min-h-10 items-center gap-2 border border-[#2359d4]/20 px-4 text-xs font-semibold text-violet-600 dark:border-white/15"
+                  >
+                    <Download className="size-3.5" /> Download certificate
+                  </button>
+                ) : null}
+              </>
             )}
           </div>
         </div>
@@ -443,12 +501,14 @@ function RegistrationForm({
   onSubmit,
   scope,
   paid,
+  evidenceRequired,
   busy,
   member = false,
 }: {
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>
   scope: "intra_cuet" | "divisional" | "national"
   paid: boolean
+  evidenceRequired: boolean
   busy: boolean
   member?: boolean
 }) {
@@ -466,7 +526,15 @@ function RegistrationForm({
         </>
       )}
       {scope === "intra_cuet" && !member && (
-        <Input name="studentId" label="CUET student ID" required />
+        <>
+          <Input name="studentId" label="CUET student ID" required />
+          <Input
+            name="institutionEmail"
+            label="CUET institutional email"
+            type="email"
+            required
+          />
+        </>
       )}
       {scope === "divisional" && (
         <Input
@@ -478,6 +546,16 @@ function RegistrationForm({
       )}
       {paid && (
         <Input name="transactionId" label="Payment transaction ID" required />
+      )}
+      {member ? null : (
+        <>
+          <EventEligibilityUpload required={evidenceRequired} />
+          <Input
+            name="eligibilityEvidenceNote"
+            label="Evidence note"
+            placeholder="Program, department, team, or other context"
+          />
+        </>
       )}
       <label className="flex gap-3 text-sm leading-5 sm:col-span-2">
         <input

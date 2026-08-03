@@ -11,6 +11,7 @@ import {
 import { PageHero } from "@/components/shared/page-hero"
 import { SectionHeading } from "@/components/shared/section-heading"
 import { api } from "@/convex/_generated/api"
+import { RichText } from "@/components/shared/rich-text"
 
 export const metadata: Metadata = {
   title: "About",
@@ -72,36 +73,24 @@ const values = [
 ]
 export default async function AboutPage() {
   const managed = await fetchQuery(api.content.getPage, { slug: "about" })
-  if (managed) {
-    return (
-      <>
-        <PageHero
-          eyebrow="Organization / managed content"
-          title={managed.title}
-          intro={
-            managed.summary ??
-            "Learn about ASRRO's mission and research culture."
-          }
-        />
-        <section className="px-5 py-20 sm:px-8 lg:px-12">
-          <div className="mx-auto max-w-3xl space-y-7 text-lg leading-9 text-[#425a70] dark:text-[#b9c8d9]">
-            {managed.body.split(/\n{2,}/).map((paragraph) => (
-              <p key={paragraph.slice(0, 80)} className="whitespace-pre-wrap">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </section>
-      </>
-    )
-  }
   return (
     <>
       <PageHero
         eyebrow="Organization / since 2016"
-        title="A workshop for the possible."
-        intro="ASRRO gives CUET students the space, collaborators, and discipline to move from curiosity to credible frontier-technology research."
+        title={managed?.title ?? "A workshop for the possible."}
+        intro={
+          managed?.summary ??
+          "ASRRO gives CUET students the space, collaborators, and discipline to move from curiosity to credible frontier-technology research."
+        }
       />
+      {managed ? (
+        <section className="px-5 pt-16 sm:px-8 lg:px-12">
+          <RichText
+            value={managed.body}
+            className="mx-auto max-w-3xl text-lg leading-9 text-[#425a70] dark:text-[#b9c8d9]"
+          />
+        </section>
+      ) : null}
       <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
         <div className="mx-auto max-w-[88rem]">
           <div className="grid gap-4 lg:grid-cols-2">

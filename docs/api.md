@@ -1,29 +1,96 @@
 # Application API guide
 
-Convex functions are the application's typed API. Generated references in `convex/_generated/api` are consumed with `useQuery`, `useMutation`, or server-side Convex clients.
+The generated client in `convex/_generated/api` exposes the typed backend
+contract. Browser code calls queries and mutations through the application
+provider; server-rendered routes use the authenticated server client. Internal
+functions and actions are never callable directly from a browser.
 
-## Public reads
+## Public content and discovery
 
-Public pages read bounded or paginated lists for events, projects, alumni, committee members, publications, posts, gallery albums, and site settings. Detail reads accept typed document IDs or indexed slugs.
+| Module         | Public functions                                                                  | Purpose                                                                   |
+| -------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `content`      | `getPage`, `listPages`, `publicSettings`, `publicBranding`, `publicStatistics`    | Published pages, brand, home sections, contact/social data and statistics |
+| `projects`     | `listPublic`, `getPublicBySlug`                                                   | Paginated project portfolio and detail                                    |
+| `events`       | `listPublic`, `listPast`, `listDirectory`, `listDirectoryPage`, `getPublicBySlug` | Event cards, calendar, archive and detail                                 |
+| `alumni`       | `listPublic`, `getPublicBySlug`                                                   | Alumni directory and profile detail                                       |
+| `committee`    | `current`, `currentWithPhotos`                                                    | Current committee and photographs                                         |
+| `publications` | `listPublic`, `getPublicBySlug`, `listPublicCards`                                | Downloadable publications                                                 |
+| `blogs`        | `listPublic`, `searchPublic`, `getPublicBySlug`, `listComments`                   | Published news, rich content and approved comments                        |
+| `gallery`      | `listPublicAlbums`, `getPublicAlbum`, `listPublicCards`                           | Event-linked albums, images and videos                                    |
+| `search`       | `publicSearch`                                                                    | Bounded cross-content search                                              |
 
-## Public writes
+Public writes are `membership.submitApplication`,
+`membership.trackApplication`, `events.registerGuest`,
+`events.cancelGuest`, `events.getGuestRegistrationStatus`,
+`blogs.submitComment`, and `contact.submit`. Each receives a complete typed
+argument object, normalizes text/email values, validates scope-specific rules,
+and returns only the record or receipt needed by the public workflow.
 
-- Submit a membership application.
-- Register or cancel an eligible event registration before its deadline.
-- Send a contact message.
+## Member API
 
-Every write validates its complete argument shape. Membership and event workflows derive authority from the authenticated identity rather than accepting an arbitrary user ID.
+| Module                     | Functions                                                     | Authorization                                                           |
+| -------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `members`                  | `me`, `myMembership`, `updateMyProfile`, `linkMyIdentity`     | Current authenticated member only                                       |
+| `membership`               | `accountStatus`, `linkApplicationToMyAccount`                 | Current authenticated account only                                      |
+| `events`                   | `registerMember`, `cancelMine`, `listMine`, `memberDashboard` | Active member and own registrations                                     |
+| `notifications`            | `listMine`, `listForAccount`, `markRead`, `markAllRead`       | Current account/member only                                             |
+| `members.verifyMembership` | public UUID lookup                                            | Returns the bounded verification projection, never private contact data |
 
-## Member reads
+Pending or rejected applicants are redirected to the applicant-status surface;
+the same restriction is enforced by backend member requirements.
 
-Authenticated members can read their own profile, membership card data, event history, receipts, and notifications. These functions never return another member's private fields.
+## Administrative API
 
-## Administrative operations
+| Capability         | Functions                                                                                                                     | Required permission                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Applications       | `membership.listApplications`, `reviewApplication`, `bulkApproveApplications`, `upsertUuidMapping`                            | `membership_manage` (mapping requires super admin)                    |
+| Members            | `members.list`, `getByUuid`, `setStatus`, `searchAdmin`, `adminUpdate`, `remove`                                              | `membership_manage`                                                   |
+| Roles              | `members.setRole`, `setExecutiveAccess`                                                                                       | Super admin                                                           |
+| Accounts           | `adminAccounts.createExecutive`, `resetPassword`                                                                              | Super admin plus configured administrator account ID                  |
+| Events             | `events.listManagedEvents`, `paginateManagedEvents`, `upsert`, `archive`, `remove`, `clone`                                   | `events_manage`                                                       |
+| Registrations      | `events.listManagedRegistrations`, `paginateManagedRegistrations`, `reviewRegistration`, `markAttendance`, `issueCertificate` | `events_manage`                                                       |
+| Committee          | `committee.listAdmin`, `upsertTerm`, `upsertMember`, `sendAnnouncement`                                                       | `committee_manage`; announcements also require notification authority |
+| Alumni             | `alumni.listAdmin`, `upsert`                                                                                                  | `content_manage`                                                      |
+| Projects           | `projects.listAdmin`, `upsert`, `upsertTeamMember`                                                                            | `projects_manage`                                                     |
+| Publications       | `publications.listAdmin`, `upsert`                                                                                            | `content_manage`                                                      |
+| News/comments      | `blogs.listAdmin`, `upsert`, `listCommentsAdmin`, `moderateComment`                                                           | `content_manage`                                                      |
+| Gallery            | `gallery.listAdmin`, `upsertAlbum`, `upsertItem`                                                                              | `content_manage`                                                      |
+| Contact inbox      | `contact.list`, `updateStatus`                                                                                                | `content_manage`                                                      |
+| Site configuration | `content.listPagesAdmin`, `upsertPage`, `upsertSetting`, `listSettingsAdmin`                                                  | `content_manage` or super admin for private brand/template settings   |
+| Reports            | `reports.memberRoster`, `pendingApplications`, `eventAttendance`, `committeeRoster`, `projectInventory`                       | `reports_view` plus domain permission where applicable                |
 
-Executive operations include application approval/rejection, member status updates, event and content management, attendance, committee maintenance, finance entries, and report datasets. Functions enforce role permissions server-side; hiding controls in the browser is only a usability layer.
+## Finance
 
-Account creation and password changes are handled by the authentication routes. Outbound email delivery is deliberately disabled until an organization-owned mail provider and credentials are configured; in-app notifications remain available.
+`finance.access` returns `manage`, `summary`, or `none` for the authenticated
+member. `finance.summaryView` exposes aggregate totals, monthly series, and
+expense categories to explicit `finance_summary` holders. Detailed ledger
+queries and `createTransaction`, `postDraft`, and `voidTransaction` require
+`finance_manage`. `financeBudgets.list` and `financeBudgets.upsert` also require
+detailed finance access. The distinction and denial behavior are covered by
+`convex/finance.test.ts`.
 
-## Error handling
+## Files and email
 
-User-correctable failures use concise messages suitable for form feedback. Authorization failures do not disclose whether a private record exists. Export formatting belongs in a bounded action or client worker so database transactions remain short.
+`assets.generateUploadUrl` and `assets.registerUpload` require file authority;
+application-specific upload functions accept only the public membership file
+classes. Registration records enforce MIME type, size, role/ownership, and
+public/private access. `getOwnedUrl`, `deleteOwned`, and `listAdmin` re-check
+authorization before exposing or changing a stored object.
+
+`emails.enqueue` and `emailActions.deliver` form the internal durable outbox.
+Membership decisions, event reminders, registration confirmation,
+certificates, bulk member mail, and committee announcements enqueue provider
+messages while retaining dashboard notifications. Administrators with
+`notifications_send` may inspect delivery state through `emails.list`.
+
+## Pagination, errors and exports
+
+Directory and administrative list functions use cursor pagination where data
+can grow. Export controls continue loading pages before building CSV, XLSX, or
+PDF artifacts, so an export is not limited to the visible table page.
+
+User-correctable failures use concise `ConvexError` messages suitable for form
+feedback. Authorization failures do not disclose whether another user's
+private record exists. Database functions return bounded data; document
+generation lives in `lib/dashboard-exports.ts`, `lib/event-documents.ts`,
+`lib/committee-pdf.ts`, `lib/membership-pdf.ts`, and `lib/project-pdf.ts`.

@@ -19,6 +19,7 @@ public_routes=(
   "public-committee|/committee"
   "public-contact|/contact"
   "public-gallery|/gallery"
+  "gallery-riverwatch-field-tests|/gallery/riverwatch-field-tests"
   "public-membership|/membership"
   "public-membership-status|/membership/status"
   "public-membership-verification|/membership/verify/AR-901"
@@ -50,11 +51,13 @@ dashboard_routes=(
   "dashboard-content|/dashboard/content"
   "dashboard-reports|/dashboard/reports"
   "dashboard-settings|/dashboard/settings"
+  "dashboard-files|/dashboard/files"
 )
 
 capture_routes() {
   local session="$1"
-  shift
+  local viewport="$2"
+  shift 2
   local entries=("$@")
 
   for entry in "${entries[@]}"; do
@@ -63,7 +66,7 @@ capture_routes() {
     agent-browser --session "$session" open "${BASE_URL}${route}" >/dev/null
     agent-browser --session "$session" wait 1200 >/dev/null
     capture_current_page "$session" \
-      "${OUTPUT_DIR}/${name}-light-desktop.png"
+      "${OUTPUT_DIR}/${name}-light-${viewport}.png"
     echo "Captured ${route}"
   done
 }
@@ -80,7 +83,7 @@ agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" set viewport 1440 1000 >/dev/null
 agent-browser --session "$PUBLIC_SESSION" eval \
   'localStorage.setItem("theme", "light")' >/dev/null
-capture_routes "$PUBLIC_SESSION" "${public_routes[@]}"
+capture_routes "$PUBLIC_SESSION" "desktop" "${public_routes[@]}"
 
 agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" eval \
@@ -94,17 +97,13 @@ agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
 capture_current_page "$PUBLIC_SESSION" \
   "${OUTPUT_DIR}/auth-login-dark-desktop.png"
 
-agent-browser --session "$PUBLIC_SESSION" set viewport 390 844 >/dev/null
+agent-browser --session "$PUBLIC_SESSION" set viewport 768 1024 >/dev/null
 agent-browser --session "$PUBLIC_SESSION" eval \
   'localStorage.setItem("theme", "light")' >/dev/null
-agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
-agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-capture_current_page "$PUBLIC_SESSION" \
-  "${OUTPUT_DIR}/public-home-light-mobile.png"
-agent-browser --session "$PUBLIC_SESSION" open "${BASE_URL}/login" >/dev/null
-agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-capture_current_page "$PUBLIC_SESSION" \
-  "${OUTPUT_DIR}/auth-login-light-mobile.png"
+capture_routes "$PUBLIC_SESSION" "tablet" "${public_routes[@]}"
+
+agent-browser --session "$PUBLIC_SESSION" set viewport 390 844 >/dev/null
+capture_routes "$PUBLIC_SESSION" "mobile" "${public_routes[@]}"
 
 if [[ -z "${ASRRO_SCREENSHOT_EMAIL:-}" || -z "${ASRRO_SCREENSHOT_PASSWORD:-}" ]]; then
   echo "Public screenshots complete. Set ASRRO_SCREENSHOT_EMAIL and ASRRO_SCREENSHOT_PASSWORD to capture dashboard routes."
@@ -125,7 +124,7 @@ agent-browser --session "$DASHBOARD_SESSION" find role button click \
   --name "Enter mission portal" >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" wait --text "Overview" >/dev/null
 
-capture_routes "$DASHBOARD_SESSION" "${dashboard_routes[@]}"
+capture_routes "$DASHBOARD_SESSION" "desktop" "${dashboard_routes[@]}"
 
 agent-browser --session "$DASHBOARD_SESSION" eval \
   'localStorage.setItem("theme", "dark")' >/dev/null
@@ -134,13 +133,13 @@ agent-browser --session "$DASHBOARD_SESSION" wait 1200 >/dev/null
 capture_current_page "$DASHBOARD_SESSION" \
   "${OUTPUT_DIR}/dashboard-overview-dark-desktop.png"
 
-agent-browser --session "$DASHBOARD_SESSION" set viewport 390 844 >/dev/null
+agent-browser --session "$DASHBOARD_SESSION" set viewport 768 1024 >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" eval \
   'localStorage.setItem("theme", "light")' >/dev/null
-agent-browser --session "$DASHBOARD_SESSION" open "${BASE_URL}/dashboard" >/dev/null
-agent-browser --session "$DASHBOARD_SESSION" wait 1200 >/dev/null
-capture_current_page "$DASHBOARD_SESSION" \
-  "${OUTPUT_DIR}/dashboard-overview-light-mobile.png"
+capture_routes "$DASHBOARD_SESSION" "tablet" "${dashboard_routes[@]}"
+
+agent-browser --session "$DASHBOARD_SESSION" set viewport 390 844 >/dev/null
+capture_routes "$DASHBOARD_SESSION" "mobile" "${dashboard_routes[@]}"
 
 if [[ -n "${ASRRO_SCREENSHOT_PENDING_EMAIL:-}" && -n "${ASRRO_SCREENSHOT_PENDING_PASSWORD:-}" ]]; then
   agent-browser --session "$APPLICANT_SESSION" open "${BASE_URL}/login" >/dev/null
@@ -157,6 +156,12 @@ if [[ -n "${ASRRO_SCREENSHOT_PENDING_EMAIL:-}" && -n "${ASRRO_SCREENSHOT_PENDING
   agent-browser --session "$APPLICANT_SESSION" wait 1200 >/dev/null
   capture_current_page "$APPLICANT_SESSION" \
     "${OUTPUT_DIR}/applicant-status-light-desktop.png"
+  agent-browser --session "$APPLICANT_SESSION" set viewport 768 1024 >/dev/null
+  capture_current_page "$APPLICANT_SESSION" \
+    "${OUTPUT_DIR}/applicant-status-light-tablet.png"
+  agent-browser --session "$APPLICANT_SESSION" set viewport 390 844 >/dev/null
+  capture_current_page "$APPLICANT_SESSION" \
+    "${OUTPUT_DIR}/applicant-status-light-mobile.png"
   agent-browser --session "$APPLICANT_SESSION" close >/dev/null
 fi
 

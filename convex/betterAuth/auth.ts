@@ -1,6 +1,7 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth"
 import { convex } from "@convex-dev/better-auth/plugins"
 import { betterAuth, type BetterAuthOptions } from "better-auth"
+import { admin } from "better-auth/plugins"
 
 import { components } from "../_generated/api"
 import type { DataModel } from "../_generated/dataModel"
@@ -23,6 +24,13 @@ function getTrustedOrigins() {
     .filter((origin): origin is string => Boolean(origin))
 }
 
+function getBetterAuthAdminIds() {
+  return (process.env.BETTER_AUTH_ADMIN_USER_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean)
+}
+
 export function createAuthOptions(ctx: GenericCtx<DataModel>) {
   return {
     appName: "ASRRO Portal",
@@ -37,7 +45,10 @@ export function createAuthOptions(ctx: GenericCtx<DataModel>) {
       minPasswordLength: 8,
       maxPasswordLength: 128,
     },
-    plugins: [convex({ authConfig })],
+    plugins: [
+      admin({ adminUserIds: getBetterAuthAdminIds() }),
+      convex({ authConfig }),
+    ],
   } satisfies BetterAuthOptions
 }
 

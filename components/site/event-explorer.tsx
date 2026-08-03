@@ -1,7 +1,14 @@
 "use client"
 
-import { useQuery } from "convex/react"
-import { ArrowUpRight, CalendarDays, Grid2X2, MapPin } from "lucide-react"
+import { usePaginatedQuery } from "convex/react"
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Grid2X2,
+  MapPin,
+} from "lucide-react"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 
@@ -35,7 +42,23 @@ type DirectoryEvent = Doc<"events"> & {
 
 export function EventExplorer() {
   const [now] = useState(() => Date.now())
-  const events = useQuery(api.events.listDirectory, { now })
+  const publishedQuery = usePaginatedQuery(
+    api.events.listDirectoryPage,
+    { status: "published", now },
+    { initialNumItems: 50 }
+  )
+  const completedQuery = usePaginatedQuery(
+    api.events.listDirectoryPage,
+    { status: "completed", now },
+    { initialNumItems: 50 }
+  )
+  const events = useMemo(
+    () =>
+      [...publishedQuery.results, ...completedQuery.results].toSorted(
+        (a, b) => b.startsAt - a.startsAt
+      ),
+    [completedQuery.results, publishedQuery.results]
+  )
   const [status, setStatus] = useState("upcoming")
   const [mode, setMode] = useState<"cards" | "calendar">("cards")
   const list = useMemo(
@@ -94,7 +117,8 @@ export function EventExplorer() {
         </div>
       </div>
 
-      {events === undefined ? (
+      {publishedQuery.status === "LoadingFirstPage" ||
+      completedQuery.status === "LoadingFirstPage" ? (
         <EventGridSkeleton />
       ) : list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[#2359d4]/25 p-12 text-center text-sm text-[#587084] dark:border-white/15 dark:text-[#8296ad]">
@@ -109,6 +133,25 @@ export function EventExplorer() {
       ) : (
         <CalendarMode list={list} />
       )}
+      {publishedQuery.status === "CanLoadMore" ||
+      completedQuery.status === "CanLoadMore" ? (
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              if (publishedQuery.status === "CanLoadMore") {
+                publishedQuery.loadMore(50)
+              }
+              if (completedQuery.status === "CanLoadMore") {
+                completedQuery.loadMore(50)
+              }
+            }}
+            className="min-h-10 border border-[#2359d4]/20 px-5 text-sm font-semibold text-[#007d89] dark:border-white/15 dark:text-[#65f2f1]"
+          >
+            Load more events
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -175,45 +218,94 @@ function PublicEventCard({ event }: { event: DirectoryEvent }) {
 }
 
 function CalendarMode({ list }: { list: DirectoryEvent[] }) {
-  const grouped = new Map<string, DirectoryEvent[]>()
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const anchor = list.find((event) => event.startsAt >= Date.now())?.startsAt
+    const date = new Date(anchor ?? Date.now())
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+  })
+  const year = visibleMonth.getFullYear()
+  const month = visibleMonth.getMonth()
+  const leadingDays = new Date(year, month, 1).getDay()
+  const cells = Array.from(
+    { length: 42 },
+    (_, index) => new Date(year, month, index - leadingDays + 1)
+  )
+  const eventsByDay = new Map<string, DirectoryEvent[]>()
   for (const event of list) {
-    const month = eventMonthYearFormatter.format(event.startsAt)
-    grouped.set(month, [...(grouped.get(month) ?? []), event])
+    const date = new Date(event.startsAt)
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+    eventsByDay.set(key, [...(eventsByDay.get(key) ?? []), event])
   }
   return (
-    <div className="grid gap-5 md:grid-cols-2">
-      {[...grouped].map(([month, events]) => (
-        <section
-          key={month}
-          className="overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white dark:border-white/10 dark:bg-[#09182a]"
+    <section className="overflow-hidden rounded-xl border border-[#2359d4]/15 bg-white dark:border-white/10 dark:bg-[#09182a]">
+      <div className="flex items-center justify-between border-b border-[#2359d4]/15 px-4 py-3 dark:border-white/10">
+        <button
+          type="button"
+          aria-label="Previous month"
+          onClick={() => setVisibleMonth(new Date(year, month - 1, 1))}
+          className="grid size-10 place-items-center hover:bg-[#2359d4]/5 dark:hover:bg-white/5"
         >
-          <h2 className="border-b border-[#2359d4]/15 px-5 py-4 text-sm font-semibold dark:border-white/10">
-            {month}
-          </h2>
-          <div className="divide-y divide-[#2359d4]/10 dark:divide-white/8">
-            {events.map((event) => (
-              <Link
-                key={event._id}
-                href={`/events/${event.slug}`}
-                className="flex min-h-16 items-center gap-4 px-5 py-3 hover:bg-[#2359d4]/5 dark:hover:bg-white/5"
-              >
-                <span className="w-8 text-center text-2xl font-semibold">
-                  {eventDayFormatter.format(event.startsAt)}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">
-                    {event.name}
-                  </span>
-                  <span className="mt-1 block text-xs text-[#587084] dark:text-[#8296ad]">
-                    {eventTimeFormatter.format(event.startsAt)} · {event.venue}
-                  </span>
-                </span>
-              </Link>
-            ))}
+          <ChevronLeft className="size-4" />
+        </button>
+        <h2 className="text-sm font-semibold">
+          {eventMonthYearFormatter.format(visibleMonth)}
+        </h2>
+        <button
+          type="button"
+          aria-label="Next month"
+          onClick={() => setVisibleMonth(new Date(year, month + 1, 1))}
+          className="grid size-10 place-items-center hover:bg-[#2359d4]/5 dark:hover:bg-white/5"
+        >
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 border-b border-[#2359d4]/10 text-center font-mono text-[9px] tracking-[.14em] text-[#587084] uppercase dark:border-white/8 dark:text-[#8296ad]">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+          <div key={day} className="px-1 py-3">
+            {day}
           </div>
-        </section>
-      ))}
-    </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {cells.map((date) => {
+          const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+          const dayEvents = eventsByDay.get(key) ?? []
+          const inMonth = date.getMonth() === month
+          return (
+            <div
+              key={date.toISOString()}
+              className={cn(
+                "min-h-24 border-r border-b border-[#2359d4]/10 p-1.5 sm:min-h-32 sm:p-2 dark:border-white/8",
+                !inMonth &&
+                  "bg-[#eef3f8]/55 text-[#8296ad] dark:bg-[#06101f]/60"
+              )}
+            >
+              <span className="text-xs font-semibold">{date.getDate()}</span>
+              <div className="mt-1 grid gap-1">
+                {dayEvents.slice(0, 3).map((event) => (
+                  <Link
+                    key={event._id}
+                    href={`/events/${event.slug}`}
+                    title={`${event.name} · ${event.venue}`}
+                    className="block truncate rounded-sm bg-[#57e6e6]/25 px-1.5 py-1 text-[9px] font-semibold text-[#075f68] hover:bg-[#57e6e6]/45 sm:text-[10px] dark:text-[#9effff]"
+                  >
+                    <span className="hidden sm:inline">
+                      {eventTimeFormatter.format(event.startsAt)} ·{" "}
+                    </span>
+                    {event.name}
+                  </Link>
+                ))}
+                {dayEvents.length > 3 ? (
+                  <span className="text-[9px] text-[#587084] dark:text-[#8296ad]">
+                    +{dayEvents.length - 3} more
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 

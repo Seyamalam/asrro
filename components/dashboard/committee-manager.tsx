@@ -18,6 +18,7 @@ export function CommitteeManager() {
   const data = useQuery(api.committee.listAdmin)
   const saveTerm = useMutation(api.committee.upsertTerm)
   const saveMember = useMutation(api.committee.upsertMember)
+  const sendAnnouncement = useMutation(api.committee.sendAnnouncement)
   const [photo, setPhoto] = useState<Id<"assets">>()
   const [message, setMessage] = useState("")
   const current = data?.terms.find((term) => term.status === "current")
@@ -56,6 +57,20 @@ export function CommitteeManager() {
     form.reset()
     setPhoto(undefined)
     setMessage("Committee member saved.")
+  }
+  async function emailCommittee() {
+    const subject = prompt("Committee announcement subject")
+    if (!subject) return
+    const body = prompt("Committee announcement")
+    if (!body) return
+    try {
+      const result = await sendAnnouncement({ subject, message: body })
+      setMessage(
+        `Queued ${result.queued} committee email${result.queued === 1 ? "" : "s"}.`
+      )
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Announcement failed")
+    }
   }
   const field = (name: string, placeholder: string, type = "text") => (
     <input
@@ -117,6 +132,9 @@ export function CommitteeManager() {
       <p role="status" className="text-sm text-emerald-600">
         {message}
       </p>
+      <ActionButton variant="secondary" onClick={() => void emailCommittee()}>
+        Email current committee
+      </ActionButton>
       <Panel
         title={current ? `Current roster · ${current.name}` : "Current roster"}
       >
