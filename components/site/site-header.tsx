@@ -114,7 +114,7 @@ export function SiteHeader() {
             ⌘K
           </kbd>
         </button>
-        <ThemeToggle className="hidden xl:inline-flex" showLabel />
+        <ThemeToggle className="hidden xl:inline-grid" />
         <Link
           href="/membership"
           className="hidden min-h-11 items-center bg-[#07111f] px-4 text-sm font-semibold text-white transition hover:bg-[#2359d4] sm:flex dark:bg-[#65f2f1] dark:text-[#03101e] dark:hover:bg-[#8bf7f5]"
@@ -185,7 +185,7 @@ export function SiteHeader() {
               <LogIn className="size-4" />
               Member dashboard
             </Link>
-            <ThemeToggle className="mt-2" showLabel />
+            <ThemeToggle className="mt-2 ml-auto" />
           </div>
         </nav>
       ) : null}

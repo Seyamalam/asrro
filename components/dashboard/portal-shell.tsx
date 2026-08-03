@@ -12,12 +12,10 @@ import {
   Gauge,
   LogOut,
   Menu,
-  Moon,
   PanelLeftClose,
   Search,
   Settings,
   ShieldCheck,
-  Sun,
   UserRound,
   UsersRound,
   X,
@@ -27,7 +25,6 @@ import { useQuery } from "convex/react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { useMemo, useState, type ReactNode } from "react"
 
 import {
@@ -52,6 +49,7 @@ import {
   CommandPalette,
   type CommandItem,
 } from "@/components/motion/command-palette"
+import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { api } from "@/convex/_generated/api"
 import type { PortalRole } from "@/data/dashboard-data"
 import { authClient } from "@/lib/auth-client"
@@ -181,7 +179,6 @@ function ShellTopbar({
   initials: string
 }) {
   const pathname = usePathname()
-  const { resolvedTheme, setTheme } = useTheme()
   const active = [...memberNav, ...executiveNav].find((item) =>
     isActivePath(pathname, item.href)
   )
@@ -221,17 +218,7 @@ function ShellTopbar({
       >
         <Search className="size-4" />
       </button>
-      <button
-        type="button"
-        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-        aria-label="Toggle light and dark theme"
-        title="Toggle light and dark theme (D)"
-        className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition outline-none hover:border-cyan-300 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-500 lg:px-3 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-cyan-400/40 dark:hover:text-white"
-      >
-        <Sun className="hidden size-4 dark:block" aria-hidden />
-        <Moon className="size-4 dark:hidden" aria-hidden />
-        <span className="hidden lg:inline">Theme</span>
-      </button>
+      <ThemeToggle className="size-10 rounded-lg border-slate-200 bg-white shadow-none dark:border-white/10 dark:bg-white/5" />
       <Link
         href="/dashboard/notifications"
         aria-label="Notifications"

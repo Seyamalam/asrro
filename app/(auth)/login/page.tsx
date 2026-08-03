@@ -40,10 +40,7 @@ export default async function LoginPage({
         aria-hidden
         className="absolute inset-0 [background-image:linear-gradient(rgba(15,23,42,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.08)_1px,transparent_1px)] [background-size:72px_72px] opacity-40 dark:[background-image:linear-gradient(rgba(255,255,255,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.1)_1px,transparent_1px)] dark:opacity-[0.08]"
       />
-      <ThemeToggle
-        showLabel
-        className="fixed top-5 right-5 z-30 sm:top-7 sm:right-7"
-      />
+      <ThemeToggle className="fixed top-5 right-5 z-30 sm:top-7 sm:right-7" />
 
       <div className="relative mx-auto grid min-h-svh max-w-[94rem] lg:grid-cols-[1.05fr_0.95fr]">
         <section className="hidden min-h-svh flex-col justify-between border-r border-slate-300/70 p-12 lg:flex xl:p-16 dark:border-white/8">
