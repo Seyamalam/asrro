@@ -2,7 +2,8 @@
 
 The public website and organization-management workspace for the Andromeda Space and Robotics Research Organization at CUET, Bangladesh.
 
-The application combines a fast editorial public site with a member portal and role-aware executive dashboard. It is built with Next.js 16, React 19, Convex, Tailwind CSS 4, and vendored [BeUI](https://beui.dev/) motion primitives.
+The application combines a public organizational website, a member portal, and
+role-aware operational dashboards.
 
 ## Product areas
 
@@ -12,20 +13,47 @@ The application combines a fast editorial public site with a member portal and r
 - Executive workflows for members, committees, projects, content, reports, and settings.
 - Restricted finance views for income, expenses, budgets, trends, and reporting periods.
 
-## Local development
+## Run locally
 
-Requirements: Bun 1.3+, Node.js 20+, and a Convex deployment.
+You need Bun 1.3 or newer and access to the project’s backend workspace.
+
+1. Clone the repository and install dependencies.
 
 ```bash
+git clone https://github.com/Seyamalam/asrro.git
+cd asrro
 bun install
-cp .env.example .env.local
+```
+
+2. Create or select a development backend. This command writes the generated
+   public endpoints to `.env.local` and keeps the backend synchronized while
+   you work.
+
+```bash
 bunx convex dev
+```
+
+3. In another terminal, configure the local frontend origin and authentication
+   secret. Enter the secret interactively so it is not saved in shell history.
+
+```bash
+bunx convex env set SITE_URL http://localhost:3000
+bunx convex env set TRUSTED_ORIGINS http://localhost:3000
+bunx convex env set BETTER_AUTH_SECRET
+```
+
+4. Start the website.
+
+```bash
 bun dev
 ```
 
-Open `http://localhost:3000`. Use **Dashboard** in the header or visit
-`/login`, create an email/password account, and you will be taken directly to
-`/dashboard`. Development authentication does not send a verification code.
+Open `http://localhost:3000`. Public pages work without signing in. Visit
+`/login` to test authenticated areas; development authentication does not send
+a verification code. On a completely empty deployment, create the first
+account and open `/applicant-status`; the one-time initialization form creates
+the initial administrator. It disappears permanently after the first member is
+created.
 
 ## Public demo accounts
 
@@ -44,7 +72,7 @@ are intentionally public and must never be used for personal, confidential, or
 production data. A fresh Convex deployment has a separate database, so these
 accounts must be created again when setting up another deployment.
 
-## Environment
+## Environment variables
 
 ```dotenv
 CONVEX_DEPLOYMENT=
@@ -52,17 +80,12 @@ NEXT_PUBLIC_CONVEX_URL=
 NEXT_PUBLIC_CONVEX_SITE_URL=
 ```
 
-Never commit `.env.local`. Better Auth is configured in
-`convex/betterAuth/auth.ts`, with Convex JWT discovery in
-`convex/auth.config.ts`.
-
-Set `SITE_URL` and `BETTER_AUTH_SECRET` in the Convex deployment environment.
-`SITE_URL` must be the canonical frontend origin, such as
-`https://asrro.vercel.app`. If the same Convex deployment also serves local or
-preview frontends, set `TRUSTED_ORIGINS` to a comma-separated allowlist such as
-`http://localhost:3000`. Approved members can link their portal identity to the
-existing role-aware member record; new accounts initially receive member-level
-navigation.
+Never commit `.env.local`. `SITE_URL`, `TRUSTED_ORIGINS`, and
+`BETTER_AUTH_SECRET` belong in the backend
+deployment environment, not `.env.local`. `SITE_URL` must be one exact origin,
+for example `https://asrro.vercel.app`, with no path or trailing slash.
+`TRUSTED_ORIGINS` is a comma-separated list of any additional local or preview
+origins allowed to authenticate.
 
 ## Quality checks
 
@@ -74,36 +97,54 @@ bun run doctor
 bun run build
 ```
 
-Husky runs lint-staged, a full TypeScript check, and staged React Doctor
-diagnostics before commits. Start the local React Scan workflow with
-`bun run dev:scan`.
+Run the complete local validation before opening a pull request:
+
+```bash
+bun run check
+bun run build
+```
 
 ## Screenshots
 
 The complete public-site and authenticated-dashboard gallery is maintained in
 [screenshots.md](screenshots.md).
 
-## Structure
-
-```text
-app/(site)             public routes and shared site layout
-app/(portal)/dashboard member and administration routes
-components/site        public product components
-components/dashboard   portal shell and data interfaces
-components/motion      vendored BeUI motion primitives
-convex                  schema and domain functions
-content, data           typed display data and fixtures
-docs                    architecture, API, data model, and user guide
-```
-
-See [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), and [user guide](docs/user-guide.md).
+See [architecture](docs/architecture.md), [data model](docs/data-model.md), [API guide](docs/api.md), [user guide](docs/user-guide.md), and the [verification record](docs/verification.md).
 
 ## Deployment
 
-1. Configure the production Convex deployment and Better Auth environment.
-2. Run `bunx convex deploy` after confirming the target deployment.
-3. Build with `bun run build` and deploy the Next.js output to a compatible host.
-4. Set the three environment variables above and update the canonical `metadataBase` in `app/layout.tsx` if the final domain differs from `asrro.org`.
+The current public deployment is <https://asrro.vercel.app>.
+
+1. Create the production backend and deploy its schema and functions.
+
+```bash
+bunx convex deploy
+```
+
+2. In the production backend environment, set the canonical website origin,
+   any additional preview origins, and a unique production secret.
+
+```bash
+bunx convex env set --prod SITE_URL https://your-domain.example
+bunx convex env set --prod TRUSTED_ORIGINS https://your-preview.example
+bunx convex env set --prod BETTER_AUTH_SECRET
+```
+
+3. In the frontend hosting project, configure:
+
+```dotenv
+CONVEX_DEPLOYMENT=prod:<deployment-name>
+NEXT_PUBLIC_CONVEX_URL=https://<deployment-name>.convex.cloud
+NEXT_PUBLIC_CONVEX_SITE_URL=https://<deployment-name>.convex.site
+```
+
+4. Configure the host to install with `bun install --frozen-lockfile` and build
+   with `bun run build`, then deploy. Redeploy after changing any
+   `NEXT_PUBLIC_` value because those values are embedded during the build.
+
+5. Confirm `/login`, `/api/auth/get-session`, and `/dashboard` on the final
+   domain. If login reports `Invalid origin`, ensure `SITE_URL` contains only
+   the final origin and add every preview origin to `TRUSTED_ORIGINS`.
 
 ## License
 

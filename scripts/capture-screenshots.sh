@@ -1,59 +1,55 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Prevent Chromium from retaining a renderer for every captured route.
+export AGENT_BROWSER_ARGS="${AGENT_BROWSER_ARGS:---disable-features=BackForwardCache,--remote-allow-origins=*}"
+
 BASE_URL="${ASRRO_SCREENSHOT_BASE_URL:-http://localhost:3000}"
 OUTPUT_DIR="${ASRRO_SCREENSHOT_OUTPUT_DIR:-screenshots/pages}"
 PUBLIC_SESSION="asrro-capture-public"
 DASHBOARD_SESSION="asrro-capture-dashboard"
+APPLICANT_SESSION="asrro-capture-applicant"
 
 mkdir -p "$OUTPUT_DIR"
 
 public_routes=(
-  "01-public-home|/"
-  "02-public-about|/about"
-  "03-public-alumni|/alumni"
-  "04-public-committee|/committee"
-  "05-public-contact|/contact"
-  "06-public-gallery|/gallery"
-  "07-public-membership|/membership"
-  "08-public-publications|/publications"
-  "09-public-search|/search"
-  "10-public-projects-index|/projects"
-  "11-project-agribot-terrain-rover|/projects/agribot-terrain-rover"
-  "12-project-bengalsat-ground-station|/projects/bengalsat-ground-station"
-  "13-project-cyclone-vision|/projects/cyclone-vision"
-  "14-project-firefly-swarm|/projects/firefly-swarm"
-  "15-project-riverwatch|/projects/riverwatch"
-  "16-project-braille-cell|/projects/braille-cell"
-  "17-public-events-index|/events"
-  "18-event-national-rover-challenge|/events/national-rover-challenge-2026"
-  "19-event-satellite-data-bootcamp|/events/satellite-data-bootcamp"
-  "20-event-frontier-talk|/events/frontier-talk-autonomous-systems"
-  "21-event-embedded-systems-sprint|/events/embedded-systems-sprint"
-  "22-event-robotics-for-resilience|/events/robotics-for-resilience"
-  "23-public-news-index|/news"
-  "24-news-rover-registration|/news/rover-challenge-registration"
-  "25-news-riverwatch-pilot|/news/riverwatch-pilot"
-  "26-news-research-partnership|/news/new-research-partnership"
-  "27-news-alumni-field-notes|/news/alumni-field-notes-riyad"
-  "28-auth-login|/login"
-  "42-not-found|/this-route-does-not-exist"
+  "public-home|/"
+  "public-about|/about"
+  "public-alumni|/alumni"
+  "public-committee|/committee"
+  "public-contact|/contact"
+  "public-gallery|/gallery"
+  "public-membership|/membership"
+  "public-membership-status|/membership/status"
+  "public-membership-verification|/membership/verify/AR-901"
+  "public-publications|/publications"
+  "public-search|/search"
+  "public-projects|/projects"
+  "project-riverwatch-rover|/projects/riverwatch-rover"
+  "public-events|/events"
+  "event-robotics-foundations|/events/robotics-foundations-workshop-2026"
+  "event-space-tech-bootcamp|/events/chattogram-space-tech-bootcamp-2026"
+  "event-bangladesh-rover-challenge|/events/bangladesh-rover-challenge-2026"
+  "public-news|/news"
+  "news-riverwatch-field-notes|/news/riverwatch-field-notes"
+  "auth-login|/login"
+  "not-found|/this-route-does-not-exist"
 )
 
 dashboard_routes=(
-  "29-dashboard-overview|/dashboard"
-  "30-dashboard-profile|/dashboard/profile"
-  "31-dashboard-membership|/dashboard/membership"
-  "32-dashboard-events|/dashboard/events"
-  "33-dashboard-notifications|/dashboard/notifications"
-  "34-dashboard-members|/dashboard/members"
-  "35-dashboard-event-management|/dashboard/event-management"
-  "36-dashboard-committee|/dashboard/committee"
-  "37-dashboard-finance|/dashboard/finance"
-  "38-dashboard-projects|/dashboard/projects"
-  "39-dashboard-content|/dashboard/content"
-  "40-dashboard-reports|/dashboard/reports"
-  "41-dashboard-settings|/dashboard/settings"
+  "dashboard-overview|/dashboard"
+  "dashboard-profile|/dashboard/profile"
+  "dashboard-membership|/dashboard/membership"
+  "dashboard-events|/dashboard/events"
+  "dashboard-notifications|/dashboard/notifications"
+  "dashboard-members|/dashboard/members"
+  "dashboard-event-management|/dashboard/event-management"
+  "dashboard-committee|/dashboard/committee"
+  "dashboard-finance|/dashboard/finance"
+  "dashboard-projects|/dashboard/projects"
+  "dashboard-content|/dashboard/content"
+  "dashboard-reports|/dashboard/reports"
+  "dashboard-settings|/dashboard/settings"
 )
 
 capture_routes() {
@@ -66,10 +62,18 @@ capture_routes() {
     local route="${entry#*|}"
     agent-browser --session "$session" open "${BASE_URL}${route}" >/dev/null
     agent-browser --session "$session" wait 1200 >/dev/null
-    agent-browser --session "$session" screenshot \
-      "${OUTPUT_DIR}/${name}-light-desktop.png" >/dev/null
+    capture_current_page "$session" \
+      "${OUTPUT_DIR}/${name}-light-desktop.png"
     echo "Captured ${route}"
   done
+}
+
+capture_current_page() {
+  local session="$1"
+  local output="$2"
+  local cdp_url
+  cdp_url="$(agent-browser --session "$session" get cdp-url)"
+  node scripts/capture-current-page.mjs "$cdp_url" "$output"
 }
 
 agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
@@ -83,24 +87,24 @@ agent-browser --session "$PUBLIC_SESSION" eval \
   'localStorage.setItem("theme", "dark")' >/dev/null
 agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-agent-browser --session "$PUBLIC_SESSION" screenshot \
-  "${OUTPUT_DIR}/01-public-home-dark-desktop.png" >/dev/null
+capture_current_page "$PUBLIC_SESSION" \
+  "${OUTPUT_DIR}/public-home-dark-desktop.png"
 agent-browser --session "$PUBLIC_SESSION" open "${BASE_URL}/login" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-agent-browser --session "$PUBLIC_SESSION" screenshot \
-  "${OUTPUT_DIR}/28-auth-login-dark-desktop.png" >/dev/null
+capture_current_page "$PUBLIC_SESSION" \
+  "${OUTPUT_DIR}/auth-login-dark-desktop.png"
 
 agent-browser --session "$PUBLIC_SESSION" set viewport 390 844 >/dev/null
 agent-browser --session "$PUBLIC_SESSION" eval \
   'localStorage.setItem("theme", "light")' >/dev/null
 agent-browser --session "$PUBLIC_SESSION" open "$BASE_URL" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-agent-browser --session "$PUBLIC_SESSION" screenshot \
-  "${OUTPUT_DIR}/01-public-home-light-mobile.png" >/dev/null
+capture_current_page "$PUBLIC_SESSION" \
+  "${OUTPUT_DIR}/public-home-light-mobile.png"
 agent-browser --session "$PUBLIC_SESSION" open "${BASE_URL}/login" >/dev/null
 agent-browser --session "$PUBLIC_SESSION" wait 1200 >/dev/null
-agent-browser --session "$PUBLIC_SESSION" screenshot \
-  "${OUTPUT_DIR}/28-auth-login-light-mobile.png" >/dev/null
+capture_current_page "$PUBLIC_SESSION" \
+  "${OUTPUT_DIR}/auth-login-light-mobile.png"
 
 if [[ -z "${ASRRO_SCREENSHOT_EMAIL:-}" || -z "${ASRRO_SCREENSHOT_PASSWORD:-}" ]]; then
   echo "Public screenshots complete. Set ASRRO_SCREENSHOT_EMAIL and ASRRO_SCREENSHOT_PASSWORD to capture dashboard routes."
@@ -127,16 +131,34 @@ agent-browser --session "$DASHBOARD_SESSION" eval \
   'localStorage.setItem("theme", "dark")' >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" open "${BASE_URL}/dashboard" >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" wait 1200 >/dev/null
-agent-browser --session "$DASHBOARD_SESSION" screenshot \
-  "${OUTPUT_DIR}/29-dashboard-overview-dark-desktop.png" >/dev/null
+capture_current_page "$DASHBOARD_SESSION" \
+  "${OUTPUT_DIR}/dashboard-overview-dark-desktop.png"
 
 agent-browser --session "$DASHBOARD_SESSION" set viewport 390 844 >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" eval \
   'localStorage.setItem("theme", "light")' >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" open "${BASE_URL}/dashboard" >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" wait 1200 >/dev/null
-agent-browser --session "$DASHBOARD_SESSION" screenshot \
-  "${OUTPUT_DIR}/29-dashboard-overview-light-mobile.png" >/dev/null
+capture_current_page "$DASHBOARD_SESSION" \
+  "${OUTPUT_DIR}/dashboard-overview-light-mobile.png"
+
+if [[ -n "${ASRRO_SCREENSHOT_PENDING_EMAIL:-}" && -n "${ASRRO_SCREENSHOT_PENDING_PASSWORD:-}" ]]; then
+  agent-browser --session "$APPLICANT_SESSION" open "${BASE_URL}/login" >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" set viewport 1440 1000 >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" find label "Email address" fill \
+    "$ASRRO_SCREENSHOT_PENDING_EMAIL" >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" find label "Password" fill \
+    "$ASRRO_SCREENSHOT_PENDING_PASSWORD" >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" find role button click \
+    --name "Enter mission portal" >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" wait 1200 >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" open \
+    "${BASE_URL}/applicant-status" >/dev/null
+  agent-browser --session "$APPLICANT_SESSION" wait 1200 >/dev/null
+  capture_current_page "$APPLICANT_SESSION" \
+    "${OUTPUT_DIR}/applicant-status-light-desktop.png"
+  agent-browser --session "$APPLICANT_SESSION" close >/dev/null
+fi
 
 agent-browser --session "$PUBLIC_SESSION" close >/dev/null
 agent-browser --session "$DASHBOARD_SESSION" close >/dev/null

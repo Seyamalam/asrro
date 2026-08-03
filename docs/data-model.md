@@ -16,7 +16,6 @@ erDiagram
   MEMBERS ||--o{ NOTIFICATIONS : receives
   EVENTS ||--o{ FINANCE_ENTRIES : budgets
   MEMBERS ||--o{ FINANCE_ENTRIES : records
-  POSTS ||--o{ COMMENTS : receives
 ```
 
 ## Scale decisions
@@ -26,3 +25,4 @@ erDiagram
 - List queries are bounded or paginated and use declared indexes instead of table filters.
 - Public content and sensitive member/finance fields have separate response shapes.
 - Uploaded files store Convex storage IDs; URLs are resolved at read time.
+- Audit records capture privileged mutations without exposing authentication secrets.

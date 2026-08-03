@@ -14,7 +14,7 @@ The dashboard shows membership status, UUID, profile completion, digital members
 
 ## Executive committee
 
-Executive users receive modules based on their assigned permissions. Member operations cover application review, status changes, search, and bulk workflows. Event operations cover event setup, registrations, and attendance. Committee, content, project, and report areas support the organization's ongoing work.
+Executive users receive modules based on their assigned role. Member operations cover application review, status changes, and search. Event operations cover event setup, registrations, exports, and attendance. Committee, content, project, and report areas support the organization's ongoing work.
 
 ## Finance roles
 
@@ -22,7 +22,7 @@ The president, vice president, financial secretary, and organizing secretary can
 
 ## Super administrators
 
-Administrators manage roles, permissions, website sections, social/contact information, brand assets, email templates, gallery content, and theme settings. Role enforcement is always performed in Convex functions, not only in the dashboard.
+Administrators manage roles, website sections, social/contact information, brand assets, gallery content, and theme settings. Role enforcement is always performed in backend functions, not only in the dashboard. Outbound email remains visibly marked as unconfigured until an organization-owned provider is connected.
 
 ## Accessibility and mobile use
 
